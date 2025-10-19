@@ -1,4 +1,4 @@
-# FRONTEND README - FRONTEND_SISTEMA_WEB_DAS 
+# FRONTEND - SISTEMA WEB DAS 
 
 Desarrollado con **Angular 20.2.0** implementando arquitectura de componentes, programación reactiva con RxJS, integración con APIs REST y servicios externos para e-commerce.
 

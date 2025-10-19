@@ -524,7 +524,7 @@ INSERT INTO usuarios (id_usuario, nombre, apellido, email, contraseña_encriptad
 VALUES
 (1, 'Administrador', 'General', 'admin.tienda@gmail.com', '$2a$10$ziusMzpRfckPip9uk3R9pu94cw.7.y54dEXR5FY2Jy3f.Q3IXK3CS', '987123456', 'Oficina Central, Lima', 'administrador', '2025-10-08 11:44:03', TRUE),
 (2, 'Diego', 'Mendoza', 'repartidor.tienda@gmail.com', '$2a$10$4tLBaTJNdNCDscGPICsZZeULmFpHBk1ECID9JfTCUrcYsnb4lcX5m', '960815325', 'Av. Defensores del Morro 2765, Chorrillos, Lima', 'repartidor', '2025-10-19 02:01:13', TRUE),
-(3, 'Luis', 'Ruiz', 'cliente.tienda@gmail.com', '$2a$10$JASawiIiJKBDUt18J8AFVu1egepDaifCbv8zt18rTbUn9M53WoDaO', '96173519', 'Av. Caminos del Inca 2882, Santiago de Surco', 'cliente', '2025-10-19 02:03:13', TRUE);
+(3, 'Luis', 'Ruiz', 'cliente.tienda@gmail.com', '$2a$10$yC2rjpCG/7WR/mjynT7WH.sSC.izxQbmsDY5RKjfP2gcfOCa1OSXm', '96173519', 'Av. Caminos del Inca 2882, Santiago de Surco', 'cliente', '2025-10-19 02:03:13', TRUE);
 
 -- Insertar categorías
 INSERT INTO categorias (id_categoria, nombre_categoria, descripcion)

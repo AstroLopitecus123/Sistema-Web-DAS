@@ -1,4 +1,4 @@
-# BACKEND - ISTEMA WEB DAS 
+# BACKEND - SISTEMA WEB DAS 
 
 Desarrollado con **Spring Boot 3.5.6** implementando arquitectura de microservicios, autenticación JWT, integración con servicios externos y gestión completa de e-commerce.
 

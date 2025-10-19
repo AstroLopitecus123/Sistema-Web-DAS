@@ -1,0 +1,106 @@
+<div class="recuperar-container">
+  <div class="recuperar-card">
+    <div class="recuperar-header">
+      <div class="lock-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h2>Restablecer Contraseña</h2>
+      <p class="subtitle">Ingresa tu nueva contraseña</p>
+    </div>
+
+    <!-- Mensajes de error y éxito -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <strong>Error:</strong> {{ errorMessage }}
+    </div>
+
+    <div *ngIf="successMessage" class="alert alert-success">
+      <strong>Éxito:</strong> {{ successMessage }}
+      <p class="redirect-message">Serás redirigido al inicio de sesión en unos segundos...</p>
+    </div>
+
+    <!-- Formulario -->
+    <form *ngIf="!successMessage" (ngSubmit)="onSubmit()" class="recuperar-form">
+      <!-- Nueva Contraseña -->
+      <div class="form-group">
+        <label for="nuevaContrasena">Nueva Contraseña *</label>
+        <div class="password-input-container">
+          <input
+            [type]="mostrarNuevaContrasena ? 'text' : 'password'"
+            id="nuevaContrasena"
+            name="nuevaContrasena"
+            [(ngModel)]="nuevaContrasena"
+            placeholder="Mínimo 6 caracteres"
+            class="form-input"
+            required
+            minlength="6"
+          />
+          <button
+            type="button"
+            class="toggle-password-btn"
+            (click)="toggleMostrarNuevaContrasena()"
+            [title]="mostrarNuevaContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            {{ mostrarNuevaContrasena ? '👁️' : '👁️‍🗨️' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Confirmar Contraseña -->
+      <div class="form-group">
+        <label for="confirmarContrasena">Confirmar Contraseña *</label>
+        <div class="password-input-container">
+          <input
+            [type]="mostrarConfirmarContrasena ? 'text' : 'password'"
+            id="confirmarContrasena"
+            name="confirmarContrasena"
+            [(ngModel)]="confirmarContrasena"
+            placeholder="Repite tu nueva contraseña"
+            class="form-input"
+            required
+            minlength="6"
+          />
+          <button
+            type="button"
+            class="toggle-password-btn"
+            (click)="toggleMostrarConfirmarContrasena()"
+            [title]="mostrarConfirmarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            {{ mostrarConfirmarContrasena ? '👁️' : '👁️‍🗨️' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Requisitos de contraseña -->
+      <div class="password-requirements">
+        <p><strong>Requisitos de la contraseña:</strong></p>
+        <ul>
+          <li [class.valid]="nuevaContrasena.length >= 6">Mínimo 6 caracteres</li>
+          <li [class.valid]="nuevaContrasena === confirmarContrasena && nuevaContrasena.length > 0">Las contraseñas coinciden</li>
+        </ul>
+      </div>
+
+      <!-- Botón de envío -->
+      <button
+        type="submit"
+        class="btn-submit"
+        [disabled]="loading || !token"
+      >
+        <span *ngIf="!loading">Restablecer Contraseña</span>
+        <span *ngIf="loading" class="loading-text">
+          <span class="spinner"></span> Procesando...
+        </span>
+      </button>
+    </form>
+
+    <!-- Enlaces -->
+    <div class="recuperar-footer">
+      <p>
+        <a routerLink="/login" class="link">← Volver a Iniciar Sesión</a>
+      </p>
+    </div>
+  </div>
+</div>
+

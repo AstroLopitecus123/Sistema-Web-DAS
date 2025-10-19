@@ -1,0 +1,135 @@
+<!-- Modal Backdrop -->
+@if (mostrar) {
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="header-title">
+          <div class="title-icon">
+            <i class="fas fa-cog"></i>
+          </div>
+          <h3 class="modal-title">Personalizar Producto</h3>
+        </div>
+        <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Cerrar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    @if (producto) {
+    <div class="modal-body">
+      
+      <!-- Producto Info -->
+      <div class="producto-info">
+        <div class="producto-imagen">
+          <img [src]="producto.imagenUrl || 'https://placehold.co/300x200/808080/FFFFFF?text=Producto'" 
+               [alt]="producto.nombre"
+               class="img-fluid">
+        </div>
+        
+        <div class="producto-details">
+          <h4 class="producto-nombre">{{ producto.nombre }}</h4>
+          <span class="badge categoria-badge">{{ obtenerNombreCategoria(producto.categoria) }}</span>
+          <p class="producto-descripcion">{{ producto.descripcion }}</p>
+          <div class="precio-container">
+            <span class="precio">S/. {{ producto.precio | number:'1.2-2' }}</span>
+            <span class="stock-info">
+              <i class="fas fa-box me-1"></i>
+              Stock: {{ producto.stock }} unidades
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuración del Producto -->
+      <div class="configuracion-producto">
+        
+        <!-- Cantidad -->
+        <div class="form-group">
+          <label for="cantidad" class="form-label">
+            <i class="fas fa-sort-numeric-up me-2"></i>
+            Cantidad
+          </label>
+          <div class="cantidad-controls">
+            <button type="button" 
+                    class="btn btn-cantidad" 
+                    (click)="decrementarCantidad()"
+                    [disabled]="cantidad <= 1">
+              <i class="fas fa-minus"></i>
+            </button>
+            <input type="number" 
+                   id="cantidad"
+                   class="form-control cantidad-input" 
+                   [(ngModel)]="cantidad"
+                   (input)="onCantidadChange()"
+                   min="1">
+            <button type="button" 
+                    class="btn btn-cantidad" 
+                    (click)="incrementarCantidad()">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Personalización -->
+        <div class="form-group">
+          <label for="personalizacion" class="form-label">
+            <i class="fas fa-edit me-2"></i>
+            Personalización <span class="text-muted">(Opcional)</span>
+          </label>
+          <textarea id="personalizacion"
+                    class="form-control personalizacion-textarea" 
+                    [(ngModel)]="personalizacion"
+                    placeholder="Ej: Sin cebolla, extra queso, bien cocido, etc."
+                    rows="3"
+                    maxlength="200"></textarea>
+          <small class="form-text text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            {{ personalizacion.length }}/200 caracteres
+          </small>
+        </div>
+
+        <!-- Resumen del Pedido -->
+        <div class="resumen-pedido">
+          <div class="resumen-header">
+            <i class="fas fa-receipt me-2"></i>
+            <span>Resumen del Pedido</span>
+          </div>
+          <div class="resumen-item">
+            <span>Subtotal ({{ cantidad }} {{ cantidad === 1 ? 'unidad' : 'unidades' }}):</span>
+            <span class="precio-subtotal">S/. {{ (producto.precio * cantidad) | number:'1.2-2' }}</span>
+          </div>
+          <div class="resumen-total">
+            <span><strong>Total:</strong></span>
+            <span class="precio-total"><strong>S/. {{ (producto.precio * cantidad) | number:'1.2-2' }}</strong></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    }
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" 
+              class="btn btn-secondary" 
+              (click)="cerrarModal()">
+        <i class="fas fa-times me-2"></i>
+        Cancelar
+      </button>
+      <button type="button" 
+              class="btn btn-primary btn-confirmar"
+              (click)="confirmarAgregar()"
+              [disabled]="!producto || cantidad < 1">
+        <i class="fas fa-cart-plus me-2"></i>
+        Agregar al Carrito
+      </button>
+    </div>
+
+  </div>
+</div>
+}
+

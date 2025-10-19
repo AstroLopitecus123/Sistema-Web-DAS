@@ -1,0 +1,210 @@
+<div class="admin-productos-container">
+  <!-- Encabezado -->
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-volver" (click)="volverAlDashboard()">← Volver</button>
+      <h1>Gestión de Productos</h1>
+    </div>
+    <button class="btn-nuevo" (click)="nuevoProducto()">+ Nuevo Producto</button>
+  </div>
+
+  <!-- Buscador y filtros -->
+  <div class="filters-section">
+    <div class="search-container">
+      <input 
+        type="text" 
+        placeholder="Buscar productos..." 
+        [(ngModel)]="terminoBusqueda"
+        (input)="buscarProductos()"
+        class="search-input"
+      >
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="products-section">
+    <div class="table-container">
+      <table class="products-table">
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (producto of productos; track producto.idProducto) {
+            <tr>
+              <td class="image-cell">
+                <img [src]="producto.imagenUrl" [alt]="producto.nombre" class="product-image">
+              </td>
+              <td class="product-cell">
+                <div class="product-name">{{ producto.nombre }}</div>
+                <div class="product-description">{{ producto.descripcion }}</div>
+              </td>
+              <td>{{ typeof producto.categoria === 'string' ? producto.categoria : producto.categoria.nombreCategoria }}</td>
+              <td class="price-cell">S/. {{ producto.precio | number:'1.2-2' }}</td>
+              <td class="stock-cell">{{ producto.stock }} unidades</td>
+              <td>
+                <span class="status-badge" [ngClass]="'status-' + producto.estado">
+                  {{ producto.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="btn-edit" (click)="editarProducto(producto)" title="Editar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button class="btn-toggle" (click)="cambiarEstado(producto)" [title]="producto.estado === 'activo' ? 'Desactivar' : 'Activar'">
+                  @if (producto.estado === 'activo') {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="6" y="4" width="4" height="16"></rect>
+                      <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="5,3 19,12 5,21"></polygon>
+                    </svg>
+                  }
+                </button>
+                <button class="btn-delete" (click)="eliminarProducto(producto.idProducto)" title="Eliminar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"></polyline>
+                    <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal de producto -->
+  @if (modoEdicion) {
+    <div class="modal-overlay" (click)="cancelarEdicion()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ productoSeleccionado?.idProducto === 0 ? 'Nuevo Producto' : 'Editar Producto' }}</h2>
+          <button class="btn-close" (click)="cancelarEdicion()">×</button>
+        </div>
+        
+        @if (productoSeleccionado) {
+          <form class="product-form">
+        <div class="form-group">
+          <label for="nombre">Nombre del Producto</label>
+          <input 
+            type="text" 
+            id="nombre" 
+            [(ngModel)]="productoSeleccionado.nombre" 
+            name="nombre"
+            class="form-input"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <textarea 
+            id="descripcion" 
+            [(ngModel)]="productoSeleccionado.descripcion" 
+            name="descripcion"
+            class="form-textarea"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="precio">Precio (S/.)</label>
+            <input 
+              type="number" 
+              id="precio" 
+              [(ngModel)]="productoSeleccionado.precio" 
+              name="precio"
+              class="form-input"
+              step="0.01"
+              min="0"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="stock">Stock</label>
+            <input 
+              type="number" 
+              id="stock" 
+              [(ngModel)]="productoSeleccionado.stock" 
+              name="stock"
+              class="form-input"
+              min="0"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="categoria">Categoría</label>
+          <select 
+            id="categoria" 
+            [(ngModel)]="productoSeleccionado.categoria" 
+            name="categoria"
+            class="form-select"
+            required
+          >
+            @for (categoria of categorias; track categoria.idCategoria) {
+              <option [ngValue]="categoria">
+                {{ categoria.nombreCategoria }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="imagenUrl">URL de la Imagen</label>
+          <input 
+            type="url" 
+            id="imagenUrl" 
+            [(ngModel)]="productoSeleccionado.imagenUrl" 
+            name="imagenUrl"
+            class="form-input"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="estado">Estado</label>
+          <select 
+            id="estado" 
+            [(ngModel)]="productoSeleccionado.estado" 
+            name="estado"
+            class="form-select"
+          >
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-cancel" (click)="cancelarEdicion()">
+                Cancelar
+              </button>
+              <button type="button" class="btn-save" (click)="guardarProducto()">
+                {{ productoSeleccionado.idProducto === 0 ? 'Crear' : 'Guardar' }}
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  }
+</div>
+

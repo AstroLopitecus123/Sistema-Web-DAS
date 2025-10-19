@@ -1,0 +1,194 @@
+<div class="menu-container">
+  <!-- Header -->
+  <div class="menu-header">
+    <div class="header-content">
+      <div class="header-title">
+        <div class="title-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"></path>
+          </svg>
+        </div>
+        <div class="title-text">
+          <h1>Explora Nuestro Menú</h1>
+          <p>Deliciosa comida entregada a tu puerta</p>
+        </div>
+      </div>
+      
+      <!-- Búsqueda -->
+      <div class="search-section">
+        <div class="search-wrapper">
+          <input type="text" 
+                 class="search-input" 
+                 placeholder="Buscar por nombre..."
+                 [(ngModel)]="keyword"
+                 (keyup.enter)="buscar()">
+          <button class="search-btn" type="button" (click)="buscar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros de Categorías -->
+  <div class="categories-filter mb-4">
+    <div class="d-flex flex-wrap gap-2 justify-content-center">
+      <button 
+        class="btn btn-category active" 
+        (click)="filtrarPorCategoria('todos')"
+        [class.active]="categoriaSeleccionada === 'todos'">
+        <i class="fas fa-th me-1"></i>
+        Todos
+      </button>
+      <button 
+        class="btn btn-category" 
+        (click)="filtrarPorCategoria('Hamburguesas')"
+        [class.active]="categoriaSeleccionada === 'Hamburguesas'">
+        <i class="fas fa-hamburger me-1"></i>
+        Hamburguesas
+      </button>
+      <button 
+        class="btn btn-category" 
+        (click)="filtrarPorCategoria('Bebidas')"
+        [class.active]="categoriaSeleccionada === 'Bebidas'">
+        <i class="fas fa-glass-martini me-1"></i>
+        Bebidas
+      </button>
+      <button 
+        class="btn btn-category" 
+        (click)="filtrarPorCategoria('Acompañamientos')"
+        [class.active]="categoriaSeleccionada === 'Acompañamientos'">
+        <i class="fas fa-shopping-basket me-1"></i>
+        Acompañamientos
+      </button>
+      <button 
+        class="btn btn-category" 
+        (click)="filtrarPorCategoria('Postres')"
+        [class.active]="categoriaSeleccionada === 'Postres'">
+        <i class="fas fa-birthday-cake me-1"></i>
+        Postres
+      </button>
+      <button 
+        class="btn btn-category" 
+        (click)="filtrarPorCategoria('Ensaladas')"
+        [class.active]="categoriaSeleccionada === 'Ensaladas'">
+        <i class="fas fa-leaf me-1"></i>
+        Ensaladas
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div class="menu-content">
+    <!-- Indicador de Carga -->
+    @if (loading) {
+      <div class="loading-card">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+        </div>
+        <p>Cargando menú...</p>
+      </div>
+    }
+
+    <!-- Mensaje de Error -->
+    @if (!loading && error) {
+      <div class="error-card">
+        <div class="error-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <h3>Error de Conexión</h3>
+        <p>{{ error }}</p>
+        <small>Intenta recargar la página o revisa la conexión con el backend.</small>
+      </div>
+    }
+
+    <!-- Lista de Productos -->
+    @if (!loading && !error && productosFiltrados.length > 0) {
+      <div class="products-grid">
+        @for (producto of productosFiltrados; track producto.idProducto) {
+          <div class="product-card">
+            <div class="product-image">
+              <img [src]="producto.imagenUrl || 'https://placehold.co/600x400/808080/FFFFFF?text=Producto'" 
+                   alt="{{ producto.nombre }}"
+                   loading="lazy">
+              <div class="product-category">
+                {{ obtenerNombreCategoria(producto.categoria) }}
+              </div>
+            </div>
+            
+            <div class="product-content">
+              <h3 class="product-name">{{ producto.nombre }}</h3>
+              <p class="product-description">{{ producto.descripcion | slice:0:70 }}...</p>
+              
+              <div class="product-footer">
+                <div class="product-price">
+                  <span class="price-amount">S/. {{ producto.precio | number:'1.2-2' }}</span>
+                </div>
+                
+                <div class="product-actions">
+                  @if ((producto.stock && producto.stock > 0) || !producto.stock || producto.stock === undefined) {
+                    <button class="btn-add" (click)="addToCart(producto)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                      </svg>
+                      <span>Añadir</span>
+                    </button>
+                  }
+                  
+                  @if (producto.stock === 0) {
+                    <button class="btn-no-stock" disabled>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                      </svg>
+                      <span>Sin Stock</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Estado Vacío -->
+    @if (!loading && !error && productosFiltrados.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="M21 21l-4.35-4.35"></path>
+          </svg>
+        </div>
+        <h3>No se encontraron productos</h3>
+        <p>Intenta con otra palabra clave o <a (click)="keyword=''; buscar()">restablece la búsqueda</a>.</p>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal de Detalle de Producto -->
+<app-detalle-producto 
+    [producto]="productoSeleccionado"
+    [mostrar]="mostrarModalDetalle"
+    (cerrar)="cerrarModalDetalle()"
+    (agregarAlCarrito)="onAgregarAlCarrito($event)">
+</app-detalle-producto>
+
+<!-- Notificación Toast -->
+<app-notificacion 
+    [notificacion]="notificacion"
+    [mostrar]="mostrarNotificacion"
+    (cerrar)="cerrarNotificacion()">
+</app-notificacion>

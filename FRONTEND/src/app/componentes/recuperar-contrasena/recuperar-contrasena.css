@@ -1,0 +1,280 @@
+/* ===========================================
+   DISEÑO DE RECUPERAR CONTRASEÑA CON DOS COLUMNAS
+   =========================================== */
+
+.recover-page-container {
+    height: 100vh;
+    width: 100vw;
+    background: white;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* COLUMNA IZQUIERDA - Sección Promocional */
+.recover-promo-section {
+    background: #F4CEA1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.recover-promo-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
+    animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.recover-promo-content {
+    text-align: center;
+    color: #2c3e50;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.promo-icon {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.promo-icon i {
+    font-size: 2rem;
+    color: #D35400;
+}
+
+.promo-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.promo-subtitle {
+    font-size: 1.2rem;
+    color: #34495e;
+    margin-bottom: 3rem;
+    font-weight: 400;
+}
+
+.promo-features {
+    text-align: left;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.feature-icon i {
+    font-size: 1.2rem;
+    color: #D35400;
+}
+
+.feature-text {
+    font-size: 1rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+/* COLUMNA DERECHA - Formulario de Recuperación */
+.recover-form-section {
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+}
+
+.recover-form-container {
+    width: 100%;
+    max-width: 400px;
+    margin-left: 2rem;
+}
+
+.recover-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.recover-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.recover-subtitle {
+    font-size: 1rem;
+    color: #7f8c8d;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Estilos de formulario */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #bdc3c7;
+    font-size: 1rem;
+    z-index: 2;
+}
+
+.form-control {
+    padding: 15px 15px 15px 45px;
+    border: 2px solid #ecf0f1;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.form-control:focus {
+    border-color: #E67E22;
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+    background: white;
+    outline: none;
+}
+
+/* Botón de recuperación */
+.btn-recover {
+    background: linear-gradient(135deg, #E67E22, #D35400);
+    border: none;
+    color: white;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+}
+
+.btn-recover:hover {
+    background: linear-gradient(135deg, #D35400, #C0392B);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
+}
+
+.btn-recover:disabled {
+    opacity: 0.7;
+    transform: none;
+}
+
+/* Caja de información */
+.info-box {
+    background: #FDF2E9;
+    border-left: 4px solid #F4CEA1;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.info-content {
+    display: flex;
+    align-items: flex-start;
+}
+
+.info-icon {
+    color: #F4CEA1;
+    font-size: 1.2rem;
+    margin-right: 0.75rem;
+    margin-top: 0.2rem;
+}
+
+.info-text {
+    color: #2c3e50;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Enlace de volver al login */
+.back-to-login {
+    color: #E67E22;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.back-to-login:hover {
+    color: #D35400;
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .recover-promo-section {
+        display: none;
+    }
+    
+    .recover-form-section {
+        padding: 2rem 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .recover-form-container {
+        padding: 0 1rem;
+    }
+    
+    .recover-title {
+        font-size: 1.5rem;
+    }
+    
+    .promo-title {
+        font-size: 2rem;
+    }
+}

@@ -1,0 +1,138 @@
+/* Notificación Toast */
+.notificacion-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  cursor: pointer;
+  animation: slideInRight 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notificacion-contenido {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+.notificacion-icono {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.notificacion-mensaje {
+  flex: 1;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.notificacion-cerrar {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.notificacion-cerrar:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+/* Barra de progreso */
+.notificacion-progreso {
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  animation: progreso 3s linear forwards;
+}
+
+@keyframes progreso {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Tipos de notificación */
+.notificacion-exito {
+  border-left: 4px solid #28a745;
+}
+
+.notificacion-exito .notificacion-icono {
+  color: #28a745;
+}
+
+.notificacion-exito .notificacion-progreso {
+  background: linear-gradient(90deg, #28a745, #20c997);
+}
+
+.notificacion-error {
+  border-left: 4px solid #dc3545;
+}
+
+.notificacion-error .notificacion-icono {
+  color: #dc3545;
+}
+
+.notificacion-error .notificacion-progreso {
+  background: linear-gradient(90deg, #dc3545, #e74c3c);
+}
+
+.notificacion-advertencia {
+  border-left: 4px solid #ffc107;
+}
+
+.notificacion-advertencia .notificacion-icono {
+  color: #ffc107;
+}
+
+.notificacion-advertencia .notificacion-progreso {
+  background: linear-gradient(90deg, #ffc107, #f39c12);
+}
+
+.notificacion-info {
+  border-left: 4px solid #17a2b8;
+}
+
+.notificacion-info .notificacion-icono {
+  color: #17a2b8;
+}
+
+.notificacion-info .notificacion-progreso {
+  background: linear-gradient(90deg, #17a2b8, #3498db);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notificacion-toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+  }
+}
+
+

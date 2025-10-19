@@ -1,0 +1,96 @@
+# ===========================================
+# GLOBAL .GITIGNORE - Sistema Web DAS
+# ===========================================
+
+# ===========================================
+# BACKEND (Spring Boot / Java / Maven)
+# ===========================================
+BACKEND/target/
+BACKEND/.mvn/wrapper/maven-wrapper.jar
+!BACKEND/**/src/main/**/target/
+!BACKEND/**/src/test/**/target/
+
+# ===========================================
+# FRONTEND (Angular / Node.js)
+# ===========================================
+FRONTEND/dist/
+FRONTEND/node_modules/
+FRONTEND/.angular/
+FRONTEND/tmp/
+FRONTEND/out-tsc/
+FRONTEND/bazel-out/
+
+# ===========================================
+# IDEs y Editores
+# ===========================================
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+.project
+.classpath
+.settings/
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+
+# ===========================================
+# Archivos Temporales
+# ===========================================
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ===========================================
+# Variables de Entorno
+# ===========================================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ===========================================
+# Sistema Operativo
+# ===========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===========================================
+# Archivos de Caché
+# ===========================================
+*.cache
+.cache/
+.parcel-cache/
+
+# ===========================================
+# Archivos de Backup
+# ===========================================
+*.bak
+*.backup
+*.old
+
+# ===========================================
+# Archivos de Compilación
+# ===========================================
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ===========================================
+# Logs
+# ===========================================
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

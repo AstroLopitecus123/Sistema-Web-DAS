@@ -1,0 +1,137 @@
+<!-- Modal Backdrop -->
+<div *ngIf="mostrar" class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="fas fa-receipt me-2"></i>
+        Detalles del Pedido #{{ pedido?.idPedido }}
+      </h3>
+      <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Cerrar">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body" *ngIf="pedido">
+      
+      <!-- Información General del Pedido -->
+      <div class="pedido-info">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="info-item">
+              <label>Fecha del Pedido:</label>
+              <span>{{ formatearFecha(pedido.fechaPedido) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Estado:</label>
+              <span class="badge" [ngClass]="obtenerClaseEstado(pedido.estadoPedido)">
+                {{ obtenerTextoEstado(pedido.estadoPedido) }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Total:</label>
+              <span class="precio-total">S/. {{ pedido.totalPedido | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="info-item">
+              <label>Método de Pago:</label>
+              <span>{{ obtenerTextoMetodoPago(pedido.metodoPago) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Estado de Pago:</label>
+              <span class="badge" [ngClass]="obtenerClaseEstadoPago(pedido.estadoPago)">
+                {{ obtenerTextoEstadoPago(pedido.estadoPago) }}
+              </span>
+            </div>
+            <div class="info-item" *ngIf="pedido.fechaEntrega">
+              <label>Fecha de Entrega:</label>
+              <span class="fecha-entrega">{{ formatearFecha(pedido.fechaEntrega) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dirección de Entrega -->
+      <div class="direccion-entrega">
+        <h5><i class="fas fa-map-marker-alt me-2"></i>Dirección de Entrega</h5>
+        <p>{{ pedido.direccionEntrega }}</p>
+        <p *ngIf="pedido.notasCliente" class="notas-cliente">
+          <strong>Notas adicionales:</strong> {{ pedido.notasCliente }}
+        </p>
+      </div>
+
+      <!-- Información del Repartidor -->
+      <div class="repartidor-info" *ngIf="pedido.repartidor">
+        <h5><i class="fas fa-motorcycle me-2"></i>Repartidor Asignado</h5>
+        <div class="repartidor-card">
+          <div class="repartidor-details">
+            <h6>{{ pedido.repartidor.nombre }} {{ pedido.repartidor.apellido }}</h6>
+            <p><i class="fas fa-phone me-1"></i> {{ pedido.repartidor.telefono }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Productos -->
+      <div class="productos-section">
+        <h5><i class="fas fa-shopping-basket me-2"></i>Productos del Pedido</h5>
+        <div class="productos-list">
+          <div *ngFor="let producto of pedido.productos" class="producto-item">
+            <div class="producto-imagen">
+              <img [src]="producto.imagenUrl || 'https://placehold.co/80x80/808080/FFFFFF?text=Prod'" 
+                   [alt]="producto.nombre"
+                   class="img-fluid">
+            </div>
+            
+            <div class="producto-info">
+              <h6 class="producto-nombre">{{ producto.nombre }}</h6>
+              <p class="producto-descripcion">{{ producto.descripcion }}</p>
+              <span class="badge categoria-badge">{{ producto.categoria }}</span>
+              
+              <!-- Personalización si existe -->
+              <div *ngIf="producto.notasPersonalizacion" class="personalizacion">
+                <strong>Personalización:</strong>
+                <p class="notas-personalizacion">{{ producto.notasPersonalizacion }}</p>
+              </div>
+            </div>
+            
+            <div class="producto-cantidad">
+              <span class="cantidad">Cantidad: {{ producto.cantidad }}</span>
+            </div>
+            
+            <div class="producto-precio">
+              <div class="precio-unitario">
+                S/. {{ producto.precioUnitario | number:'1.2-2' }} c/u
+              </div>
+              <div class="subtotal">
+                <strong>S/. {{ producto.subtotal | number:'1.2-2' }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen Final -->
+      <div class="resumen-final">
+        <div class="resumen-total">
+          <span><strong>Total del Pedido:</strong></span>
+          <span class="precio-total"><strong>S/. {{ pedido.totalPedido | number:'1.2-2' }}</strong></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" 
+              class="btn btn-secondary" 
+              (click)="cerrarModal()">
+        <i class="fas fa-times me-2"></i>
+        Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>

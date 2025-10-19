@@ -1,0 +1,226 @@
+<!-- Modal Backdrop -->
+<div *ngIf="mostrar" class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="fas fa-credit-card me-2"></i>
+        Procesar Pago
+      </h3>
+      <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Cerrar">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      
+      <!-- Indicador de Pasos -->
+      <div class="pasos-indicator">
+        <div class="paso" [ngClass]="{'activo': pasoActual >= 1, 'completado': pasoActual > 1}">
+          <span class="paso-numero">1</span>
+          <span class="paso-texto">Método de Pago</span>
+        </div>
+        <div class="paso" [ngClass]="{'activo': pasoActual >= 2, 'completado': pasoActual > 2}">
+          <span class="paso-numero">2</span>
+          <span class="paso-texto">Información</span>
+        </div>
+        <div class="paso" [ngClass]="{'activo': pasoActual >= 3}">
+          <span class="paso-numero">3</span>
+          <span class="paso-texto">Confirmación</span>
+        </div>
+      </div>
+
+
+      <!-- Paso 1: Selección de Método de Pago -->
+      <div *ngIf="pasoActual === 1" class="paso-contenido">
+        <h4>Selecciona tu método de pago</h4>
+        <div class="metodos-pago">
+          <div *ngFor="let metodo of metodosPago" 
+               class="metodo-pago-card"
+               [ngClass]="{'seleccionado': informacionPago.metodoPago === metodo.id}"
+               (click)="seleccionarMetodoPago(metodo.id)">
+            <div class="metodo-icono">
+              <i [class]="metodo.icono"></i>
+            </div>
+            <div class="metodo-info">
+              <h5>{{ metodo.nombre }}</h5>
+              <p>{{ metodo.descripcion }}</p>
+            </div>
+            <div class="metodo-radio">
+              <input type="radio" 
+                     [name]="'metodo-pago'"
+                     [value]="metodo.id"
+                     [checked]="informacionPago.metodoPago === metodo.id">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2: Información de Pago -->
+      <div *ngIf="pasoActual === 2" class="paso-contenido">
+        <h4>Información de Pago</h4>
+        
+        <!-- Dirección de Entrega -->
+        <div class="form-group">
+          <label for="direccion">Dirección de Entrega *</label>
+          <textarea id="direccion"
+                    class="form-control"
+                    [(ngModel)]="informacionPago.direccionEntrega"
+                    placeholder="Ingresa tu dirección completa"
+                    rows="3"
+                    required></textarea>
+        </div>
+
+        <!-- Notas del Cliente -->
+        <div class="form-group">
+          <label for="notas">Notas Adicionales (Opcional)</label>
+          <textarea id="notas"
+                    class="form-control"
+                    [(ngModel)]="informacionPago.notasCliente"
+                    placeholder="Instrucciones especiales para la entrega"
+                    rows="2"></textarea>
+        </div>
+
+        <!-- Información específica según el método de pago -->
+        <div *ngIf="informacionPago.metodoPago === 'tarjeta'" class="metodo-especifico">
+          <h5>Datos de la Tarjeta</h5>
+          <div class="form-group">
+            <label>Información de la Tarjeta *</label>
+            <!-- El campo real de Stripe está más abajo como contenedor permanente -->
+            <small class="form-text text-muted mt-2 d-block">
+              <i class="fas fa-lock me-1"></i>
+              Pago seguro procesado por Stripe
+            </small>
+          </div>
+        </div>
+
+        <div *ngIf="informacionPago.metodoPago === 'billetera_virtual'" class="metodo-especifico">
+          <h5>Datos de Billetera Virtual</h5>
+          <div class="form-group">
+            <label for="numeroTelefono">Número de Teléfono *</label>
+            <input type="tel" 
+                   id="numeroTelefono"
+                   class="form-control"
+                   placeholder="+51 987 654 321"
+                   [(ngModel)]="informacionPago.numeroTelefono">
+          </div>
+          <div class="form-group">
+            <label for="codigoVerificacion">Código de Verificación</label>
+            <input type="text" 
+                   id="codigoVerificacion"
+                   class="form-control"
+                   placeholder="Código enviado por SMS"
+                   [(ngModel)]="informacionPago.codigoVerificacion">
+          </div>
+        </div>
+
+        <div *ngIf="informacionPago.metodoPago === 'efectivo'" class="metodo-especifico">
+          <h5>Pago en Efectivo</h5>
+          <div class="efectivo-info">
+            <p><strong>Total a pagar:</strong> S/. {{ subtotal | number:'1.2-2' }}</p>
+            <div class="form-group">
+              <label for="montoRecibido">Monto que recibirás *</label>
+              <input type="number" 
+                     id="montoRecibido"
+                     class="form-control"
+                     [(ngModel)]="informacionPago.montoRecibido"
+                     [min]="subtotal"
+                     step="0.01">
+            </div>
+            <div *ngIf="informacionPago.montoRecibido && informacionPago.montoRecibido >= subtotal" 
+                 class="vuelto-info">
+              <p><strong>Vuelto:</strong> S/. {{ calcularVuelto() | number:'1.2-2' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenedor permanente de Stripe (siempre en DOM mientras el modal esté abierto) -->
+      <div
+        id="stripe-card-element"
+        [style.display]="pasoActual === 2 && informacionPago.metodoPago === 'tarjeta' ? 'block' : 'none'"
+        style="
+          padding: 20px 18px;
+          border: 2px solid #FF8C00;
+          border-radius: 12px;
+          background: linear-gradient(145deg, #ffffff 0%, #fefefe 100%);
+          min-height: 60px;
+          width: 100%;
+          box-sizing: border-box;
+          position: relative;
+          z-index: 1000;
+          overflow: visible;
+          margin-top: 16px;
+        "
+      ></div>
+
+      <!-- Paso 3: Confirmación -->
+      <div *ngIf="pasoActual === 3" class="paso-contenido">
+        <h4>Confirma tu Pedido</h4>
+        
+        <!-- Resumen del Pedido -->
+        <div class="resumen-pedido">
+          <h5>Productos</h5>
+          <div *ngFor="let item of items" class="item-resumen">
+            <div class="item-info">
+              <span class="item-nombre">{{ item.nombre }}</span>
+              <span class="item-cantidad">x{{ item.cantidad }}</span>
+            </div>
+            <span class="item-precio">S/. {{ (item.precio * item.cantidad) | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="total-resumen">
+            <span><strong>Total:</strong></span>
+            <span class="precio-total"><strong>S/. {{ subtotal | number:'1.2-2' }}</strong></span>
+          </div>
+        </div>
+
+        <!-- Información de Entrega -->
+        <div class="info-entrega">
+          <h5>Información de Entrega</h5>
+          <p><strong>Dirección:</strong> {{ informacionPago.direccionEntrega }}</p>
+          <p><strong>Método de Pago:</strong> {{ obtenerNombreMetodoPago() }}</p>
+          <p *ngIf="informacionPago.notasCliente"><strong>Notas:</strong> {{ informacionPago.notasCliente }}</p>
+        </div>
+      </div>
+
+      <!-- Mensaje de Error -->
+      <div *ngIf="errorPago" class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        {{ errorPago }}
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" 
+              class="btn btn-secondary" 
+              (click)="pasoActual === 1 ? cerrarModal() : pasoAnterior()">
+        <i class="fas fa-arrow-left me-2"></i>
+        {{ pasoActual === 1 ? 'Cancelar' : 'Anterior' }}
+      </button>
+      
+      <button *ngIf="pasoActual < 3" 
+              type="button" 
+              class="btn btn-primary" 
+              (click)="siguientePaso()">
+        Siguiente
+        <i class="fas fa-arrow-right ms-2"></i>
+      </button>
+      
+      <button *ngIf="pasoActual === 3" 
+              type="button" 
+              class="btn btn-success" 
+              (click)="procesarPago()"
+              [disabled]="procesandoPago">
+        <i *ngIf="!procesandoPago" class="fas fa-check me-2"></i>
+        <i *ngIf="procesandoPago" class="fas fa-spinner fa-spin me-2"></i>
+        {{ procesandoPago ? 'Procesando...' : 'Confirmar Pago' }}
+      </button>
+    </div>
+
+  </div>
+</div>

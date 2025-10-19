@@ -1,0 +1,122 @@
+<div class="recover-page-container">
+  <div class="row g-0 h-100">
+    
+    <!-- COLUMNA IZQUIERDA - Sección Promocional -->
+    <div class="col-lg-4 recover-promo-section">
+      <div class="recover-promo-content">
+        <!-- Icono principal -->
+        <div class="promo-icon">
+          <i class="fas fa-key"></i>
+        </div>
+        
+        <!-- Título principal -->
+        <h1 class="promo-title">Tienda de Alimentos Online</h1>
+        
+        <!-- Subtítulo -->
+        <p class="promo-subtitle">Recuperación segura de tu cuenta</p>
+        
+        <!-- Lista de características -->
+        <div class="promo-features">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <span class="feature-text">Proceso 100% seguro</span>
+          </div>
+          
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <span class="feature-text">Enlace enviado por correo</span>
+          </div>
+          
+          
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-lock-open"></i>
+            </div>
+            <span class="feature-text">Datos encriptados</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- COLUMNA DERECHA - Formulario de Recuperación -->
+    <div class="col-lg-8 recover-form-section">
+      <div class="recover-form-container">
+        
+        <!-- Título y Subtítulo -->
+        <div class="recover-header mb-4">
+          <h2 class="recover-title">¿Olvidaste tu Contraseña?</h2>
+          <p class="recover-subtitle">No te preocupes, te enviaremos un enlace de recuperación a tu correo electrónico para que puedas restablecer tu contraseña de forma segura.</p>
+        </div>
+
+        <!-- Formulario -->
+        <form (ngSubmit)="onSubmit()">
+          
+          <!-- Mensaje de Éxito -->
+          @if (successMessage) {
+            <div class="alert alert-success mb-4" role="alert">
+              {{ successMessage }}
+            </div>
+          }
+          
+          <!-- Mensaje de Error -->
+          @if (errorMessage) {
+            <div class="alert alert-danger mb-4" role="alert">
+              {{ errorMessage }}
+            </div>
+          }
+
+          <!-- Correo Electrónico -->
+          <div class="form-group mb-4">
+            <label for="email" class="form-label">Correo electrónico</label>
+            <div class="input-with-icon">
+              <i class="fas fa-envelope input-icon"></i>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                placeholder="nombre@ejemplo.com"
+                required
+                [(ngModel)]="email"
+                name="email"
+              />
+            </div>
+          </div>
+          
+          <!-- Botón de Envío -->
+          <button type="submit" class="btn btn-recover w-100 mb-4" [disabled]="loading">
+            @if (loading) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Enviando...
+            } @else {
+              <i class="fas fa-paper-plane me-2"></i>
+              Enviar Enlace de Recuperación
+            }
+          </button>
+
+          <!-- Información adicional -->
+          <div class="info-box mb-4">
+            <div class="info-content">
+              <i class="fas fa-info-circle info-icon"></i>
+              <div class="info-text">
+                <strong>¿No recibes el correo?</strong><br>
+                Revisa tu carpeta de spam o correo no deseado. Si aún no lo encuentras, intenta nuevamente en unos minutos.
+              </div>
+            </div>
+          </div>
+
+          <!-- Enlace para volver al Login -->
+          <div class="text-center">
+            <a routerLink="/login" class="back-to-login">
+              <i class="fas fa-arrow-left me-2"></i>
+              Volver a Iniciar Sesión
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

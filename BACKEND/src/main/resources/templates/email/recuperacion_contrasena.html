@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperación de Contraseña</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%); padding: 40px 20px; text-align: center; }
+    .header h1 { color: white; margin: 0; font-size: 28px; }
+    .content { padding: 40px 30px; }
+    .content h2 { color: #1a1a2e; margin-top: 0; }
+    .content p { color: #555; line-height: 1.6; font-size: 16px; }
+    .button { display: inline-block; padding: 18px 40px; background: #FF6B35; color: white !important; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; margin-top: 20px; transition: background-color 0.3s ease; }
+    .button:hover { background-color: #e65a2e; }
+    .footer { background-color: #f9f9f9; padding: 30px; text-align: center; border-top: 1px solid #eee; font-size: 14px; color: #777; }
+    .warning-box { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 20px; margin-top: 30px; border-radius: 5px; }
+    .warning-box p { margin: 0; color: #856404; }
+    .warning-box strong { color: #856404; }
+    .warning-icon { vertical-align: middle; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Recuperación de Contraseña</h1>
+    </div>
+    <div class="content">
+      <h2>Hola, {{nombreUsuario}}</h2>
+      <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en <strong>Tienda De Alimentos Online S.A.</strong>.</p>
+      <p>Si solicitaste este cambio, haz clic en el siguiente botón para crear una nueva contraseña:</p>
+      <div style="text-align: center;">
+        <a href="{{enlaceRecuperacion}}" class="button" style="color: white !important;">Restablecer Contraseña</a>
+      </div>
+      <div class="warning-box">
+        <p><strong>⚠️ Importante:</strong></p>
+        <ul>
+          <li>Este enlace expira en <strong>15 minutos</strong></li>
+          <li>Solo puede ser usado <strong>una vez</strong></li>
+          <li>Si no solicitaste este cambio, ignora este correo</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; 2024 Tienda De Alimentos Online S.A. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<div class="notificaciones-container">
+  @for (notificacion of notificaciones; track notificacion.id) {
+    <div 
+      [class]="obtenerClaseNotificacion(notificacion)"
+      class="notification-item">
+      <div class="notification-content">
+        <div class="notification-icon">
+          <i [class]="notificacion.icono"></i>
+        </div>
+        <div class="notification-text">
+          <div class="notification-title">{{ notificacion.titulo }}</div>
+          <div class="notification-message">{{ notificacion.mensaje }}</div>
+        </div>
+        <button 
+          class="notification-close" 
+          (click)="cerrarNotificacion(notificacion.id)"
+          aria-label="Cerrar notificación">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>

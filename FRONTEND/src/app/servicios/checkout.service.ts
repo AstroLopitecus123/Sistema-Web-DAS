@@ -1,0 +1,92 @@
+import { Injectable } from '@angular/core';
+import { AuthService } from './auth.service';
+import { PagoService } from './pago.service';
+import { ItemCarrito } from '../modelos/producto.model';
+
+export interface DatosPedido {
+  idCliente: number;
+  totalPedido: number;
+  direccionEntrega: string;
+  notasCliente: string;
+  metodoPago: 'tarjeta' | 'billetera_virtual' | 'efectivo';
+  productos: ProductoPedido[];
+}
+
+export interface ProductoPedido {
+  idProducto: number;
+  nombre: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+  notasPersonalizacion: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CheckoutService {
+
+  constructor(
+    private authService: AuthService,
+    private pagoService: PagoService
+  ) {}
+
+  /**
+   * Crea la estructura de datos del pedido para enviar al backend
+   */
+  crearDatosPedido(
+    items: ItemCarrito[], 
+    subtotal: number, 
+    direccionEntrega: string, 
+    notasCliente: string, 
+    metodoPago: 'tarjeta' | 'billetera_virtual' | 'efectivo'
+  ): DatosPedido {
+    const usuario = this.authService.getUsuarioActual();
+    if (!usuario) {
+      throw new Error('Debes iniciar sesión para realizar un pedido');
+    }
+
+    return {
+      idCliente: usuario.idUsuario,
+      totalPedido: subtotal,
+      direccionEntrega,
+      notasCliente: notasCliente || '',
+      metodoPago,
+      productos: this.mapearProductos(items)
+    };
+  }
+
+  /**
+   * Mapea los items del carrito a la estructura esperada por el backend
+   */
+  private mapearProductos(items: ItemCarrito[]): ProductoPedido[] {
+    return items.map(item => ({
+      idProducto: item.idProducto,
+      nombre: item.nombre,
+      cantidad: item.cantidad,
+      precioUnitario: item.precio,
+      subtotal: item.precio * item.cantidad,
+      notasPersonalizacion: item.notasPersonalizacion || ''
+    }));
+  }
+
+  /**
+   * Crea el pedido en el backend
+   */
+  crearPedidoEnBackend(datosPedido: DatosPedido): Promise<any> {
+    console.log('Creando pedido en backend:', datosPedido);
+
+    return new Promise((resolve, reject) => {
+      this.pagoService.crearPedido(datosPedido).subscribe({
+        next: (response) => {
+          console.log('Pedido creado en backend:', response);
+          resolve(response);
+        },
+        error: (error) => {
+          console.error('Error al crear pedido:', error);
+          reject(new Error('No se pudo crear el pedido en el servidor'));
+        }
+      });
+    });
+  }
+}

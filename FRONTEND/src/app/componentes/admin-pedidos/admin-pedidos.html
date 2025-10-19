@@ -1,0 +1,171 @@
+<div class="admin-pedidos-container">
+  <!-- Encabezado -->
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-volver" (click)="volverAlDashboard()">← Volver</button>
+      <h1>Gestión de Pedidos</h1>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label for="filtroEstado">Filtrar por Estado:</label>
+        <select 
+          id="filtroEstado" 
+          [(ngModel)]="filtroEstado" 
+          (change)="cambiarFiltroEstado()"
+          class="filter-select"
+        >
+          <option value="todos">Todos los Estados</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="aceptado">Aceptados</option>
+          <option value="en_preparacion">En Preparación</option>
+          <option value="en_camino">En Camino</option>
+          <option value="entregado">Entregados</option>
+          <option value="cancelado">Cancelados</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="busqueda">Buscar:</label>
+        <input 
+          type="text" 
+          id="busqueda"
+          placeholder="ID del pedido o nombre del cliente..."
+          [(ngModel)]="terminoBusqueda"
+          (input)="buscarPedidos()"
+          class="search-input"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de pedidos -->
+  <div class="orders-section">
+    <div class="orders-grid">
+      <div class="order-card" *ngFor="let pedido of pedidosFiltrados">
+        <div class="order-header">
+          <div class="order-info">
+            <span class="order-id">Pedido #{{ pedido.idPedido }}</span>
+            <span class="order-date">{{ formatearFecha(pedido.fechaPedido) }}</span>
+          </div>
+          <div class="order-status" [style.background-color]="obtenerColorEstado(pedido.estadoPedido)">
+            {{ obtenerTextoEstado(pedido.estadoPedido) }}
+          </div>
+        </div>
+
+        <div class="order-content">
+          <div class="customer-info">
+            <div class="info-item">
+              <span class="info-label">Cliente:</span>
+              <span class="info-value">{{ pedido.cliente?.nombre }} {{ pedido.cliente?.apellido }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Teléfono:</span>
+              <span class="info-value">{{ pedido.cliente?.telefono }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Dirección:</span>
+              <span class="info-value">{{ pedido.direccionEntrega }}</span>
+            </div>
+            <div class="info-item" *ngIf="pedido.repartidor">
+              <span class="info-label">Repartidor:</span>
+              <span class="info-value">{{ pedido.repartidor.nombre }} {{ pedido.repartidor.apellido }}</span>
+            </div>
+          </div>
+
+          <div class="order-details">
+            <div class="detail-item">
+              <span class="detail-label">Total:</span>
+              <span class="detail-value">S/. {{ pedido.totalPedido | number:'1.2-2' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Método de Pago:</span>
+              <span class="detail-value">{{ pedido.metodoPago }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Estado de Pago:</span>
+              <span class="detail-value" [ngClass]="'payment-' + pedido.estadoPago">
+                {{ pedido.estadoPago }}
+              </span>
+            </div>
+          </div>
+
+          <div class="order-notes" *ngIf="pedido.notasCliente">
+            <span class="notes-label">Notas:</span>
+            <span class="notes-value">{{ pedido.notasCliente }}</span>
+          </div>
+        </div>
+
+        <div class="order-actions">
+          <button class="btn-detalle" (click)="verDetallePedido(pedido)">
+            Ver Detalle
+          </button>
+          
+          <div class="status-actions" *ngIf="obtenerEstadosDisponibles(pedido.estadoPedido).length > 0">
+            <select 
+              class="status-select"
+              (change)="cambiarEstadoPedido(pedido, $any($event.target).value)"
+            >
+              <option value="">Cambiar Estado</option>
+              <option 
+                *ngFor="let estado of obtenerEstadosDisponibles(pedido.estadoPedido)" 
+                [value]="estado"
+              >
+                {{ obtenerTextoEstado(estado) }}
+              </option>
+            </select>
+          </div>
+
+          <button 
+            class="btn-asignar" 
+            (click)="asignarRepartidor(pedido)"
+            *ngIf="pedido.estadoPedido === 'aceptado' || pedido.estadoPedido === 'en_preparacion'"
+          >
+            Asignar Repartidor
+          </button>
+
+          <!-- Botones de notificación WhatsApp -->
+          <div class="whatsapp-actions" *ngIf="pedido.cliente?.telefono">
+            <button 
+              class="btn-whatsapp btn-en-camino"
+              (click)="notificarPedidoEnCamino(pedido)"
+              *ngIf="puedeNotificarEnCamino(pedido)"
+              title="Notificar que el pedido está en camino"
+            >
+              🚚 En Camino
+            </button>
+            
+            <button 
+              class="btn-whatsapp btn-entregado"
+              (click)="notificarPedidoEntregado(pedido)"
+              *ngIf="puedeNotificarEntregado(pedido)"
+              title="Notificar que el pedido fue entregado"
+            >
+              ✅ Entregado
+            </button>
+            
+            <button 
+              class="btn-whatsapp btn-cancelado"
+              (click)="notificarPedidoCancelado(pedido)"
+              *ngIf="puedeNotificarCancelado(pedido)"
+              title="Notificar cancelación del pedido"
+            >
+              ❌ Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Orders Message -->
+    <div class="no-orders" *ngIf="pedidosFiltrados.length === 0">
+      <div class="no-orders-icon">📭</div>
+      <div class="no-orders-text">
+        No hay pedidos que coincidan con los filtros seleccionados
+      </div>
+    </div>
+  </div>
+</div>

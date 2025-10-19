@@ -1,0 +1,28 @@
+<!-- Notificación Toast -->
+<div *ngIf="mostrar && notificacion" 
+     class="notificacion-toast"
+     [ngClass]="obtenerClaseTipo()"
+     (click)="cerrar()">
+  
+  <div class="notificacion-contenido">
+    <div class="notificacion-icono">
+      <i *ngIf="notificacion.tipo === 'exito'" class="fas fa-check-circle"></i>
+      <i *ngIf="notificacion.tipo === 'error'" class="fas fa-exclamation-circle"></i>
+      <i *ngIf="notificacion.tipo === 'advertencia'" class="fas fa-exclamation-triangle"></i>
+      <i *ngIf="notificacion.tipo === 'info'" class="fas fa-info-circle"></i>
+    </div>
+    
+    <div class="notificacion-mensaje">
+      {{ notificacion.mensaje }}
+    </div>
+    
+    <button class="notificacion-cerrar" (click)="cerrar()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  
+  <!-- Barra de progreso -->
+  <div class="notificacion-progreso"></div>
+</div>
+
+

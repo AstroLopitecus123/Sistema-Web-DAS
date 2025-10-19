@@ -1,0 +1,636 @@
+<div class="repartidor-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="shield-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+        </span>
+        <span class="logo-text">Repartidor Panel</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" [class.active]="seccionActiva === 'dashboard'" (click)="navegarA('dashboard', $event)">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </span>
+        <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" [class.active]="seccionActiva === 'historial'" (click)="navegarA('historial', $event)">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v18h18"></path>
+            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+          </svg>
+        </span>
+        <span class="nav-text">Historial</span>
+      </a>
+      <a href="#" class="nav-item" [class.active]="seccionActiva === 'perfil'" (click)="navegarA('perfil', $event)">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </span>
+        <span class="nav-text">Mi Perfil</span>
+      </a>
+      <button class="nav-item logout-item" (click)="mostrarConfirmacionSalir($event)">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16,17 21,12 16,7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </span>
+        <span class="nav-text">Cerrar Sesión</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="main-content">
+    <!-- Sección dashboard -->
+    @if (seccionActiva === 'dashboard') {
+    <div class="content-section">
+      <!-- Encabezado -->
+      <div class="content-header">
+        <div class="welcome-section">
+          <h1>¡Bienvenido, {{ usuario?.nombre }}!</h1>
+          <p>Aquí está el resumen de tus entregas hoy</p>
+        </div>
+        <div class="user-info">
+          <div class="user-status">
+            <span class="status-dot"></span>
+            En Línea
+          </div>
+        </div>
+      </div>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="kpi-section">
+      <div class="kpi-card">
+        <div class="kpi-icon entregas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11H5a2 2 0 0 0-2 2v3c0 1.1.9 2 2 2h4m0-7v7m0-7h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9m0-7V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+            <path d="M9 7h6v4H9z"></path>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value">{{ entregasHoy }}</div>
+          <div class="kpi-label">Entregas Hoy</div>
+          <div class="kpi-trend positive">
+            <span class="trend-arrow">↗</span>
+            <span class="trend-value">+{{ tendenciaEntregas }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon ganado">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1v6m0 6v6"></path>
+            <path d="M17.5 6.5L12 12l-5.5-5.5"></path>
+            <path d="M6.5 17.5L12 12l5.5 5.5"></path>
+            <circle cx="12" cy="12" r="10"></circle>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value">S/. {{ ganadoHoy | number:'1.0-0' }}</div>
+          <div class="kpi-label">Ganado Hoy</div>
+          <div class="kpi-trend positive">
+            <span class="trend-arrow">↗</span>
+            <span class="trend-value">+{{ tendenciaGanado }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon calificacion">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"></polygon>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value">{{ calificacion }}</div>
+          <div class="kpi-label">Calificación</div>
+          <div class="kpi-trend positive">
+            <span class="trend-arrow">↗</span>
+            <span class="trend-value">+0.2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Status Tabs -->
+    <div class="section-header">
+      <h2>Gestión de Pedidos</h2>
+      <div class="tab-buttons">
+        <button 
+          class="tab-button" 
+          [class.active]="tabActivo === 'pendientes'"
+          (click)="cambiarTab('pendientes')"
+        >
+          <span class="tab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12,6 12,12 16,14"></polyline>
+            </svg>
+          </span>
+          <span class="tab-text">Pendientes ({{ pedidosPendientes }})</span>
+        </button>
+        <button 
+          class="tab-button" 
+          [class.active]="tabActivo === 'en_curso'"
+          (click)="cambiarTab('en_curso')"
+        >
+          <span class="tab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12a7 7 0 1 0 14 0 7 7 0 0 0-14 0z"></path>
+              <path d="M12 1v6m0 6v6"></path>
+            </svg>
+          </span>
+          <span class="tab-text">En Curso ({{ pedidosEnCurso }})</span>
+        </button>
+        <button 
+          class="tab-button" 
+          [class.active]="tabActivo === 'completadas'"
+          (click)="cambiarTab('completadas')"
+        >
+          <span class="tab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4"></path>
+              <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c4.97 0 9 4.03 9 9z"></path>
+            </svg>
+          </span>
+          <span class="tab-text">Completadas</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Order Details -->
+    <div class="orders-section">
+      @if (obtenerPedidosPorEstado(tabActivo).length > 0) {
+        <div class="orders-grid">
+          @for (pedido of obtenerPedidosPorEstado(tabActivo); track pedido.id) {
+            <div class="order-card">
+              <div class="order-header">
+                <div class="order-info">
+                  <span class="order-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 11H5a2 2 0 0 0-2 2v3c0 1.1.9 2 2 2h4m0-7v7m0-7h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9m0-7V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                      <path d="M9 7h6v4H9z"></path>
+                    </svg>
+                  </span>
+                  <span class="order-id">Pedido #{{ pedido.id }}</span>
+                </div>
+                <div class="order-status" [ngClass]="'status-' + pedido.estado">
+                  {{ pedido.estado === 'pendiente' ? 'PENDIENTE' : 
+                     pedido.estado === 'en_curso' ? 'EN CURSO' : 
+                     'ENTREGADO' }}
+                </div>
+              </div>
+
+              <div class="order-content">
+                <div class="order-section">
+                  <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                      <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                    </svg>
+                  </div>
+                  <div class="section-content">
+                    <div class="section-label">Recoger en</div>
+                    <div class="section-value">{{ pedido.restaurante }}</div>
+                  </div>
+                </div>
+
+                <div class="order-section">
+                  <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                  </div>
+                  <div class="section-content">
+                    <div class="section-label">Entregar en</div>
+                    <div class="section-value">{{ pedido.direccionEntrega }}</div>
+                  </div>
+                </div>
+
+                <div class="order-section">
+                  <div class="section-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <div class="section-content">
+                    <div class="section-label">Cliente</div>
+                    <div class="section-value">{{ pedido.cliente }} - {{ pedido.telefono }}</div>
+                  </div>
+                </div>
+
+                @if (pedido.total) {
+                  <div class="order-section">
+                    <div class="section-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1v6m0 6v6"></path>
+                        <path d="M17.5 6.5L12 12l-5.5-5.5"></path>
+                        <path d="M6.5 17.5L12 12l5.5 5.5"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                      </svg>
+                    </div>
+                    <div class="section-content">
+                      <div class="section-label">Total</div>
+                      <div class="section-value">S/. {{ pedido.total | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                }
+
+                @if (pedido.horaPedido) {
+                  <div class="order-section">
+                    <div class="section-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12,6 12,12 16,14"></polyline>
+                      </svg>
+                    </div>
+                    <div class="section-content">
+                      <div class="section-label">Hora del pedido</div>
+                      <div class="section-value">{{ pedido.horaPedido }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              @if (pedido.estado === 'pendiente') {
+                <div class="order-actions">
+                  <button class="btn-aceptar" (click)="aceptarPedido(pedido.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 12l2 2 4-4"></path>
+                      <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c4.97 0 9 4.03 9 9z"></path>
+                    </svg>
+                    Aceptar Pedido
+                  </button>
+                </div>
+              }
+
+              @if (pedido.estado === 'en_curso') {
+                <div class="order-actions">
+                  <button class="btn-completar" (click)="completarEntrega(pedido.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 12l2 2 4-4"></path>
+                      <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c4.97 0 9 4.03 9 9z"></path>
+                    </svg>
+                    Marcar como Entregado
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="no-orders">
+          <div class="no-orders-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11H5a2 2 0 0 0-2 2v3c0 1.1.9 2 2 2h4m0-7v7m0-7h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9m0-7V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+              <path d="M9 7h6v4H9z"></path>
+            </svg>
+          </div>
+          <div class="no-orders-text">
+            No hay pedidos {{ tabActivo === 'pendientes' ? 'pendientes' : 
+                              tabActivo === 'en_curso' ? 'en curso' : 
+                              'completados' }} en este momento
+          </div>
+        </div>
+      }
+    </div>
+    </div>
+    }
+
+
+    <!-- Historial -->
+    @if (seccionActiva === 'historial') {
+    <div class="content-section">
+      <div class="content-header">
+        <div class="welcome-section">
+          <h1>Historial de Entregas</h1>
+          <p>Revisa tu historial de entregas completadas</p>
+        </div>
+      </div>
+
+      <div class="historial-table">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Restaurante</th>
+              <th>Total</th>
+              <th>Calificación</th>
+              <th>Comentario</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entrega of historialEntregas; track entrega.id) {
+            <tr>
+              <td>#{{ entrega.id }}</td>
+              <td>{{ entrega.fecha }}</td>
+              <td>{{ entrega.cliente }}</td>
+              <td>{{ entrega.restaurante }}</td>
+              <td>S/. {{ entrega.total | number:'1.2-2' }}</td>
+              <td>
+                <div class="rating">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <span class="star" [class.filled]="star <= entrega.calificacion">★</span>
+                  }
+                </div>
+              </td>
+              <td>{{ entrega.comentario }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    }
+
+    <!-- Perfil -->
+    @if (seccionActiva === 'perfil') {
+    <div class="content-section">
+      <div class="content-header">
+        <div class="welcome-section">
+          <h1>Mi Perfil</h1>
+          <p>Gestiona tu información personal y estadísticas</p>
+        </div>
+      </div>
+
+      <div class="profile-content">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div class="profile-info">
+              <h2>{{ usuario?.nombre }} {{ usuario?.apellido }}</h2>
+              <p>{{ usuario?.email }}</p>
+              <p>{{ usuario?.telefono }}</p>
+            </div>
+          </div>
+          
+          <div class="profile-details">
+            <div class="detail-row">
+              <span class="detail-label">Dirección:</span>
+              <span class="detail-value">{{ usuario?.direccion }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Fecha de Registro:</span>
+              <span class="detail-value">{{ perfilRepartidor.fechaRegistro }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Total de Entregas:</span>
+              <span class="detail-value">{{ perfilRepartidor.totalEntregas }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Calificación Promedio:</span>
+              <span class="detail-value">{{ perfilRepartidor.calificacionPromedio }}/5</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Ganancia Total:</span>
+              <span class="detail-value">S/. {{ perfilRepartidor.gananciaTotal | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          
+          <!-- Botones de Acción -->
+          <div class="profile-actions">
+            <button class="btn-editar-perfil" (click)="toggleEditarPerfil()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              {{ modoEdicion ? 'Cancelar' : 'Editar Información' }}
+            </button>
+            
+            <button class="btn-cambiar-contrasena" (click)="toggleCambiarContrasena()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <circle cx="12" cy="16" r="1"></circle>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              {{ modoCambiarContrasena ? 'Cancelar' : 'Cambiar Contraseña' }}
+            </button>
+          </div>
+        </div>
+        
+        <!-- Formulario de edición -->
+        @if (modoEdicion) {
+          <div class="edit-form-card">
+            <h3>Editar Información Personal</h3>
+            <form (ngSubmit)="guardarCambiosPerfil()">
+              <div class="form-group">
+                <label for="nombre">Nombre</label>
+                <input 
+                  type="text" 
+                  id="nombre" 
+                  [(ngModel)]="datosEdicion.nombre" 
+                  name="nombre"
+                  class="form-control"
+                  required
+                >
+              </div>
+              
+              <div class="form-group">
+                <label for="apellido">Apellido</label>
+                <input 
+                  type="text" 
+                  id="apellido" 
+                  [(ngModel)]="datosEdicion.apellido" 
+                  name="apellido"
+                  class="form-control"
+                  required
+                >
+              </div>
+              
+              <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <input 
+                  type="tel" 
+                  id="telefono" 
+                  [(ngModel)]="datosEdicion.telefono" 
+                  name="telefono"
+                  class="form-control"
+                  placeholder="999 999 999"
+                >
+              </div>
+              
+              <div class="form-group">
+                <label for="direccion">Dirección</label>
+                <input 
+                  type="text" 
+                  id="direccion" 
+                  [(ngModel)]="datosEdicion.direccion" 
+                  name="direccion"
+                  class="form-control"
+                  placeholder="Av. Principal 123"
+                >
+              </div>
+              
+              @if (mensajeError) {
+                <div class="alert alert-error">{{ mensajeError }}</div>
+              }
+              
+              @if (mensajeExito) {
+                <div class="alert alert-success">{{ mensajeExito }}</div>
+              }
+              
+              <div class="form-actions">
+                <button type="button" class="btn-cancelar" (click)="toggleEditarPerfil()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn-guardar" [disabled]="guardando">
+                  {{ guardando ? 'Guardando...' : 'Guardar Cambios' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+        
+        <!-- Formulario de cambio de contraseña -->
+        @if (modoCambiarContrasena) {
+          <div class="edit-form-card">
+            <h3>Cambiar Contraseña</h3>
+            <form (ngSubmit)="guardarNuevaContrasena()">
+              <div class="form-group">
+                <label for="contrasenaActual">Contraseña Actual</label>
+                <div class="password-input-wrapper">
+                  <input 
+                    [type]="mostrarContrasenaActual ? 'text' : 'password'" 
+                    id="contrasenaActual" 
+                    [(ngModel)]="datosContrasena.contrasenaActual" 
+                    name="contrasenaActual"
+                    class="form-control"
+                    placeholder="Ingresa tu contraseña actual"
+                    required
+                  >
+                  <button 
+                    type="button" 
+                    class="toggle-password-btn"
+                    (click)="toggleMostrarContrasenaActual()"
+                  >
+                    <i class="fas" [ngClass]="{'fa-eye': !mostrarContrasenaActual, 'fa-eye-slash': mostrarContrasenaActual}"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="nuevaContrasena">Nueva Contraseña</label>
+                <div class="password-input-wrapper">
+                  <input 
+                    [type]="mostrarNuevaContrasena ? 'text' : 'password'" 
+                    id="nuevaContrasena" 
+                    [(ngModel)]="datosContrasena.nuevaContrasena" 
+                    name="nuevaContrasena"
+                    class="form-control"
+                    placeholder="Mínimo 6 caracteres"
+                    required
+                    minlength="6"
+                  >
+                  <button 
+                    type="button" 
+                    class="toggle-password-btn"
+                    (click)="toggleMostrarNuevaContrasena()"
+                  >
+                    <i class="fas" [ngClass]="{'fa-eye': !mostrarNuevaContrasena, 'fa-eye-slash': mostrarNuevaContrasena}"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="confirmarContrasena">Confirmar Nueva Contraseña</label>
+                <div class="password-input-wrapper">
+                  <input 
+                    [type]="mostrarConfirmarContrasena ? 'text' : 'password'" 
+                    id="confirmarContrasena" 
+                    [(ngModel)]="datosContrasena.confirmarContrasena" 
+                    name="confirmarContrasena"
+                    class="form-control"
+                    placeholder="Repite la nueva contraseña"
+                    required
+                  >
+                  <button 
+                    type="button" 
+                    class="toggle-password-btn"
+                    (click)="toggleMostrarConfirmarContrasena()"
+                  >
+                    <i class="fas" [ngClass]="{'fa-eye': !mostrarConfirmarContrasena, 'fa-eye-slash': mostrarConfirmarContrasena}"></i>
+                  </button>
+                </div>
+              </div>
+              
+              @if (mensajeErrorContrasena) {
+                <div class="alert alert-error">{{ mensajeErrorContrasena }}</div>
+              }
+              
+              @if (mensajeExitoContrasena) {
+                <div class="alert alert-success">{{ mensajeExitoContrasena }}</div>
+              }
+              
+              <div class="form-actions">
+                <button type="button" class="btn-cancelar" (click)="toggleCambiarContrasena()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn-guardar" [disabled]="guardandoContrasena">
+                  {{ guardandoContrasena ? 'Cambiando...' : 'Cambiar Contraseña' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Modal de confirmación de cierre de sesión -->
+  @if (mostrarModalSalir) {
+    <div class="modal-overlay" (click)="cerrarModalSalir()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16,17 21,12 16,7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </div>
+          <h3>¿Cerrar Sesión?</h3>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que quieres cerrar tu sesión? Se perderán los datos no guardados.</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="cerrarModalSalir()">
+            Cancelar
+          </button>
+          <button class="btn-confirm" (click)="confirmarSalir()">
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

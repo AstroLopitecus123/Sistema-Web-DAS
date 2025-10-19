@@ -1,0 +1,170 @@
+<div class="pedidos-container">
+  <!-- Header -->
+  <div class="pedidos-header">
+    <div class="header-content">
+      <div class="header-title">
+        <div class="title-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12,6 12,12 16,14"></polyline>
+          </svg>
+        </div>
+        <div class="title-text">
+          <h1>Historial de Pedidos</h1>
+          <p>Revisa el estado y detalles de todos tus pedidos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pedidos-content">
+    <!-- Columna Principal -->
+    <div class="main-content">
+      <!-- Indicador de Carga -->
+      @if (isLoading) {
+        <div class="loading-card">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+          <p>Cargando historial de pedidos...</p>
+        </div>
+      }
+      
+      <!-- Lista de Pedidos -->
+      @if (!isLoading && listaPedidos.length > 0) {
+        <div class="pedidos-list">
+          @for (pedido of listaPedidos; track pedido.idPedido) {
+            <div class="pedido-card" (click)="verDetallesPedido(pedido)">
+              <div class="pedido-header">
+                <div class="pedido-id">
+                  <span class="id-label">Pedido</span>
+                  <span class="id-number">#{{ pedido.idPedido }}</span>
+                </div>
+                <div class="pedido-fecha">
+                  {{ pedido.fechaPedido | date: 'dd/MM/yyyy' }}
+                </div>
+              </div>
+              
+              <div class="pedido-body">
+                <div class="pedido-details">
+                  <p class="pedido-descripcion">{{ pedido.direccionEntrega }}</p>
+                </div>
+                <div class="pedido-total">
+                  <span class="total-label">Total</span>
+                  <span class="total-amount">{{ pedido.totalPedido | currency:'S/.':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              
+              <div class="pedido-footer">
+                <div class="pedido-status">
+                  <span class="status-badge" [ngClass]="getEstadoClase(pedido.estadoPedido)">
+                    {{ pedido.estadoPedido }}
+                  </span>
+                </div>
+                <div class="pedido-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9,18 15,12 9,6"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } 
+      
+      <!-- Estado Vacío -->
+      @if (!isLoading && listaPedidos.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2v6h6"></path>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <line x1="10" y1="9" x2="8" y2="9"></line>
+            </svg>
+          </div>
+          <h3>Aún no realizaste pedidos</h3>
+          <p>Busca entre todas nuestras opciones y disfruta de tu primer pedido.</p>
+          <button class="btn-primary" routerLink="/menu">Hacer pedidos</button>
+        </div>
+      }
+
+    </div>
+
+    <!-- Panel de Filtros -->
+    <div class="filters-sidebar">
+      <div class="filters-card">
+        <div class="filters-header">
+          <h3>Filtrar por</h3>
+          <button class="btn-clear" (click)="limpiarFiltros()">Limpiar filtros</button>
+        </div>
+        
+        <div class="filters-section">
+          <h4>Período</h4>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="periodoRadio" value="semana" [(ngModel)]="filtroPeriodo">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Última semana</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="periodoRadio" value="quinceDias" [(ngModel)]="filtroPeriodo">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Últimos 15 días</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="periodoRadio" value="treintaDias" [(ngModel)]="filtroPeriodo">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Últimos 30 días</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="periodoRadio" value="tresMeses" [(ngModel)]="filtroPeriodo">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Últimos 3 meses</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="periodoRadio" value="seisMeses" [(ngModel)]="filtroPeriodo">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Últimos 6 meses</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="filters-section">
+          <h4>Estado</h4>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="estadoRadio" value="todos" [(ngModel)]="filtroEstado">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Todos los estados</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="estadoRadio" value="Entregado" [(ngModel)]="filtroEstado">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Entregados</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="estadoRadio" value="Enviado" [(ngModel)]="filtroEstado">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Enviados</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="estadoRadio" value="Pendiente" [(ngModel)]="filtroEstado">
+              <span class="radio-custom"></span>
+              <span class="radio-label">Pendientes</span>
+            </label>
+          </div>
+        </div>
+        
+        <button class="btn-apply" (click)="aplicarFiltros()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalles del Pedido -->
+<app-detalle-pedido 
+    [pedido]="pedidoSeleccionado"
+    [mostrar]="mostrarModalDetalle"
+    (cerrar)="cerrarModalDetalle()">
+</app-detalle-pedido>

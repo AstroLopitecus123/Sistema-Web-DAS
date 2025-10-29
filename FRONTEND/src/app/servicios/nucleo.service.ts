@@ -111,31 +111,23 @@ export class NucleoService implements HttpInterceptor {
     return localStorage.getItem('token');
   }
 
-  /**
-   * Establece el token de autenticación en el localStorage
-   */
+  // Establece el token de autenticación en el localStorage
   setToken(token: string): void {
     localStorage.setItem('token', token);
   }
 
-  /**
-   * Elimina el token de autenticación del localStorage
-   */
+  // Elimina el token de autenticación del localStorage
   removeToken(): void {
     localStorage.removeItem('token');
   }
 
-  /**
-   * Verifica si el usuario está autenticado
-   */
+  // Verifica si el usuario está autenticado
   isAuthenticated(): boolean {
     const token = this.getToken();
     return token !== null && token !== '';
   }
 
-  /**
-   * Obtiene información del usuario desde el token
-   */
+  // Obtiene información del usuario desde el token
   getUserInfo(): any {
     const token = this.getToken();
     if (!token) return null;
@@ -149,9 +141,7 @@ export class NucleoService implements HttpInterceptor {
     }
   }
 
-  /**
-   * Verifica si el token está expirado
-   */
+  // Verifica si el token está expirado
   isTokenExpired(): boolean {
     const userInfo = this.getUserInfo();
     if (!userInfo || !userInfo.exp) return true;
@@ -160,9 +150,7 @@ export class NucleoService implements HttpInterceptor {
     return userInfo.exp < currentTime;
   }
 
-  /**
-   * Limpia toda la información de sesión
-   */
+  // Limpia toda la información de sesión
   clearSession(): void {
     this.removeToken();
     localStorage.removeItem('usuario');

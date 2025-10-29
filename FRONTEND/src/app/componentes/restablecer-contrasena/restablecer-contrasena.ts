@@ -87,7 +87,6 @@ export class RestablecerContrasena implements OnInit {
         if (response.success) {
           this.successMessage = response.mensaje || 'Tu contraseña ha sido restablecida exitosamente.';
           
-          // Limpiar campos
           this.nuevaContrasena = '';
           this.confirmarContrasena = '';
 

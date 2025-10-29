@@ -4,6 +4,15 @@ export interface Categoria {
   descripcion: string;
 }
 
+export interface OpcionPersonalizacion {
+  idOpcion: number;
+  nombre: string;
+  descripcion?: string;
+  precioAdicional: number;
+  activa: boolean;
+  idProducto: number;
+}
+
 export interface Producto {
   idProducto: number;
   nombre: string;
@@ -16,6 +25,7 @@ export interface Producto {
   fechaCreacion?: string;
   fechaActualizacion?: string;
   ultimaActualizacion?: string;
+  opcionesPersonalizacion?: OpcionPersonalizacion[];
 }
 
 export interface ItemCarrito {
@@ -28,4 +38,6 @@ export interface ItemCarrito {
   stock: number;
   categoria: string;
   notasPersonalizacion?: string;
+  opcionesSeleccionadas?: OpcionPersonalizacion[];
+  precioOpciones?: number;
 }

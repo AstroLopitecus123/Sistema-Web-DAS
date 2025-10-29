@@ -2,10 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-/**
- * Servicio unificado de configuración
- * Incluye: configuraciones de Stripe, notificaciones, y configuraciones generales
- */
+// Servicio unificado de configuración (Stripe, notificaciones, configuraciones generales)
 @Injectable({
   providedIn: 'root'
 })
@@ -20,9 +17,7 @@ export class ConfiguracionService {
 
   // ==================== CONFIGURACIÓN DE STRIPE ====================
 
-  /**
-   * Configuración de Stripe para el frontend
-   */
+  // Configuración de Stripe para el frontend
   getStripeConfig() {
     return {
       // Clave pública de Stripe en modo TEST
@@ -58,94 +53,70 @@ export class ConfiguracionService {
 
   // ==================== NOTIFICACIONES ====================
 
-  /**
-   * Notifica que un pedido está en camino
-   */
+  // Notifica que un pedido está en camino
   notificarPedidoEnCamino(idPedido: number): Observable<any> {
     return this.http.put(`${this.notificacionesApiUrl}/pedido/${idPedido}/en-camino`, {});
   }
 
-  /**
-   * Notifica que un pedido fue entregado
-   */
+  // Notifica que un pedido fue entregado
   notificarPedidoEntregado(idPedido: number): Observable<any> {
     return this.http.put(`${this.notificacionesApiUrl}/pedido/${idPedido}/entregado`, {});
   }
 
-  /**
-   * Notifica que un pedido fue cancelado
-   */
+  // Notifica que un pedido fue cancelado
   notificarPedidoCancelado(idPedido: number, motivo: string): Observable<any> {
     return this.http.put(`${this.notificacionesApiUrl}/pedido/${idPedido}/cancelado`, { motivo });
   }
 
   // ==================== CONFIGURACIONES GENERALES ====================
 
-  /**
-   * Obtiene la configuración general de la aplicación
-   */
+  // Obtiene la configuración general de la aplicación
   obtenerConfiguracionGeneral(): Observable<any> {
     return this.http.get(`${this.apiUrl}/configuracion`);
   }
 
-  /**
-   * Actualiza la configuración general de la aplicación
-   */
+  // Actualiza la configuración general de la aplicación
   actualizarConfiguracionGeneral(configuracion: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/configuracion`, configuracion);
   }
 
   // ==================== CONFIGURACIONES DE PAGO ====================
 
-  /**
-   * Obtiene las configuraciones de métodos de pago
-   */
+  // Obtiene las configuraciones de métodos de pago
   obtenerMetodosPago(): Observable<any> {
     return this.http.get(`${this.apiUrl}/configuracion/metodos-pago`);
   }
 
-  /**
-   * Actualiza los métodos de pago disponibles
-   */
+  // Actualiza los métodos de pago disponibles
   actualizarMetodosPago(metodos: any[]): Observable<any> {
     return this.http.put(`${this.apiUrl}/configuracion/metodos-pago`, { metodos });
   }
 
   // ==================== CONFIGURACIONES DE NOTIFICACIONES ====================
 
-  /**
-   * Obtiene las configuraciones de notificaciones
-   */
+  // Obtiene las configuraciones de notificaciones
   obtenerConfiguracionNotificaciones(): Observable<any> {
     return this.http.get(`${this.apiUrl}/configuracion/notificaciones`);
   }
 
-  /**
-   * Actualiza las configuraciones de notificaciones
-   */
+  // Actualiza las configuraciones de notificaciones
   actualizarConfiguracionNotificaciones(configuracion: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/configuracion/notificaciones`, configuracion);
   }
 
   // ==================== CONFIGURACIÓN DE URLs ====================
 
-  /**
-   * Obtiene la URL base de la API
-   */
+  // Obtiene la URL base de la API
   getBaseUrl(): string {
     return this.baseUrl;
   }
 
-  /**
-   * Obtiene la URL de la API v1
-   */
+  // Obtiene la URL de la API v1
   getApiV1Url(): string {
     return this.apiV1Url;
   }
 
-  /**
-   * Obtiene la URL de la API
-   */
+  // Obtiene la URL de la API
   getApiUrl(): string {
     return this.apiUrl;
   }

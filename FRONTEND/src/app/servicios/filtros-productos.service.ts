@@ -11,9 +11,7 @@ export interface FiltrosProductos {
 })
 export class FiltrosProductosService {
 
-  /**
-   * Aplica filtros de búsqueda y categoría a los productos
-   */
+  // Aplica filtros de búsqueda y categoría a los productos
   filtrarProductos(productos: Producto[], filtros: FiltrosProductos): Producto[] {
     let productosFiltrados = [...productos];
 
@@ -30,9 +28,7 @@ export class FiltrosProductosService {
     return productosFiltrados;
   }
 
-  /**
-   * Filtra productos por palabra clave
-   */
+  // Filtra productos por palabra clave
   private filtrarPorPalabraClave(productos: Producto[], keyword: string): Producto[] {
     const palabraClave = keyword.toLowerCase().trim();
     
@@ -45,9 +41,7 @@ export class FiltrosProductosService {
     );
   }
 
-  /**
-   * Filtra productos por categoría
-   */
+  // Filtra productos por categoría
   private filtrarPorCategoria(productos: Producto[], categoria: string): Producto[] {
     return productos.filter(producto => 
       (typeof producto.categoria === 'string' ? 
@@ -56,9 +50,7 @@ export class FiltrosProductosService {
     );
   }
 
-  /**
-   * Obtiene las categorías únicas de una lista de productos
-   */
+  // Obtiene las categorías únicas de una lista de productos
   obtenerCategorias(productos: Producto[]): string[] {
     const categorias = productos.map(producto => 
       typeof producto.categoria === 'string' ? 
@@ -68,9 +60,7 @@ export class FiltrosProductosService {
     return [...new Set(categorias)].sort();
   }
 
-  /**
-   * Obtiene las opciones de filtro disponibles
-   */
+  // Obtiene las opciones de filtro disponibles
   obtenerOpcionesFiltro(productos: Producto[]): {
     categorias: { valor: string; etiqueta: string }[];
   } {
@@ -87,9 +77,7 @@ export class FiltrosProductosService {
     };
   }
 
-  /**
-   * Limpia los filtros
-   */
+  // Limpia los filtros
   limpiarFiltros(): FiltrosProductos {
     return {
       keyword: '',
@@ -97,9 +85,7 @@ export class FiltrosProductosService {
     };
   }
 
-  /**
-   * Verifica si hay filtros activos
-   */
+  // Verifica si hay filtros activos
   tieneFiltrosActivos(filtros: FiltrosProductos): boolean {
     return (!!filtros.keyword && filtros.keyword.trim() !== '') || 
            (!!filtros.categoria && filtros.categoria !== 'todos');

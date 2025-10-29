@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../servicios/auth.service';
 import { UsuarioService } from '../../servicios/usuario.service';
 import { EstadisticasService } from '../../servicios/estadisticas.service';
@@ -35,55 +35,62 @@ export class PerfilUsuario implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private usuarioService: UsuarioService,
     private estadisticasService: EstadisticasService
   ) {}
 
   ngOnInit() {
-    // Obtener datos básicos del usuario actual desde localStorage
-    this.usuario = this.authService.getUsuarioActual();
+    // Obtener username de la ruta
+    const username = this.route.snapshot.paramMap.get('username');
     
-    // Si no hay usuario logueado, redirigir al login
-    if (!this.usuario) {
+    if (!username) {
+      // Si no hay username en la ruta, redirigir al login
       this.router.navigate(['/login']);
       return;
     }
 
-    // Cargar datos completos del usuario desde el backend
-    this.cargarDatosCompletos();
+    // Verificar que el usuario esté autenticado
+    const usuarioActual = this.authService.getUsuarioActual();
     
-    // Cargar estadísticas del usuario
-    this.cargarEstadisticas();
-  }
-
-  cargarDatosCompletos() {
-    if (!this.usuario || !this.usuario.idUsuario) {
-      this.loading = false;
+    if (!usuarioActual) {
+      this.router.navigate(['/login']);
       return;
     }
 
-    // Obtener datos completos del usuario desde el backend
-    this.usuarioService.obtenerPerfil(this.usuario.idUsuario).subscribe({
+    // Cargar datos completos del usuario desde el backend usando username
+    this.cargarDatosCompletos(username);
+    
+    // Cargar estadísticas después de tener los datos
+    // Se cargará en cargarDatosCompletos después de obtener el idUsuario
+  }
+
+  cargarDatosCompletos(username: string) {
+    // Obtener datos completos del usuario desde el backend usando username
+    this.usuarioService.obtenerPerfilPorUsername(username).subscribe({
       next: (response: any) => {
         this.loading = false;
-        console.log('Datos completos del usuario:', response);
-        console.log('Fecha de registro recibida:', response.fechaRegistro);
-        console.log('Tipo de fecha:', typeof response.fechaRegistro);
         
         if (response) {
           this.datosUsuario = response;
           
-          // Actualizar el usuario en localStorage con los datos completos
-          if (this.usuario) {
-            const usuarioActualizado: Usuario = {
-              ...this.usuario,
-              telefono: response.telefono || '',
-              direccion: response.direccion || ''
-            };
-            
-            this.usuario = usuarioActualizado;
-            localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
-          }
+          // Crear objeto usuario con todos los datos
+          const usuarioActualizado: Usuario = {
+            idUsuario: response.idUsuario,
+            nombre: response.nombre,
+            apellido: response.apellido,
+            email: response.email,
+            username: response.username,
+            telefono: response.telefono || '',
+            direccion: response.direccion || '',
+            rol: response.rol as any,
+            activo: response.activo
+          };
+          
+          this.usuario = usuarioActualizado;
+          
+          // Cargar estadísticas ahora que tenemos el idUsuario
+          this.cargarEstadisticas();
         }
       },
       error: (err: any) => {
@@ -95,7 +102,29 @@ export class PerfilUsuario implements OnInit {
   }
 
   cargarEstadisticas() {
-    this.estadisticas = this.estadisticasService.calcularEstadisticasUsuario(this.usuario);
+    if (!this.usuario || !this.usuario.idUsuario) {
+      this.estadisticas = {
+        pedidosRealizados: 0,
+        totalGastado: 0,
+        cuponesUsados: 0
+      };
+      return;
+    }
+
+    this.estadisticasService.obtenerEstadisticasUsuario(this.usuario.idUsuario).subscribe({
+      next: (estadisticas) => {
+        this.estadisticas = estadisticas;
+      },
+      error: (err) => {
+        console.error('Error al cargar estadísticas:', err);
+        // Mantener valores por defecto en caso de error
+        this.estadisticas = {
+          pedidosRealizados: 0,
+          totalGastado: 0,
+          cuponesUsados: 0
+        };
+      }
+    });
   }
 
   mostrarConfirmacionSalir(event?: Event) {
@@ -157,7 +186,6 @@ export class PerfilUsuario implements OnInit {
     // Llamar al servicio para eliminar la cuenta
     this.usuarioService.eliminarCuenta(this.usuario.idUsuario).subscribe({
       next: () => {
-        console.log('Cuenta eliminada exitosamente');
         this.cerrarModalEliminar();
         
         // Mostrar mensaje de éxito con notificación elegante

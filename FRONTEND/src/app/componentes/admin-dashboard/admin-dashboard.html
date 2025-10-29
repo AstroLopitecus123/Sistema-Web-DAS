@@ -597,8 +597,190 @@
     </div>
     }
 
+    <!-- Sección de Configuración -->
+    @if (seccionActiva === 'configuracion') {
+    <div class="content-section">
+      <div class="content-header">
+        <div class="welcome-section">
+          <h1>Configuración</h1>
+          <p>Gestiona la configuración de tu cuenta</p>
+        </div>
+      </div>
+      
+      <div class="config-content">
+        <div class="config-card">
+          <div class="config-header">
+            <div class="config-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <circle cx="12" cy="16" r="1"></circle>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h2>Cambiar Contraseña</h2>
+            <p>Actualiza tu contraseña para mantener tu cuenta segura</p>
+          </div>
+
+          <!-- Mensajes de éxito y error -->
+          @if (mensajeExitoContrasena) {
+            <div class="alert alert-success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22,4 12,14.01 9,11.01"></polyline>
+              </svg>
+              {{ mensajeExitoContrasena }}
+            </div>
+          }
+
+          @if (mensajeErrorContrasena) {
+            <div class="alert alert-error">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              {{ mensajeErrorContrasena }}
+            </div>
+          }
+
+          <!-- Formulario de cambio de contraseña -->
+          <form class="config-form" (ngSubmit)="guardarNuevaContrasena()">
+            <div class="form-group">
+              <label for="contrasenaActual" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <circle cx="12" cy="16" r="1"></circle>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Contraseña Actual
+              </label>
+              <div class="password-input-container">
+                <input
+                  [type]="mostrarContrasenaActual ? 'text' : 'password'"
+                  id="contrasenaActual"
+                  class="form-control password-input"
+                  [(ngModel)]="datosContrasena.contrasenaActual"
+                  name="contrasenaActual"
+                  placeholder="Ingresa tu contraseña actual"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  (click)="toggleMostrarContrasenaActual()"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    @if (mostrarContrasenaActual) {
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    } @else {
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    }
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="nuevaContrasena" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <circle cx="12" cy="16" r="1"></circle>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Nueva Contraseña
+              </label>
+              <div class="password-input-container">
+                <input
+                  [type]="mostrarNuevaContrasena ? 'text' : 'password'"
+                  id="nuevaContrasena"
+                  class="form-control password-input"
+                  [(ngModel)]="datosContrasena.nuevaContrasena"
+                  name="nuevaContrasena"
+                  placeholder="Ingresa tu nueva contraseña (mínimo 6 caracteres)"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  (click)="toggleMostrarNuevaContrasena()"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    @if (mostrarNuevaContrasena) {
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    } @else {
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    }
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmarContrasena" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <circle cx="12" cy="16" r="1"></circle>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Confirmar Nueva Contraseña
+              </label>
+              <div class="password-input-container">
+                <input
+                  [type]="mostrarConfirmarContrasena ? 'text' : 'password'"
+                  id="confirmarContrasena"
+                  class="form-control password-input"
+                  [(ngModel)]="datosContrasena.confirmarContrasena"
+                  name="confirmarContrasena"
+                  placeholder="Confirma tu nueva contraseña"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  (click)="toggleMostrarConfirmarContrasena()"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    @if (mostrarConfirmarContrasena) {
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    } @else {
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    }
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="guardandoContrasena">
+                @if (guardandoContrasena) {
+                  <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+                  </svg>
+                  Guardando...
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <circle cx="12" cy="16" r="1"></circle>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  Cambiar Contraseña
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    }
+
     <!-- Otras secciones placeholder -->
-    @if (seccionActiva === 'ofertas' || seccionActiva === 'reportes' || seccionActiva === 'configuracion') {
+    @if (seccionActiva === 'ofertas' || seccionActiva === 'reportes') {
     <div class="content-section">
       <div class="content-header">
         <div class="welcome-section">

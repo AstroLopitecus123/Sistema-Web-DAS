@@ -36,7 +36,7 @@ export const routes: Routes = [
   { path: 'carrito', component: Carrito, title: 'Carrito', canActivate: [AuthGuard] },
   { path: 'mis-pedidos', component: Pedidos, title: 'Mis Pedidos', canActivate: [AuthGuard] },
   { path: 'mis-cupones', component: Cupones, title: 'Mis Cupones', canActivate: [AuthGuard] },
-  { path: 'mi-perfil', component: PerfilUsuario, title: 'Mi Perfil', canActivate: [AuthGuard] },
+  { path: 'mi-perfil/:username', component: PerfilUsuario, title: 'Mi Perfil', canActivate: [AuthGuard] },
   { path: 'editar-perfil', component: EditarPerfil, title: 'Editar Perfil', canActivate: [AuthGuard] },
   { path: 'cambiar-contrasena', component: CambiarContrasena, title: 'Cambiar Contraseña', canActivate: [AuthGuard] },
   

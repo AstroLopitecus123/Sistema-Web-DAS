@@ -76,20 +76,51 @@
 
         <!-- Personalización -->
         <div class="form-group">
-          <label for="personalizacion" class="form-label">
-            <i class="fas fa-edit me-2"></i>
+          <label class="form-label">
+            <i class="fas fa-cog me-2"></i>
             Personalización <span class="text-muted">(Opcional)</span>
           </label>
-          <textarea id="personalizacion"
-                    class="form-control personalizacion-textarea" 
-                    [(ngModel)]="personalizacion"
-                    placeholder="Ej: Sin cebolla, extra queso, bien cocido, etc."
-                    rows="3"
-                    maxlength="200"></textarea>
-          <small class="form-text text-muted">
-            <i class="fas fa-info-circle me-1"></i>
-            {{ personalizacion.length }}/200 caracteres
-          </small>
+          
+          @if (cargandoOpciones) {
+            <div class="loading-opciones">
+              <i class="fas fa-spinner fa-spin me-2"></i>
+              Cargando opciones de personalización...
+            </div>
+          } @else if (opcionesDisponibles.length > 0) {
+            <div class="opciones-personalizacion">
+              @for (opcion of opcionesDisponibles; track opcion.idOpcion) {
+                <div class="opcion-item" 
+                     [class.selected]="isOpcionSeleccionada(opcion)"
+                     (click)="toggleOpcion(opcion)">
+                  <div class="opcion-checkbox">
+                    <i class="fas" 
+                       [class.fa-check-square]="isOpcionSeleccionada(opcion)"
+                       [class.fa-square]="!isOpcionSeleccionada(opcion)"></i>
+                  </div>
+                  <div class="opcion-content">
+                    <div class="opcion-nombre">{{ opcion.nombre }}</div>
+                    @if (opcion.descripcion) {
+                      <div class="opcion-descripcion">{{ opcion.descripcion }}</div>
+                    }
+                  </div>
+                  <div class="opcion-precio">
+                    @if (opcion.precioAdicional > 0) {
+                      <span class="precio-positivo">+S/. {{ opcion.precioAdicional | number:'1.2-2' }}</span>
+                    } @else if (opcion.precioAdicional < 0) {
+                      <span class="precio-negativo">S/. {{ opcion.precioAdicional | number:'1.2-2' }}</span>
+                    } @else {
+                      <span class="precio-gratis">Gratis</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="no-opciones">
+              <i class="fas fa-info-circle me-2"></i>
+              No hay opciones de personalización disponibles para este producto.
+            </div>
+          }
         </div>
 
         <!-- Resumen del Pedido -->
@@ -102,9 +133,15 @@
             <span>Subtotal ({{ cantidad }} {{ cantidad === 1 ? 'unidad' : 'unidades' }}):</span>
             <span class="precio-subtotal">S/. {{ (producto.precio * cantidad) | number:'1.2-2' }}</span>
           </div>
+          @if (precioOpciones > 0) {
+            <div class="resumen-item">
+              <span>Opciones de personalización ({{ cantidad }} {{ cantidad === 1 ? 'unidad' : 'unidades' }}):</span>
+              <span class="precio-opciones">+S/. {{ (precioOpciones * cantidad) | number:'1.2-2' }}</span>
+            </div>
+          }
           <div class="resumen-total">
             <span><strong>Total:</strong></span>
-            <span class="precio-total"><strong>S/. {{ (producto.precio * cantidad) | number:'1.2-2' }}</strong></span>
+            <span class="precio-total"><strong>S/. {{ precioTotal | number:'1.2-2' }}</strong></span>
           </div>
         </div>
 

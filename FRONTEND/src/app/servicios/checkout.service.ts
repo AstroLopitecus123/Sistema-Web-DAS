@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
 import { PagoService } from './pago.service';
-import { ItemCarrito } from '../modelos/producto.model';
+import { ItemCarrito, OpcionPersonalizacion } from '../modelos/producto.model';
 
 export interface DatosPedido {
   idCliente: number;
@@ -19,6 +19,8 @@ export interface ProductoPedido {
   precioUnitario: number;
   subtotal: number;
   notasPersonalizacion: string;
+  opcionesSeleccionadas?: string;
+  precioOpciones?: number;
 }
 
 @Injectable({
@@ -31,9 +33,7 @@ export class CheckoutService {
     private pagoService: PagoService
   ) {}
 
-  /**
-   * Crea la estructura de datos del pedido para enviar al backend
-   */
+  // Crea la estructura de datos del pedido para enviar al backend
   crearDatosPedido(
     items: ItemCarrito[], 
     subtotal: number, 
@@ -56,30 +56,35 @@ export class CheckoutService {
     };
   }
 
-  /**
-   * Mapea los items del carrito a la estructura esperada por el backend
-   */
+  // Mapea los items del carrito a la estructura esperada por el backend
   private mapearProductos(items: ItemCarrito[]): ProductoPedido[] {
-    return items.map(item => ({
-      idProducto: item.idProducto,
-      nombre: item.nombre,
-      cantidad: item.cantidad,
-      precioUnitario: item.precio,
-      subtotal: item.precio * item.cantidad,
-      notasPersonalizacion: item.notasPersonalizacion || ''
-    }));
+    return items.map(item => {
+      const opcionesSeleccionadas = item.opcionesSeleccionadas 
+        ? JSON.stringify(item.opcionesSeleccionadas.map(opcion => opcion.nombre))
+        : undefined;
+      
+      const precioOpciones = item.precioOpciones || 0;
+      const subtotalConOpciones = (item.precio + precioOpciones) * item.cantidad;
+
+      return {
+        idProducto: item.idProducto,
+        nombre: item.nombre,
+        cantidad: item.cantidad,
+        precioUnitario: item.precio,
+        subtotal: subtotalConOpciones,
+        notasPersonalizacion: item.notasPersonalizacion || '',
+        opcionesSeleccionadas,
+        precioOpciones
+      };
+    });
   }
 
-  /**
-   * Crea el pedido en el backend
-   */
+  // Crea el pedido en el backend
   crearPedidoEnBackend(datosPedido: DatosPedido): Promise<any> {
-    console.log('Creando pedido en backend:', datosPedido);
 
     return new Promise((resolve, reject) => {
       this.pagoService.crearPedido(datosPedido).subscribe({
         next: (response) => {
-          console.log('Pedido creado en backend:', response);
           resolve(response);
         },
         error: (error) => {

@@ -61,13 +61,16 @@
                                 <p class="product-description">{{ item.descripcion }}</p>
                                 @if (item.notasPersonalizacion) {
                                     <div class="product-personalization">
-                                        <i class="fas fa-edit me-1"></i>
+                                        <i class="fas fa-cog me-1"></i>
                                         <span class="personalization-text">{{ item.notasPersonalizacion }}</span>
                                     </div>
                                 }
                                 <div class="product-prices">
                                     <span class="unit-price">Unitario: S/ {{ item.precio | number: '1.2-2' }}</span>
-                                    <span class="total-price">Total: S/ {{ (item.precio * item.cantidad) | number: '1.2-2' }}</span>
+                                    @if (item.precioOpciones && item.precioOpciones > 0) {
+                                        <span class="options-price">Opciones: +S/ {{ item.precioOpciones | number: '1.2-2' }}</span>
+                                    }
+                                    <span class="total-price">Total: S/ {{ ((item.precio + (item.precioOpciones || 0)) * item.cantidad) | number: '1.2-2' }}</span>
                                 </div>
                             </div>
 

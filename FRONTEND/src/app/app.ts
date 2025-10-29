@@ -33,9 +33,7 @@ export class AppComponent implements OnInit, OnDestroy {
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
-  /**
-   * Verifica la sesión cuando el usuario vuelve a la página
-   */
+  // Verifica la sesión cuando el usuario vuelve a la página
   private verificarSesionAlVolverPagina(): void {
     // Listener para cuando la página vuelve a ser visible
     document.addEventListener('visibilitychange', this.handleVisibilityChange);

@@ -217,7 +217,7 @@ export class AdminPedidos implements OnInit {
         next: (response: any) => {
           if (response.success) {
             alert('✅ Notificación WhatsApp enviada exitosamente');
-            this.cargarPedidos(); // Recargar para ver el cambio de estado
+            this.cargarPedidos(); 
           } else {
             alert('❌ No se pudo enviar la notificación WhatsApp');
           }

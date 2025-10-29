@@ -3,7 +3,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router,RouterLink } from '@angular/router';
 import { CarritoService } from '../../servicios/carrito.service';
-import { ItemCarrito } from '../detalle-producto/detalle-producto';
+import { ItemCarrito } from '../../modelos/producto.model';
 import { Checkout } from '../checkout/checkout';
 import { NotificacionService } from '../../servicios/notificacion.service';
 
@@ -65,10 +65,7 @@ export class Carrito implements OnInit {
     // Ya no necesitamos cargar items simulados, el servicio maneja el estado
   }
 
-  /**
-   * Se ejecuta cada vez que el usuario cambia la cantidad o usa los botones +/-.
-   * @param item El item a actualizar.
-   */
+  // Se ejecuta cada vez que el usuario cambia la cantidad o usa los botones +/-
   actualizarCantidad(item: ItemCarrito): void {
     // Validar que no exceda el máximo de 99 unidades
     if (item.cantidad > 99) {
@@ -87,11 +84,7 @@ export class Carrito implements OnInit {
     this.carritoService.actualizarCantidad(item.idProducto, item.cantidad);
   }
 
-  /**
-   * Cambia la cantidad del producto y actualiza el subtotal.
-   * @param item El item a modificar.
-   * @param delta +1 para incrementar, -1 para decrementar.
-   */
+  // Cambia la cantidad del producto y actualiza el subtotal (delta: +1 incrementar, -1 decrementar)
   cambiarCantidad(item: ItemCarrito, delta: number): void {
     const nuevaCantidad = item.cantidad + delta;
     
@@ -112,10 +105,7 @@ export class Carrito implements OnInit {
     this.carritoService.actualizarCantidad(item.idProducto, nuevaCantidad);
   }
 
-  /**
-   * Elimina un ítem del carrito.
-   * @param idProducto ID del producto a eliminar.
-   */
+  // Elimina un ítem del carrito
   removeItem(idProducto: number): void {
     this.carritoService.eliminarItem(idProducto);
     this.notificacionService.mostrarInfo(
@@ -124,9 +114,7 @@ export class Carrito implements OnInit {
     );
   }
 
-  /**
-   * Vacía todo el carrito.
-   */
+  // Vacía todo el carrito
   vaciarCarrito(): void {
     this.carritoService.vaciarCarrito();
     this.notificacionService.mostrarInfo(
@@ -135,9 +123,7 @@ export class Carrito implements OnInit {
     );
   }
 
-  /**
-   * Abre el modal de checkout para procesar el pago
-   */
+  // Abre el modal de checkout para procesar el pago
   finalizarCompra(): void {
     if (this.subtotal > 0) {
       this.mostrarCheckout = true;
@@ -149,16 +135,12 @@ export class Carrito implements OnInit {
     }
   }
 
-  /**
-   * Cierra el modal de checkout
-   */
+  // Cierra el modal de checkout
   cerrarCheckout(): void {
     this.mostrarCheckout = false;
   }
 
-  /**
-   * Maneja el pago exitoso
-   */
+  // Maneja el pago exitoso
   onPagoExitoso(): void {
     this.mostrarCheckout = false;
     // La notificación de éxito se maneja en el componente checkout
@@ -166,12 +148,8 @@ export class Carrito implements OnInit {
     // this.router.navigate(['/confirmacion-pedido']);
   }
 
-  /**
-   * Simula la navegación de vuelta al menú (simulación de router.navigate)
-   */
   simularNavegacion(ruta: string): void {
-    console.log(`Navegando a ${ruta}`);
-    // Aquí iría la lógica real de this.router.navigate([ruta])
+
   }
 
 cerrarCarrito(): void {

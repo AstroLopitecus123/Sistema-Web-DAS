@@ -29,7 +29,7 @@ export class Registro {
     email: '',
     contrasena: '',
     confirmarContrasena: '',
-    telefono: '',
+    telefono: '+51',
     direccion: ''
   };
 
@@ -89,13 +89,19 @@ export class Registro {
     }
 
     this.loading = true;
-    console.log('Datos de registro enviados:', this.registroData);
+  
+    // Normalizar teléfono: asegurar que tenga +51
+    const datosEnvio = { ...this.registroData };
+    if (datosEnvio.telefono && datosEnvio.telefono.trim() !== '') {
+      datosEnvio.telefono = this.normalizarTelefono(datosEnvio.telefono);
+    } else {
+      datosEnvio.telefono = '';
+    }
     
     // Llamada a la API de registro
-    this.authService.register(this.registroData).subscribe({
+    this.authService.register(datosEnvio).subscribe({
       next: (response) => {
         this.loading = false;
-        console.log('Respuesta del backend:', response);
         
         if (response && response.success) {
           this.notificacionService.mostrarExito(
@@ -133,5 +139,37 @@ export class Registro {
         }
       }
     });
+  }
+
+  // Normaliza el teléfono
+  normalizarTelefono(telefono: string): string {
+    if (!telefono || telefono.trim() === '') {
+      return '';
+    }
+
+    // Remover espacios
+    let telefonoLimpio = telefono.replace(/\s+/g, '');
+
+    // Si empieza con +51, dejarlo tal cual
+    if (telefonoLimpio.startsWith('+51')) {
+      return telefonoLimpio;
+    }
+
+    // Si empieza con + y otro código
+    if (telefonoLimpio.startsWith('+')) {
+      // Extraer solo los números después del +
+      const soloNumeros = telefonoLimpio.substring(1).replace(/\D/g, '');
+      if (soloNumeros.length > 0) {
+        return '+51' + soloNumeros;
+      }
+    }
+
+    // Si son solo números (sin +), agregar +51
+    const soloNumeros = telefonoLimpio.replace(/\D/g, '');
+    if (soloNumeros.length > 0) {
+      return '+51' + soloNumeros;
+    }
+
+    return '+51';
   }
 }

@@ -44,6 +44,7 @@ export class AuthService {
               nombre: response.data.nombre,
               apellido: response.data.apellido,
               email: response.data.email,
+              username: response.data.username,
               telefono: response.data.telefono,
               direccion: response.data.direccion,
               rol: response.data.rol as any,
@@ -72,6 +73,7 @@ export class AuthService {
               nombre: response.data.nombre,
               apellido: response.data.apellido,
               email: response.data.email,
+              username: response.data.username,
               telefono: response.data.telefono,
               direccion: response.data.direccion,
               rol: response.data.rol as any,
@@ -144,13 +146,11 @@ export class AuthService {
   }
 
   actualizarUsuarioActual(usuarioActualizado: Usuario): void {
-    console.log('Actualizando usuario actual en AuthService:', usuarioActualizado);
     this.currentUserSubject.next(usuarioActualizado);
     localStorage.setItem('currentUser', JSON.stringify(usuarioActualizado));
   }
 
   procesarLoginExitoso(response: any, recordarUsuario: boolean): void {
-    console.log('Login exitoso procesado:', response);
     
     if (response && response.success && response.data) {
       const user: Usuario = {
@@ -158,6 +158,7 @@ export class AuthService {
         nombre: response.data.nombre,
         apellido: response.data.apellido,
         email: response.data.email,
+        username: response.data.username,
         telefono: response.data.telefono,
         direccion: response.data.direccion,
         rol: response.data.rol as any,

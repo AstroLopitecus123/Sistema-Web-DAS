@@ -81,7 +81,6 @@ export class CambiarContrasena implements OnInit {
     ).subscribe({
       next: (response) => {
         this.loading = false;
-        console.log('Respuesta del backend:', response);
         
         if (response && response.success) {
           this.notificacionService.mostrarExito(
@@ -98,7 +97,12 @@ export class CambiarContrasena implements OnInit {
           
           // Redirigir al perfil después de 2 segundos
           setTimeout(() => {
-            this.router.navigate(['/mi-perfil']);
+            const usuario = this.authService.getUsuarioActual();
+            if (usuario?.username) {
+              this.router.navigate(['/mi-perfil', usuario.username]);
+            } else {
+              this.router.navigate(['/menu']);
+            }
           }, 2000);
         } else {
           this.notificacionService.mostrarError(
@@ -171,7 +175,12 @@ export class CambiarContrasena implements OnInit {
   }
 
   cancelar() {
-    this.router.navigate(['/mi-perfil']);
+    const usuario = this.authService.getUsuarioActual();
+    if (usuario?.username) {
+      this.router.navigate(['/mi-perfil', usuario.username]);
+    } else {
+      this.router.navigate(['/menu']);
+    }
   }
 }
 

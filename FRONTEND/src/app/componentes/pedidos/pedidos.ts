@@ -51,7 +51,7 @@ export class Pedidos implements OnInit, OnDestroy {
         }
     }
 
-    /* Carga pedidos desde el backend */
+    // Carga pedidos desde el backend
     cargarPedidos(): void {
         this.isLoading = true;
         
@@ -78,7 +78,7 @@ export class Pedidos implements OnInit, OnDestroy {
 
 
 
-    /* Aplica los filtros seleccionados (Período y Estado) a la lista de pedidos*/
+    // Aplica los filtros seleccionados (Período y Estado) a la lista de pedidos
     aplicarFiltros(): void {
         let pedidosFiltrados = [...this.listaPedidosOriginal];
 
@@ -117,7 +117,7 @@ export class Pedidos implements OnInit, OnDestroy {
         this.listaPedidos = pedidosFiltrados;
     }
 
-    /* Restablece todos los filtros y la lista de pedidos a su estado original */
+    // Restablece todos los filtros y la lista de pedidos a su estado original
     limpiarFiltros(): void {
         // Restablecer las variables de filtro 
         this.filtroPeriodo = 'semana'; 
@@ -127,7 +127,7 @@ export class Pedidos implements OnInit, OnDestroy {
         this.aplicarFiltros();
     }
 
-    /*Devuelve la clase CSS para la insignia de estado*/
+    // Devuelve la clase CSS para la insignia de estado
     getEstadoClase(estado: string): string {
         switch (estado) {
             case 'Entregado':
@@ -141,20 +141,20 @@ export class Pedidos implements OnInit, OnDestroy {
         }
     }
 
-    /* Abre el modal de detalles del pedido */
+    // Abre el modal de detalles del pedido
     verDetallesPedido(pedido: Pedido): void {
         // Generar un objeto DetallePedido basado en los datos simulados
         this.pedidoSeleccionado = this.crearDetallePedidoSimulado(pedido);
         this.mostrarModalDetalle = true;
     }
 
-    /* Cierra el modal de detalles */
+    // Cierra el modal de detalles
     cerrarModalDetalle(): void {
         this.mostrarModalDetalle = false;
         this.pedidoSeleccionado = null;
     }
 
-    /* Crea un detalle de pedido basado en los datos del servicio */
+    // Crea un detalle de pedido basado en los datos del servicio
     private crearDetallePedidoSimulado(pedido: Pedido): DetallePedidoData {
         // Mapear repartidor si existe
         const repartidor = pedido.repartidor ? {

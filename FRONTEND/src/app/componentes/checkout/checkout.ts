@@ -149,9 +149,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Monta el elemento de tarjeta de Stripe
-   */
+  // Monta el elemento de tarjeta de Stripe
   private async montarStripeElements(): Promise<void> {
     console.log('Implementando solución ngAfterViewInit...');
     
@@ -324,9 +322,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Crea el pedido en el backend
-   */
+  // Crea el pedido en el backend
   private async crearPedidoEnBackend(): Promise<any> {
     const datosPedido = this.checkoutService.crearDatosPedido(
       this.items,
@@ -341,9 +337,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     return response;
   }
 
-  /**
-   * Procesa el pago con Stripe
-   */
+  // Procesa el pago con Stripe
   private async procesarPagoConStripe(idPedido: number): Promise<void> {
     const usuario = this.authService.getUsuarioActual();
     if (!usuario) {
@@ -406,15 +400,12 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Confirma pago manual para billetera virtual y efectivo
-   */
+  // Confirma pago manual para billetera virtual y efectivo
   private async confirmarPagoManual(idPedido: number): Promise<void> {
     try {
       console.log('Confirmando pago manual para pedido:', idPedido);
       
       // Para pagos manuales (efectivo/billetera virtual), el pago se confirma automáticamente
-      // en el backend durante la creación del pedido, no necesitamos llamada adicional
       console.log('Pago manual confirmado automáticamente en backend');
       await new Promise<void>((resolve) => {
         setTimeout(() => resolve(), 1000); // Simular delay

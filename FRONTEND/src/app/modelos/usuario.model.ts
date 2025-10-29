@@ -3,6 +3,7 @@ export interface Usuario {
   nombre: string;
   apellido: string;
   email: string;
+  username?: string;
   telefono?: string;
   direccion?: string;
   rol: 'cliente' | 'administrador' | 'repartidor' | 'vendedor';
@@ -19,6 +20,7 @@ export interface AuthResponse {
     nombre: string;
     apellido: string;
     email: string;
+    username?: string;
     telefono?: string;
     direccion?: string;
     rol: string;

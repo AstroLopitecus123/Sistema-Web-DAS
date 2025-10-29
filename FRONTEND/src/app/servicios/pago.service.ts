@@ -47,9 +47,7 @@ export class PagoService {
     this.initializeStripe();
   }
 
-  /**
-   * Inicializa Stripe con la clave pública
-   */
+  // Inicializa Stripe con la clave pública
   private async initializeStripe(): Promise<void> {
     try {
       const stripeConfig = this.configuracionService.getStripeConfig();
@@ -73,9 +71,7 @@ export class PagoService {
     }
   }
 
-  /**
-   * Obtiene la instancia de Stripe
-   */
+  // Obtiene la instancia de Stripe
   async getStripe(): Promise<Stripe | null> {
     if (!this.stripe) {
       await this.initializeStripe();
@@ -83,9 +79,7 @@ export class PagoService {
     return this.stripe;
   }
 
-  /**
-   * Crea un Stripe Elements para el formulario de tarjeta
-   */
+  // Crea un Stripe Elements para el formulario de tarjeta
   async createCardElement(containerId: string): Promise<StripeCardElement | null> {
     try {
       const stripe = await this.getStripe();
@@ -170,9 +164,7 @@ export class PagoService {
     }
   }
 
-  /**
-   * Destruye el elemento de tarjeta
-   */
+  // Destruye el elemento de tarjeta
   destroyCardElement(): void {
     try {
       if (this.cardElement) {
@@ -192,23 +184,17 @@ export class PagoService {
     }
   }
 
-  /**
-   * PASO 1: Crear un pedido en el backend
-   */
+  //Crear un pedido en el backend
   crearPedido(pedidoData: CrearPedidoRequest): Observable<PedidoResponse> {
     return this.http.post<PedidoResponse>(`${this.apiUrl}/pedidos`, pedidoData);
   }
 
-  /**
-   * PASO 2: Crear un PaymentIntent en Stripe (a través del backend)
-   */
+  //Crear un PaymentIntent en Stripe 
   crearPaymentIntent(request: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/pagos/crear-intent`, request);
   }
 
-  /**
-   * PASO 3: Confirmar el pago con Stripe Elements
-   */
+  //Confirmar el pago con Stripe Elements
   async confirmarPagoConTarjeta(
     clientSecret: string,
     email: string,
@@ -248,30 +234,22 @@ export class PagoService {
     }
   }
 
-  /**
-   * PASO 4: Confirmar el pago en el backend (actualizar estado)
-   */
+  //Confirmar el pago en el backend (actualizar estado)
   confirmarPagoEnBackend(paymentIntentId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/pagos/confirmar/${paymentIntentId}`, {});
   }
 
-  /**
-   * Consultar estado de un pago
-   */
+  // Consultar estado de un pago
   consultarEstadoPago(referenciaTransaccion: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/pagos/estado/${referenciaTransaccion}`);
   }
 
-  /**
-   * Confirmar pago manual (billetera virtual y efectivo)
-   */
+  // Confirmar pago manual (billetera virtual y efectivo)
   confirmarPagoManual(idPedido: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/pagos/confirmar-manual/${idPedido}`, {});
   }
 
-  /**
-   * Verifica si el elemento de tarjeta está listo
-   */
+  // Verifica si el elemento de tarjeta está listo
   async verificarElementoListo(): Promise<boolean> {
     if (!this.cardElement) {
       console.log('No hay elemento de tarjeta');

@@ -1,6 +1,6 @@
-# BACKEND README - BACKEND_SISTEMA_WEB_DAS 
+# Backend - Sistema Web DAS
 
-Desarrollado con **Spring Boot 3.5.6** implementando arquitectura de microservicios, autenticación JWT, integración con servicios externos y gestión completa de e-commerce.
+Backend desarrollado con **Spring Boot 3.5.6** implementando arquitectura por capas (Domain, Application, Infrastructure), autenticación JWT, integración con servicios externos (Stripe, Twilio, Gmail SMTP) y gestión completa de e-commerce.
 
 ## Arquitectura del Backend
 
@@ -8,141 +8,185 @@ Desarrollado con **Spring Boot 3.5.6** implementando arquitectura de microservic
 ┌─────────────────────────────────────────────────────────────┐
 │                    SPRING BOOT APPLICATION                  │
 ├─────────────────────────────────────────────────────────────┤
-│  Controllers Layer    │  @RestController, @RequestMapping   │
+│  Controllers Layer    │  @RestController, @RequestMapping  │
+│  (Infrastructure/Web)                                         │
 ├─────────────────────────────────────────────────────────────┤
 │  Service Layer        │  @Service, @Transactional          │
+│  (Application)                                               │
 ├─────────────────────────────────────────────────────────────┤
-│  Repository Layer     │  @Repository, JPA Repositories     │
+│  Repository Layer    │  @Repository, JPA Repositories       │
+│  (Domain/Infrastructure)                                     │
 ├─────────────────────────────────────────────────────────────┤
-│  Model Layer          │  @Entity, @Table, JPA Annotations  │
+│  Entity Layer        │  @Entity, @Table, JPA Annotations   │
+│  (Infrastructure/Persistence)                                │
 ├─────────────────────────────────────────────────────────────┤
-│  Security Layer       │  JWT, BCrypt, CORS, Guards         │
+│  Security Layer      │  JWT, BCrypt, CORS, SecurityConfig  │
+│  (Infrastructure)                                            │
 ├─────────────────────────────────────────────────────────────┤
-│  External Services    │  Stripe, Twilio, Gmail SMTP        │
+│  External Services   │  Stripe, Twilio, Gmail SMTP          │
+│  (Application/Infrastructure)                               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Stack Tecnológico Detallado
+## Stack Tecnológico
 
 | Componente | Tecnología | Versión | Anotaciones Principales |
 |------------|------------|---------|-------------------------|
 | **Framework** | Spring Boot | 3.5.6 | `@SpringBootApplication` |
-| **Security** | Spring Security | 6.x | `@EnableWebSecurity`, `@PreAuthorize` |
+| **Security** | Spring Security | 6.x | `@EnableWebSecurity` |
 | **JWT** | JJWT | 0.11.5 | `@Component`, `@Service` |
 | **Database** | Spring Data JPA | 3.x | `@Repository`, `@Entity` |
-| **Database** | MySQL Connector | 8.0+ | `@Table`, `@Column` |
-| **Pagos** | Stripe Java | 30.0.0 | `@Value`, `@PostConstruct` |
-| **Notificaciones** | Twilio SDK | 10.6.3 | `@Service`, `@Async` |
+| **Database Driver** | MySQL Connector | 8.0+ | `@Table`, `@Column` |
+| **Pagos** | Stripe Java | 30.0.0 | `@Service`, `@Value` |
+| **Notificaciones** | Twilio SDK | 10.6.3 | `@Service` |
 | **Email** | JavaMail | 6.x | `@Service`, `@Configuration` |
 | **Config** | dotenv-java | 3.0.0 | `@Value`, `@Configuration` |
+| **Java** | OpenJDK | 21 | - |
+
+## Estructura de Capas
+
+### Capa de Dominio (`domain/`)
+- **Modelos de Dominio** - Entidades de negocio
+- **Repositorios** - Interfaces de acceso a datos
+- **DTOs** - Objetos de transferencia de datos
+- **Enums** - Estados y tipos del sistema
+- **Excepciones** - Excepciones de dominio
+
+### Capa de Aplicación (`application/`)
+- **Servicios** - Lógica de negocio e implementaciones
+- **Interfaces de Servicio** - Contratos de servicios
+
+### Capa de Infraestructura (`infrastructure/`)
+- **Web** - Controladores REST
+- **Persistence** - Entidades JPA y repositorios
+- **Config** - Configuraciones de seguridad y servicios externos
 
 ## Prerrequisitos
 
-- Java 21+
-- MySQL 8.0+
-- Maven 3.6+
+- Java 21 o superior
+- MySQL 8.0 o superior
+- Maven 3.6 o superior
 
 ## Configuración
 
 ### 1. Base de Datos
-```
+
+Crear la base de datos y ejecutar el script SQL:
+
+```sql
 CREATE DATABASE BD_SISTEMA_WEB_DAS;
+USE BD_SISTEMA_WEB_DAS;
+-- Ejecutar script completo de creación de tablas
 ```
 
 ### 2. Variables de Entorno
-```
-cp .env.example .env
-# Editar .env con tus credenciales
+
+Crear archivo `.env` en el directorio `BACKEND/`:
+
+```env
+# Base de Datos
+DB_URL=jdbc:mysql://localhost:3306/BD_SISTEMA_WEB_DAS?serverTimezone=UTC
+DB_USERNAME=root
+DB_PASSWORD=tu_password
+
+# JWT
+JWT_SECRET_KEY=tu-clave-secreta-super-segura
+JWT_EXPIRATION=86400000
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_tu_clave_stripe
+STRIPE_PUBLISHABLE_KEY=pk_test_tu_clave_publica
+
+# Twilio
+TWILIO_ACCOUNT_SID=ACxxxxx
+TWILIO_AUTH_TOKEN=tu_token
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+
+# Gmail SMTP
+GMAIL_USERNAME=tu_email@gmail.com
+GMAIL_PASSWORD=tu_app_password
+
+# Servidor
+SERVER_PORT=8089
 ```
 
-### 3. Ejecutar
-```
+### 3. Ejecutar la Aplicación
+
+```bash
+# Compilar
 ./mvnw clean install
+
+# Ejecutar
 ./mvnw spring-boot:run
+
+# O especificar la clase principal
+./mvnw spring-boot:run -Dspring-boot.run.main-class=com.web.capas.BackendSistemaWebDasApplication
 ```
 
-## API Endpoints Detallados
+La API estará disponible en: `http://localhost:8089`
 
-### Autenticación (`AuthController`)
-```java
-@RestController
-@RequestMapping("/api/auth")
-public class AuthController {
-    
-    @PostMapping("/registro")
-    public ResponseEntity<?> registrarUsuario(@RequestBody UsuarioRequest request)
-    
-    @PostMapping("/login") 
-    public ResponseEntity<?> login(@RequestBody LoginRequest request)
-    
-    @PostMapping("/recuperar-contrasena")
-    public ResponseEntity<?> solicitarRecuperacion(@RequestBody RecuperarContrasenaRequest request)
-}
-```
+## API Endpoints Principales
 
-### Productos (`ProductoController`)
-```java
-@RestController
-@RequestMapping("/api/v1/menu")
-public class ProductoController {
-    
-    @GetMapping("/productos")
-    public ResponseEntity<List<Producto>> obtenerProductos()
-    
-    @GetMapping("/categorias")
-    public ResponseEntity<List<Categoria>> obtenerCategorias()
-}
-```
+### Autenticación (`/api/auth`)
 
-### Pedidos (`PedidoController`)
-```java
-@RestController
-@RequestMapping("/api/v1/pedidos")
-public class PedidoController {
-    
-    @PostMapping
-    @PreAuthorize("hasRole('CLIENTE')")
-    public ResponseEntity<?> crearPedido(@RequestBody PedidoRequest request)
-    
-    @GetMapping("/usuario/{id}")
-    @PreAuthorize("hasRole('CLIENTE')")
-    public ResponseEntity<List<Pedido>> obtenerPedidosUsuario(@PathVariable Integer id)
-}
-```
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/registro` | Registrar nuevo usuario | No |
+| POST | `/api/auth/login` | Iniciar sesión | No |
+| POST | `/api/auth/recuperar-contrasena` | Solicitar recuperación | No |
+| POST | `/api/auth/restablecer-contrasena` | Restablecer contraseña | No |
+| POST | `/api/auth/cambiar-contrasena` | Cambiar contraseña | Sí |
+| GET | `/api/auth/verificar-email` | Verificar si email existe | No |
 
-### Pagos (`PagoController`)
-```java
-@RestController
-@RequestMapping("/api/v1/pagos")
-public class PagoController {
-    
-    @PostMapping("/crear-payment-intent")
-    @PreAuthorize("hasRole('CLIENTE')")
-    public ResponseEntity<?> crearPaymentIntent(@RequestBody PagoRequest request)
-}
-```
+### Productos (`/api/v1/menu`)
 
-### Administración (`UsuarioController`)
-```java
-@RestController
-@RequestMapping("/api/admin/usuarios")
-@PreAuthorize("hasRole('ADMINISTRADOR')")
-public class UsuarioController {
-    
-    @GetMapping
-    public ResponseEntity<List<Usuario>> obtenerTodosLosUsuarios()
-    
-    @PutMapping("/{id}/rol")
-    public ResponseEntity<?> cambiarRolUsuario(@PathVariable Integer id, @RequestBody RolRequest request)
-    
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminarUsuario(@PathVariable Integer id)
-}
-```
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/v1/menu/productos` | Obtener todos los productos | No |
+| GET | `/api/v1/menu/categorias` | Obtener todas las categorías | No |
+| GET | `/api/v1/menu/productos/{id}/opciones` | Opciones de personalización | No |
 
-## Estructura de Capas
+### Pedidos (`/api/v1/pedidos`)
 
-### Modelos (`@Entity`)
+| Método | Endpoint | Descripción | Auth | Rol |
+|--------|----------|-------------|------|-----|
+| POST | `/api/v1/pedidos` | Crear nuevo pedido | Sí | Cliente |
+| GET | `/api/v1/pedidos/usuario/{id}` | Pedidos del usuario | Sí | Cliente |
+| GET | `/api/v1/pedidos/{id}` | Obtener pedido por ID | Sí | - |
+
+### Pagos (`/api/v1/pagos`)
+
+| Método | Endpoint | Descripción | Auth | Rol |
+|--------|----------|-------------|------|-----|
+| POST | `/api/v1/pagos/crear-intent` | Crear PaymentIntent Stripe | Sí | Cliente |
+| POST | `/api/v1/pagos/confirmar/{id}` | Confirmar pago de Stripe | Sí | Cliente |
+| POST | `/api/v1/pagos/confirmar-manual/{idPedido}` | Confirmar pago manual | Sí | Cliente |
+| GET | `/api/v1/pagos/estado/{referencia}` | Estado de pago | Sí | - |
+
+### Perfil de Usuario (`/api/v1/usuarios`)
+
+| Método | Endpoint | Descripción | Auth | Rol |
+|--------|----------|-------------|------|-----|
+| GET | `/api/v1/usuarios/{id}` | Obtener perfil por ID | Sí | - |
+| GET | `/api/v1/usuarios/username/{username}` | Obtener perfil por username | Sí | - |
+| PUT | `/api/v1/usuarios/perfil/{id}` | Actualizar perfil | Sí | Propietario |
+| DELETE | `/api/v1/usuarios/{id}` | Eliminar cuenta | Sí | Propietario |
+| GET | `/api/v1/usuarios/estadisticas/{id}` | Estadísticas del usuario | Sí | Cliente |
+
+### Administración (`/api/admin/usuarios`)
+
+| Método | Endpoint | Descripción | Auth | Rol |
+|--------|----------|-------------|------|-----|
+| GET | `/api/admin/usuarios` | Listar todos los usuarios | Sí | Admin |
+| GET | `/api/admin/usuarios/{id}` | Obtener usuario por ID | Sí | Admin |
+| PUT | `/api/admin/usuarios/{id}/rol` | Cambiar rol de usuario | Sí | Admin |
+| PUT | `/api/admin/usuarios/{id}/estado` | Activar/desactivar usuario | Sí | Admin |
+| DELETE | `/api/admin/usuarios/{id}/seguro` | Eliminar usuario seguro | Sí | Admin |
+| GET | `/api/admin/usuarios/estadisticas` | Estadísticas generales | Sí | Admin |
+
+## Modelos de Datos Principales
+
+### Usuario
 ```java
 @Entity
 @Table(name = "Usuarios")
@@ -154,239 +198,223 @@ public class Usuario {
     @Column(unique = true, nullable = false)
     private String email;
     
+    @Column(unique = true, nullable = false)
+    private String username;
+    
     @Enumerated(EnumType.STRING)
-    private Rol rol;
+    private Rol rol; // cliente, administrador, repartidor, vendedor
     
-    // Getters, setters, constructores
+    private String telefono; // Normalizado con +51
+    // ... otros campos
 }
 ```
 
-### Repositorios (`@Repository`)
+### Producto
 ```java
-@Repository
-public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
-    Optional<Usuario> findByEmail(String email);
-    List<Usuario> findByRol(Rol rol);
-    long countByActivoTrue();
+@Entity
+@Table(name = "Productos")
+public class Producto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idProducto;
+    
+    private String nombre;
+    private BigDecimal precio;
+    
+    @ManyToOne
+    @JoinColumn(name = "id_categoria")
+    private Categoria categoria;
+    
+    @Enumerated(EnumType.STRING)
+    private EstadoProducto estado; // activo, inactivo
+    // ... otros campos
 }
 ```
 
-### Servicios (`@Service`)
+### Pedido
 ```java
-@Service
-@Transactional
-public class UsuarioServiceImpl implements UsuarioService {
+@Entity
+@Table(name = "Pedidos")
+public class Pedido {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idPedido;
     
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    @ManyToOne
+    @JoinColumn(name = "id_cliente")
+    private Usuario cliente;
     
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    @Enumerated(EnumType.STRING)
+    private EstadoPedido estadoPedido; // pendiente, aceptado, en_preparacion, etc.
     
-    @Override
-    public Usuario registrarUsuario(Usuario usuario) {
-        // Lógica de negocio
-    }
+    @Enumerated(EnumType.STRING)
+    private MetodoPago metodoPago; // tarjeta, billetera_virtual, efectivo
+    
+    private BigDecimal totalPedido;
+    // ... otros campos
 }
 ```
 
-### Controladores (`@RestController`)
-```java
-@RestController
-@RequestMapping("/api/v1/usuarios")
-public class PerfilController {
-    
-    @Autowired
-    private UsuarioService usuarioService;
-    
-    @GetMapping("/perfil")
-    @PreAuthorize("hasAnyRole('CLIENTE', 'ADMINISTRADOR', 'REPARTIDOR')")
-    public ResponseEntity<Usuario> obtenerPerfil(Authentication auth) {
-        // Lógica del controlador
-    }
-}
-```
+## Servicios Principales
 
-## Seguridad y Autenticación
+### UsuarioService
+- Registro de usuarios con generación automática de username
+- Autenticación y validación de credenciales
+- Gestión de perfiles con normalización de teléfonos (+51)
+- Recuperación y cambio de contraseñas
+- Validación de existencia de email y username
 
-### JWT Service
-```java
-@Service
-public class JwtService {
-    
-    private static final String SECRET_KEY = "mi-clave-secreta-super-segura";
-    private static final int JWT_EXPIRATION = 86400000; // 24 horas
-    
-    public String generateToken(Usuario usuario) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", usuario.getIdUsuario());
-        claims.put("rol", usuario.getRol().toString());
-        return createToken(claims, usuario.getEmail());
-    }
-    
-    public Boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token);
-            return !isTokenExpired(token);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-}
-```
+### ProductoService
+- Gestión de catálogo de productos
+- Filtrado por categoría y estado
+- Búsqueda de productos
+- Gestión de opciones de personalización
 
-### Security Configuration
-```java
-@Configuration
-@EnableWebSecurity
-public class AppConfig {
-    
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/v1/menu/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
-        return http.build();
-    }
-}
-```
+### PedidoService
+- Creación de pedidos con validaciones
+- Gestión de estados de pedidos
+- Cálculo de totales con personalizaciones
+- Integración con sistema de pagos
 
-## Integraciones Externas
+### PagoService
+- Integración con Stripe para pagos con tarjeta
+- Confirmación de pagos manuales (billetera virtual, efectivo)
+- Gestión de estados de transacciones
+- Notificaciones automáticas por WhatsApp
 
-### Stripe Integration
-```java
-@Service
-public class StripeService {
-    
-    @Value("${stripe.secret.key}")
-    private String stripeSecretKey;
-    
-    @PostConstruct
-    public void initStripe() {
-        Stripe.apiKey = stripeSecretKey;
-    }
-    
-    public PaymentIntent crearPaymentIntent(Long monto, String moneda) {
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-            .setAmount(monto)
-            .setCurrency(moneda)
-            .build();
-        
-        return PaymentIntent.create(params);
-    }
-}
-```
+### WhatsAppService
+- Notificación de confirmación de pedido
+- Notificación de pedido en camino
+- Notificación de pedido entregado
+- Notificación de pedido cancelado
 
-### Twilio WhatsApp
-```java
-@Service
-public class WhatsAppService {
-    
-    @Value("${twilio.account.sid}")
-    private String accountSid;
-    
-    @Value("${twilio.auth.token}")
-    private String authToken;
-    
-    @Value("${twilio.whatsapp.from}")
-    private String fromNumber;
-    
-    @Async
-    public void enviarMensajeWhatsApp(String to, String mensaje) {
-        Twilio.init(accountSid, authToken);
-        
-        Message message = Message.creator(
-            new PhoneNumber(to),
-            new PhoneNumber(fromNumber),
-            mensaje
-        ).create();
-    }
-}
-```
-
-### Gmail SMTP
-```java
-@Service
-public class EmailService {
-    
-    @Autowired
-    private JavaMailSender mailSender;
-    
-    @Value("${gmail.username}")
-    private String fromEmail;
-    
-    public void enviarEmail(String to, String subject, String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
-        
-        mailSender.send(message);
-    }
-}
-```
+### EmailService
+- Envío de emails de recuperación de contraseña
+- Plantillas HTML para correos
+- Configuración SMTP con Gmail
 
 ## Seguridad
 
-- Autenticación JWT
-- Encriptación BCrypt
-- CORS configurado
-- Validación de roles
+### Configuración JWT
+- Tokens con expiración de 24 horas
+- Firmado con clave secreta configurable
+- Validación en cada request autenticado
+- Claims incluyen ID de usuario y rol
+
+### Spring Security
+- Configuración CORS para desarrollo
+- Filtros de autenticación JWT
+- Protección de rutas por rol
+- Deshabilitación de CSRF (API REST)
+
+### Encriptación
+- Contraseñas encriptadas con BCrypt
+- Normalización automática de teléfonos
+- Validación de datos de entrada
+
+## Integraciones Externas
+
+### Stripe
+- Creación de PaymentIntent
+- Confirmación de pagos con tarjeta
+- Manejo de estados de pago
+- Webhooks (opcional)
+
+### Twilio WhatsApp
+- Integración con WhatsApp API
+- Mensajes automáticos de confirmación
+- Notificaciones de cambios de estado
+- Mensajes personalizados
+
+### Gmail SMTP
+- Configuración SMTP
+- Envío de emails HTML
+- Plantillas personalizadas
+- Recuperación de contraseña por email
 
 ## Base de Datos
 
 ### Tablas Principales
-- `Usuarios` - Información de usuarios
+- `Usuarios` - Usuarios con username único
 - `Productos` - Catálogo de productos
+- `Categorias` - Categorías de productos
+- `opciones_personalizacion` - Opciones personalizables
 - `Pedidos` - Pedidos realizados
-- `Pagos` - Información de pagos
-- `PasswordResetTokens` - Tokens de recuperación
+- `Detalle_Pedido` - Items de pedidos con personalizaciones
+- `Pagos` - Transacciones de pago
+- `Cupones` - Sistema de descuentos
+- `Carrito` - Carrito de compras
+- `tokens_recuperacion_contrasena` - Tokens de recuperación
 
-## Comandos
+### Características
+- Normalización automática de teléfonos con +51
+- Username único por usuario
+- Precios con DECIMAL(10,2) para precisión
+- Estados con ENUM para validación
+- Foreign keys para integridad referencial
 
-```
-# Compilar
+## Logs y Monitoreo
+
+Los logs se muestran en consola con diferentes niveles:
+- `INFO` - Información general de operaciones
+- `WARN` - Advertencias y casos no críticos
+- `ERROR` - Errores que requieren atención
+
+## Comandos Útiles
+
+```bash
+# Compilar proyecto
 ./mvnw clean compile
 
-# Ejecutar
+# Ejecutar aplicación
 ./mvnw spring-boot:run
 
-# Tests
+# Ejecutar tests
 ./mvnw test
 
-# Limpiar
+# Compilar y empaquetar
+./mvnw clean package
+
+# Limpiar proyecto
 ./mvnw clean
 ```
 
-## Logs
-
-Los logs se muestran en consola con diferentes niveles:
-- `INFO` - Información general
-- `WARN` - Advertencias
-- `ERROR` - Errores
-
 ## Configuración Avanzada
 
-### Puerto
+### Puerto del Servidor
 Por defecto: `8089`
-Cambiar en `.env`: `SERVER_PORT=8089`
+Configurar en `.env`: `SERVER_PORT=8089`
 
 ### CORS
-Configurado para `http://localhost:4200`
-Cambiar en `AppConfig.java`
+Configurado para permitir:
+- `http://localhost:4200` (Frontend desarrollo)
+- Configurable en `AppConfig.java`
 
 ### JWT
-Clave secreta configurable en `.env`
-Expiración: 24 horas
+- Clave secreta configurable en `.env`: `JWT_SECRET_KEY`
+- Expiración configurable: `JWT_EXPIRATION` (ms)
+- Por defecto: 24 horas (86400000 ms)
+
+### Base de Datos
+- Tipo: MySQL 8.0+
+- Timezone: UTC
+
+## Validaciones y Reglas de Negocio
+
+### Registro de Usuarios
+- Email único obligatorio
+- Username generado automáticamente (único)
+- Contraseña mínimo 6 caracteres
+- Teléfono normalizado a +51 si está presente
+
+### Pedidos
+- Validación de stock disponible
+- Validación de método de pago
+- Cálculo automático de totales con personalizaciones
+- Estados válidos según flujo de negocio
+
+### Pagos
+- Validación de métodos de pago
+- Integración con Stripe para tarjetas
+- Confirmación manual para efectivo/billetera virtual
+- Notificaciones automáticas

@@ -6,7 +6,7 @@ export interface Notificacion {
   tipo: 'success' | 'error' | 'warning' | 'info';
   titulo: string;
   mensaje: string;
-  duracion?: number; // en milisegundos, 0 = no se oculta automáticamente
+  duracion?: number; 
   icono?: string;
 }
 
@@ -21,9 +21,7 @@ export class NotificacionService {
 
   constructor() {}
 
-  /**
-   * Muestra una notificación de éxito
-   */
+  // Muestra una notificación de éxito
   mostrarExito(titulo: string, mensaje: string, duracion: number = 3000): string {
     return this.mostrar({
       id: this.generarId(),
@@ -35,9 +33,7 @@ export class NotificacionService {
     });
   }
 
-  /**
-   * Muestra una notificación de error
-   */
+  // Muestra una notificación de error
   mostrarError(titulo: string, mensaje: string, duracion: number = 5000): string {
     return this.mostrar({
       id: this.generarId(),
@@ -49,9 +45,7 @@ export class NotificacionService {
     });
   }
 
-  /**
-   * Muestra una notificación de advertencia
-   */
+  // Muestra una notificación de advertencia
   mostrarAdvertencia(titulo: string, mensaje: string, duracion: number = 4000): string {
     return this.mostrar({
       id: this.generarId(),
@@ -63,9 +57,7 @@ export class NotificacionService {
     });
   }
 
-  /**
-   * Muestra una notificación informativa
-   */
+  // Muestra una notificación informativa
   mostrarInfo(titulo: string, mensaje: string, duracion: number = 3000): string {
     return this.mostrar({
       id: this.generarId(),
@@ -77,9 +69,7 @@ export class NotificacionService {
     });
   }
 
-  /**
-   * Muestra una notificación personalizada
-   */
+  // Muestra una notificación personalizada
   mostrar(notificacion: Notificacion): string {
     const notificaciones = this.notificacionesSubject.value;
     
@@ -108,24 +98,18 @@ export class NotificacionService {
     return notificacion.id;
   }
 
-  /**
-   * Oculta una notificación específica
-   */
+  // Oculta una notificación específica
   ocultar(id: string): void {
     const notificaciones = this.notificacionesSubject.value.filter(n => n.id !== id);
     this.notificacionesSubject.next(notificaciones);
   }
 
-  /**
-   * Oculta todas las notificaciones
-   */
+  // Oculta todas las notificaciones
   ocultarTodas(): void {
     this.notificacionesSubject.next([]);
   }
 
-  /**
-   * Obtiene las notificaciones actuales
-   */
+  // Obtiene las notificaciones actuales
   obtenerNotificaciones(): Notificacion[] {
     return this.notificacionesSubject.value;
   }

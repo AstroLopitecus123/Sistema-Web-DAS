@@ -60,14 +60,19 @@ export class EditarPerfil implements OnInit {
     this.usuarioService.obtenerPerfil(this.usuario.idUsuario).subscribe({
       next: (response: any) => {
         this.loadingData = false;
-        console.log('Datos del usuario para editar:', response);
         
         if (response && this.usuario) {
+          // Remover +51 del teléfono para mostrar solo los números al usuario
+          let telefonoMostrar = response.telefono || '';
+          if (telefonoMostrar.startsWith('+51')) {
+            telefonoMostrar = telefonoMostrar.substring(3);
+          }
+          
           this.perfilData = {
             nombre: response.nombre || this.usuario.nombre || '',
             apellido: response.apellido || this.usuario.apellido || '',
             email: response.email || this.usuario.email || '',
-            telefono: response.telefono || '',
+            telefono: telefonoMostrar,
             direccion: response.direccion || ''
           };
         }
@@ -82,11 +87,17 @@ export class EditarPerfil implements OnInit {
         
         // Cargar datos desde localStorage como fallback
         if (this.usuario) {
+          // Remover +51 del teléfono para mostrar solo los números al usuario
+          let telefonoMostrar = this.usuario.telefono || '';
+          if (telefonoMostrar && telefonoMostrar.startsWith('+51')) {
+            telefonoMostrar = telefonoMostrar.substring(3);
+          }
+          
           this.perfilData = {
             nombre: this.usuario.nombre || '',
             apellido: this.usuario.apellido || '',
             email: this.usuario.email || '',
-            telefono: this.usuario.telefono || '',
+            telefono: telefonoMostrar,
             direccion: this.usuario.direccion || ''
           };
         }
@@ -112,10 +123,18 @@ export class EditarPerfil implements OnInit {
     this.successMessage = null;
 
     // Preparar datos a enviar (sin el correo)
+    // Normalizar teléfono: asegurar que tenga +51
+    let telefonoNormalizado = this.perfilData.telefono.trim();
+    if (telefonoNormalizado && telefonoNormalizado !== '') {
+      telefonoNormalizado = this.normalizarTelefono(telefonoNormalizado);
+    } else {
+      telefonoNormalizado = '';
+    }
+    
     const datosActualizacion = {
       nombre: this.perfilData.nombre.trim(),
       apellido: this.perfilData.apellido.trim(),
-      telefono: this.perfilData.telefono.trim(),
+      telefono: telefonoNormalizado,
       direccion: this.perfilData.direccion.trim()
     };
 
@@ -123,7 +142,6 @@ export class EditarPerfil implements OnInit {
     this.authService.actualizarPerfil(this.usuario.idUsuario, datosActualizacion).subscribe({
       next: (response) => {
         this.loading = false;
-        console.log('Respuesta del backend:', response);
         
         if (response && response.success) {
           this.notificacionService.mostrarExito(
@@ -133,23 +151,30 @@ export class EditarPerfil implements OnInit {
           
           // Refrescar el usuario actual en el AuthService
           if (response.usuario) {
+            const usuarioActual = this.authService.getUsuarioActual();
+            
             const usuarioActualizado: Usuario = {
               idUsuario: response.usuario.idUsuario,
               nombre: response.usuario.nombre,
               apellido: response.usuario.apellido,
               email: response.usuario.email,
+              username: response.usuario.username || usuarioActual?.username,
               telefono: response.usuario.telefono,
               direccion: response.usuario.direccion,
               rol: response.usuario.rol as any,
               activo: true
             };
             this.authService.actualizarUsuarioActual(usuarioActualizado);
-            console.log('Usuario actualizado en AuthService');
           }
           
           // Redirigir al perfil después de 2 segundos
           setTimeout(() => {
-            this.router.navigate(['/mi-perfil']);
+            const usuario = this.authService.getUsuarioActual();
+            if (usuario?.username) {
+              this.router.navigate(['/mi-perfil', usuario.username]);
+            } else {
+              this.router.navigate(['/menu']);
+            }
           }, 2000);
         } else {
           this.notificacionService.mostrarError(
@@ -202,8 +227,9 @@ export class EditarPerfil implements OnInit {
       return false;
     }
     
-    if (!this.perfilData.telefono.trim()) {
-      this.notificacionService.mostrarError('Campo requerido', 'El teléfono es requerido');
+    // Teléfono es opcional, pero si está presente debe tener formato válido
+    if (this.perfilData.telefono.trim() && !this.validarTelefono(this.perfilData.telefono.trim())) {
+      this.notificacionService.mostrarError('Teléfono inválido', 'El teléfono debe tener un formato válido');
       return false;
     }
     
@@ -220,8 +246,51 @@ export class EditarPerfil implements OnInit {
     return emailRegex.test(email);
   }
 
+  validarTelefono(telefono: string): boolean {
+    if (!telefono || telefono.trim() === '') {
+      return true; // Teléfono es opcional
+    }
+    // Debe ser solo números (sin +51, eso se agregará automáticamente)
+    const soloNumeros = telefono.replace(/\D/g, '');
+    return soloNumeros.length >= 9 && soloNumeros.length <= 12;
+  }
+
+  // Normaliza el teléfono
+  normalizarTelefono(telefono: string): string {
+    if (!telefono || telefono.trim() === '') {
+      return '';
+    }
+
+    // Remover espacios
+    let telefonoLimpio = telefono.replace(/\s+/g, '');
+
+    if (telefonoLimpio.startsWith('+51')) {
+      return telefonoLimpio;
+    }
+
+    if (telefonoLimpio.startsWith('+')) {
+      const soloNumeros = telefonoLimpio.substring(1).replace(/\D/g, '');
+      if (soloNumeros.length > 0) {
+        return '+51' + soloNumeros;
+      }
+    }
+
+    // Si son solo números (sin +), agregar +51
+    const soloNumeros = telefonoLimpio.replace(/\D/g, '');
+    if (soloNumeros.length > 0) {
+      return '+51' + soloNumeros;
+    }
+
+    return '+51';
+  }
+
   cancelar() {
-    this.router.navigate(['/mi-perfil']);
+    const usuario = this.authService.getUsuarioActual();
+    if (usuario?.username) {
+      this.router.navigate(['/mi-perfil', usuario.username]);
+    } else {
+      this.router.navigate(['/menu']);
+    }
   }
 }
 

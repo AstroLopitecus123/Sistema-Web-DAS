@@ -14,7 +14,10 @@ export class CarritoService {
   });
 
   subtotal = computed(() => {
-    return this.items().reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    return this.items().reduce((sum, item) => {
+      const precioOpciones = item.precioOpciones || 0;
+      return sum + ((item.precio + precioOpciones) * item.cantidad);
+    }, 0);
   });
 
   // Cargar todos los items del carrito
@@ -25,11 +28,14 @@ export class CarritoService {
   // Añadir un item al carrito
   agregarItem(nuevoItem: ItemCarrito): void {
     this.items.update(currentItems => {
-      // Verificar si el producto ya existe en el carrito
-      const itemExistente = currentItems.find(item => item.idProducto === nuevoItem.idProducto);
+      // Verificar si el producto ya existe en el carrito con las mismas opciones
+      const itemExistente = currentItems.find(item => 
+        item.idProducto === nuevoItem.idProducto && 
+        this.tienenMismasOpciones(item.opcionesSeleccionadas, nuevoItem.opcionesSeleccionadas)
+      );
       
       if (itemExistente) {
-        // Si existe, incrementar la cantidad (con validación de máximo 99)
+        // Si existe con las mismas opciones, incrementar la cantidad
         const nuevaCantidad = itemExistente.cantidad + nuevoItem.cantidad;
         const cantidadFinal = Math.min(nuevaCantidad, 99); 
         
@@ -38,16 +44,28 @@ export class CarritoService {
         }
         
         return currentItems.map(item => 
-          item.idProducto === nuevoItem.idProducto 
+          item.idProducto === nuevoItem.idProducto && 
+          this.tienenMismasOpciones(item.opcionesSeleccionadas, nuevoItem.opcionesSeleccionadas)
             ? { ...item, cantidad: cantidadFinal }
             : item
         );
       } else {
-        // Si no existe, añadirlo al carrito (con validación de máximo 99)
+        // Si no existe o tiene opciones diferentes, añadirlo como nuevo item
         const cantidadFinal = Math.min(nuevoItem.cantidad, 99);
         return [...currentItems, { ...nuevoItem, cantidad: cantidadFinal }];
       }
     });
+  }
+
+  // Helper para comparar opciones de personalización
+  private tienenMismasOpciones(opciones1?: any[], opciones2?: any[]): boolean {
+    if (!opciones1 && !opciones2) return true;
+    if (!opciones1 || !opciones2) return false;
+    if (opciones1.length !== opciones2.length) return false;
+    
+    return opciones1.every(opcion1 => 
+      opciones2.some(opcion2 => opcion1.idOpcion === opcion2.idOpcion)
+    );
   }
 
   // Modificar cantidad de un item

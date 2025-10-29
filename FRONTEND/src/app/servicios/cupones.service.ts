@@ -19,9 +19,7 @@ export interface Cupon {
 })
 export class CuponesService {
 
-  /**
-   * Categoriza los cupones en disponibles, usados y expirados
-   */
+  // Categoriza los cupones en disponibles, usados y expirados
   categorizarCupones(cupones: Cupon[]): {
     cuponesDisponibles: Cupon[];
     cuponesUsados: Cupon[];
@@ -46,9 +44,7 @@ export class CuponesService {
     };
   }
 
-  /**
-   * Calcula las estadísticas de cupones
-   */
+  // Calcula las estadísticas de cupones
   calcularEstadisticas(cuponesDisponibles: Cupon[], cuponesUsados: Cupon[]): {
     cuponesDisponibles: number;
     cuponesUsados: number;
@@ -69,9 +65,7 @@ export class CuponesService {
     };
   }
 
-  /**
-   * Valida si un cupón es válido
-   */
+  // Valida si un cupón es válido
   validarCupon(cupon: Cupon): { valido: boolean; mensaje?: string } {
     const ahora = new Date();
     const fechaFin = new Date(cupon.fechaFin);
@@ -91,9 +85,7 @@ export class CuponesService {
     return { valido: true };
   }
 
-  /**
-   * Aplica un cupón a un total
-   */
+  // Aplica un cupón a un total
   aplicarCupon(total: number, cupon: Cupon): number {
     if (cupon.tipoDescuento === 'porcentaje') {
       return total * (1 - cupon.valorDescuento / 100);

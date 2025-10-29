@@ -1,6 +1,6 @@
-# FRONTEND README - FRONTEND_SISTEMA_WEB_DAS 
+# Frontend - Sistema Web DAS
 
-Desarrollado con **Angular 20.2.0** implementando arquitectura de componentes, programación reactiva con RxJS, integración con APIs REST y servicios externos para e-commerce.
+Frontend desarrollado con **Angular 20** implementando arquitectura de componentes standalone, integración con APIs REST, y servicios externos para e-commerce completo.
 
 ## Arquitectura del Frontend
 
@@ -8,71 +8,117 @@ Desarrollado con **Angular 20.2.0** implementando arquitectura de componentes, p
 ┌─────────────────────────────────────────────────────────────┐
 │                    ANGULAR APPLICATION                      │
 ├─────────────────────────────────────────────────────────────┤
-│  Components Layer    │  @Component, @Input, @Output        │
+│  Components Layer    │  @Component, standalone, @Input     │
+│  (Presentación)                                             │
 ├─────────────────────────────────────────────────────────────┤
 │  Services Layer      │  @Injectable, HTTP Client           │
+│  (Lógica de negocio)                                        │
 ├─────────────────────────────────────────────────────────────┤
-│  Guards Layer        │  @Injectable, CanActivate           │
+│  Guards Layer        │  @Injectable, CanActivate          │
+│  (Protección de rutas)                                      │
 ├─────────────────────────────────────────────────────────────┤
 │  Models Layer        │  Interfaces, TypeScript Types       │
+│  (Tipos de datos)                                           │
 ├─────────────────────────────────────────────────────────────┤
-│  Routing Layer       │  RouterModule, Guards, Lazy Loading │
+│  Routing Layer       │  Routes, Guards, Lazy Loading       │
+│  (Navegación)                                               │
 ├─────────────────────────────────────────────────────────────┤
 │  External Services   │  Stripe.js, Bootstrap, RxJS         │
+│  (Integraciones)                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Stack Tecnológico Detallado
+## Stack Tecnológico
 
 | Componente | Tecnología | Versión | Decoradores Principales |
 |------------|------------|---------|-------------------------|
 | **Framework** | Angular | 20.2.0 | `@Component`, `@Injectable` |
-| **UI Framework** | Bootstrap | 5.3.8 | CSS Classes, Components |
+| **UI Framework** | Bootstrap | 5.3.8 | CSS Classes, Grid System |
 | **Language** | TypeScript | 5.9.2 | `interface`, `type`, `enum` |
 | **Reactive** | RxJS | 7.8.0 | `Observable`, `Subject`, `BehaviorSubject` |
 | **HTTP** | Angular HTTP | 20.2.0 | `HttpClient`, `HttpInterceptor` |
-| **Routing** | Angular Router | 20.2.0 | `@RouteConfig`, `CanActivate` |
-| **Forms** | Angular Forms | 20.2.0 | `FormBuilder`, `Validators` |
+| **Routing** | Angular Router | 20.2.0 | `Routes`, `CanActivate` |
+| **Forms** | Angular Forms | 20.2.0 | `FormsModule`, `ngModel` |
 | **Pagos** | Stripe.js | 8.0.0 | `loadStripe`, `StripeElements` |
 
 ## Prerrequisitos
 
-- Node.js 18+
-- Angular CLI 20+
-- npm 9+
+- Node.js 18 o superior
+- Angular CLI 20 o superior
+- npm 9 o superior
 
 ## Instalación
 
 ### 1. Instalar dependencias
-```
+
+```bash
+cd FRONTEND
 npm install
 ```
 
 ### 2. Ejecutar en desarrollo
-```
+
+```bash
 ng serve
+```
+
+O para abrir automáticamente el navegador:
+
+```bash
+ng serve -o
 ```
 
 La aplicación estará disponible en: `http://localhost:4200`
 
-## Estructura
+## Estructura del Proyecto
 
 ```
 src/
 ├── app/
 │   ├── componentes/          # Componentes de la aplicación
 │   │   ├── admin-dashboard/  # Panel de administración
-│   │   ├── carrito/         # Carrito de compras
-│   │   ├── checkout/        # Proceso de pago
-│   │   ├── login/           # Inicio de sesión
-│   │   ├── menu/            # Catálogo de productos
+│   │   ├── admin-pedidos/    # Gestión de pedidos (admin)
+│   │   ├── admin-productos/  # Gestión de productos (admin)
+│   │   ├── carrito/          # Carrito de compras
+│   │   ├── checkout/         # Proceso de pago
+│   │   ├── cupones/          # Gestión de cupones
+│   │   ├── detalle-producto/ # Modal de detalles de producto
+│   │   ├── editar-perfil/    # Edición de perfil
+│   │   ├── login/            # Inicio de sesión
+│   │   ├── menu/             # Catálogo de productos
+│   │   ├── navbar/            # Barra de navegación
+│   │   ├── pedidos/          # Historial de pedidos
+│   │   ├── perfil-usuario/   # Perfil del usuario
+│   │   ├── registro/         # Registro de usuarios
 │   │   └── ...
-│   ├── guards/              # Guards de autenticación
-│   ├── modelos/             # Interfaces y modelos
-│   ├── servicios/           # Servicios de la aplicación
-│   └── app.routes.ts        # Configuración de rutas
-├── assets/                  # Recursos estáticos
-└── styles.css              # Estilos globales
+│   │
+│   ├── guards/               # Guards de autenticación
+│   │   ├── auth.guard.ts     # Guard de autenticación
+│   │   ├── admin.guard.ts    # Guard de administrador
+│   │   └── repartidor.guard.ts # Guard de repartidor
+│   │
+│   ├── modelos/              # Interfaces y modelos
+│   │   ├── producto.model.ts
+│   │   ├── usuario.model.ts
+│   │   ├── pedido.model.ts
+│   │   └── pago.model.ts
+│   │
+│   ├── servicios/            # Servicios de la aplicación
+│   │   ├── auth.service.ts   # Autenticación
+│   │   ├── carrito.service.ts # Carrito de compras
+│   │   ├── checkout.service.ts # Proceso de checkout
+│   │   ├── menu.service.ts   # Productos y menú
+│   │   ├── pago.service.ts   # Integración Stripe
+│   │   ├── personalizacion.service.ts # Opciones de personalización
+│   │   ├── usuario.service.ts # Gestión de usuarios
+│   │   └── ...
+│   │
+│   ├── app.routes.ts         # Configuración de rutas
+│   ├── app.config.ts         # Configuración de la aplicación
+│   └── app.ts                # Componente raíz
+│
+├── assets/                   # Recursos estáticos
+└── styles.css                # Estilos globales
 ```
 
 ## Componentes Principales
@@ -80,400 +126,255 @@ src/
 ### Componentes Públicos
 
 #### Menu Component
-```typescript
-@Component({
-  selector: 'app-menu',
-  standalone: true,
-  imports: [CommonModule, FormsModule, DetalleProducto, Notificacion],
-  templateUrl: './menu.html',
-  styleUrl: './menu.css'
-})
-export class Menu implements OnInit {
-  productos: Producto[] = [];
-  productosFiltrados: Producto[] = [];
-  
-  constructor(
-    private menuService: MenuService,
-    private carritoService: CarritoService,
-    private filtrosProductosService: FiltrosProductosService
-  ) {}
-  
-  ngOnInit(): void {
-    this.cargarProductos();
-  }
-  
-  cargarProductos(): void {
-    this.menuService.obtenerMenuDisponible().subscribe({
-      next: (data) => {
-        this.productos = data;
-        this.productosFiltrados = data;
-      },
-      error: (err) => this.error = err.message
-    });
-  }
-}
-```
+Componente principal del catálogo de productos con filtros y búsqueda.
+
+**Funcionalidades:**
+- Visualización de productos activos
+- Filtrado por categoría
+- Búsqueda por nombre
+- Modal de detalles con opciones de personalización
+- Agregar productos al carrito
 
 #### Login Component
-```typescript
-@Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './login.html',
-  styleUrls: ['./login.css']
-})
-export class Login implements OnInit {
-  loginForm: FormGroup;
-  
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
-  ) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      contrasena: ['', [Validators.required, Validators.minLength(6)]]
-    });
-  }
-  
-  onSubmit(): void {
-    if (this.loginForm.valid) {
-      this.authService.login(this.loginForm.value).subscribe({
-        next: (response) => {
-          this.router.navigate(['/menu']);
-        },
-        error: (error) => this.errorMessage = error.message
-      });
-    }
-  }
-}
-```
+Autenticación de usuarios existentes.
+
+**Funcionalidades:**
+- Login con email y contraseña
+- Validación de formulario
+- Manejo de errores
+- Redirección según rol después del login
+
+#### Registro Component
+Registro de nuevos usuarios.
+
+**Funcionalidades:**
+- Formulario de registro completo
+- Validación de datos
+- Generación automática de username
+- Normalización de teléfono con +51
+- Aceptación de términos y condiciones
 
 ### Componentes Protegidos (Cliente)
 
 #### Carrito Component
-```typescript
-@Component({
-  selector: 'app-carrito',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './carrito.html',
-  styleUrls: ['./carrito.css']
-})
-export class Carrito implements OnInit {
-  items: ItemCarrito[] = [];
-  total: number = 0;
-  
-  constructor(
-    public carritoService: CarritoService,
-    private router: Router
-  ) {}
-  
-  ngOnInit(): void {
-    this.carritoService.getItems().subscribe(items => {
-      this.items = items;
-      this.calcularTotal();
-    });
-  }
-  
-  actualizarCantidad(item: ItemCarrito, cantidad: number): void {
-    this.carritoService.actualizarCantidad(item.id, cantidad);
-    this.calcularTotal();
-  }
-  
-  private calcularTotal(): void {
-    this.total = this.items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-  }
-}
-```
+Gestión del carrito de compras.
+
+**Funcionalidades:**
+- Visualización de items
+- Modificar cantidades
+- Eliminar productos
+- Cálculo de totales
+- Persistencia en localStorage
+- Navegación al checkout
 
 #### Checkout Component
-```typescript
-@Component({
-  selector: 'app-checkout',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './checkout.html',
-  styleUrls: ['./checkout.css']
-})
-export class Checkout implements OnInit {
-  stripe: Stripe | null = null;
-  elements: StripeElements | null = null;
-  cardElement: StripeCardElement | null = null;
-  
-  constructor(
-    private checkoutService: CheckoutService,
-    private carritoService: CarritoService
-  ) {}
-  
-  async ngOnInit(): Promise<void> {
-    await this.initializeStripe();
-    this.setupCardElement();
-  }
-  
-  private async initializeStripe(): Promise<void> {
-    this.stripe = await loadStripe('pk_test_tu_clave_publica');
-    this.elements = this.stripe!.elements();
-  }
-  
-  async procesarPago(): Promise<void> {
-    if (!this.stripe || !this.cardElement) return;
-    
-    const { error, paymentIntent } = await this.stripe.confirmCardPayment(
-      this.clientSecret,
-      {
-        payment_method: {
-          card: this.cardElement
-        }
-      }
-    );
-    
-    if (error) {
-      console.error('Error en el pago:', error);
-    } else {
-      console.log('Pago exitoso:', paymentIntent);
-    }
-  }
-}
-```
+Proceso de pago completo.
+
+**Funcionalidades:**
+- Integración con Stripe para tarjetas
+- Selección de método de pago (Tarjeta, Billetera Virtual, Efectivo)
+- Validación de datos de envío
+- Confirmación de pedido
+- Notificaciones de éxito/error
+
+#### Perfil Usuario Component
+Visualización y gestión del perfil.
+
+**Funcionalidades:**
+- Visualización de datos personales
+- Estadísticas del usuario (pedidos, total gastado)
+- Enlaces a edición y cambio de contraseña
+- Eliminación de cuenta
+- URL con username: `/mi-perfil/{username}`
+
+#### Pedidos Component
+Historial de pedidos del cliente.
+
+**Funcionalidades:**
+- Listado de todos los pedidos
+- Filtrado por estado
+- Detalles de cada pedido
+- Seguimiento en tiempo real
 
 ### Componentes de Administración
 
 #### Admin Dashboard Component
-```typescript
-@Component({
-  selector: 'app-admin-dashboard',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './admin-dashboard.html',
-  styleUrls: ['./admin-dashboard.css']
-})
-export class AdminDashboard implements OnInit {
-  seccionActiva: string = 'dashboard';
-  usuarios: UsuarioAdmin[] = [];
-  estadisticas: EstadisticasUsuarios | null = null;
-  
-  constructor(
-    private usuarioService: UsuarioService,
-    private notificacionService: NotificacionService
-  ) {}
-  
-  ngOnInit(): void {
-    this.cargarUsuarios();
-    this.cargarEstadisticas();
-  }
-  
-  cambiarRol(usuario: UsuarioAdmin, nuevoRol: string): void {
-    this.usuarioService.cambiarRolUsuario(usuario.id, nuevoRol).subscribe({
-      next: (response) => {
-        this.mostrarNotificacion('Rol actualizado correctamente', 'exito');
-        this.cargarUsuarios();
-      },
-      error: (error) => this.mostrarNotificacion('Error al actualizar rol', 'error')
-    });
-  }
-}
-```
+Panel principal de administración.
+
+**Funcionalidades:**
+- Dashboard con estadísticas generales
+- Gestión de productos
+- Gestión de pedidos
+- Gestión de usuarios
+- Gestión de cupones
+- Configuración (cambio de contraseña)
+
+#### Admin Productos Component
+CRUD completo de productos.
+
+**Funcionalidades:**
+- Crear, editar, eliminar productos
+- Asignar categorías
+- Subir imágenes
+- Activar/desactivar productos
+- Configurar opciones de personalización
+
+#### Admin Pedidos Component
+Gestión completa de pedidos.
+
+**Funcionalidades:**
+- Visualización de todos los pedidos
+- Cambio de estados
+- Asignación de repartidores
+- Notificaciones por WhatsApp
 
 ## Servicios Principales
 
-### Auth Service
+### AuthService
+Servicio de autenticación y gestión de sesión.
+
+**Métodos principales:**
 ```typescript
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-  private baseUrl = 'http://localhost:8089/api';
-  private usuarioSubject = new BehaviorSubject<Usuario | null>(null);
-  public usuario$ = this.usuarioSubject.asObservable();
-  
-  constructor(private http: HttpClient) {
-    this.cargarUsuarioDesdeStorage();
-  }
-  
-  login(credenciales: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, credenciales)
-      .pipe(
-        tap(response => {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('usuario', JSON.stringify(response.usuario));
-          this.usuarioSubject.next(response.usuario);
-        })
-      );
-  }
-  
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    this.usuarioSubject.next(null);
-  }
-  
-  isAuthenticated(): boolean {
-    const token = localStorage.getItem('token');
-    return !!token && !this.isTokenExpired(token);
-  }
-}
+login(credentials: LoginRequest): Observable<AuthResponse>
+register(userData: RegistroRequest): Observable<AuthResponse>
+logout(): void
+isAuthenticated(): boolean
+getUsuarioActual(): Usuario | null
+cambiarContrasena(idUsuario: number, ...): Observable<any>
 ```
 
-### Carrito Service
+### CarritoService
+Gestión del carrito de compras con persistencia local.
+
+**Métodos principales:**
 ```typescript
-@Injectable({
-  providedIn: 'root'
-})
-export class CarritoService {
-  private itemsSubject = new BehaviorSubject<ItemCarrito[]>([]);
-  public items$ = this.itemsSubject.asObservable();
-  
-  constructor() {
-    this.cargarItemsDesdeStorage();
-  }
-  
-  agregarItem(item: ItemCarrito): void {
-    const items = this.itemsSubject.value;
-    const itemExistente = items.find(i => i.id === item.id);
-    
-    if (itemExistente) {
-      itemExistente.cantidad += item.cantidad;
-    } else {
-      items.push(item);
-    }
-    
-    this.actualizarItems(items);
-  }
-  
-  eliminarItem(id: number): void {
-    const items = this.itemsSubject.value.filter(item => item.id !== id);
-    this.actualizarItems(items);
-  }
-  
-  private actualizarItems(items: ItemCarrito[]): void {
-    this.itemsSubject.next(items);
-    localStorage.setItem('carrito', JSON.stringify(items));
-  }
-}
+getItems(): Observable<ItemCarrito[]>
+agregarItem(item: ItemCarrito): void
+eliminarItem(idProducto: number): void
+actualizarCantidad(idProducto: number, cantidad: number): void
+vaciarCarrito(): void
+calcularTotal(): number
 ```
 
-### Checkout Service
+### MenuService
+Servicio para productos y menú.
+
+**Métodos principales:**
 ```typescript
-@Injectable({
-  providedIn: 'root'
-})
-export class CheckoutService {
-  private baseUrl = 'http://localhost:8089/api';
-  
-  constructor(private http: HttpClient) {}
-  
-  crearPaymentIntent(monto: number): Observable<PaymentIntentResponse> {
-    return this.http.post<PaymentIntentResponse>(`${this.baseUrl}/pagos/crear-payment-intent`, {
-      monto: monto,
-      moneda: 'usd'
-    });
-  }
-  
-  procesarPedido(pedido: PedidoRequest): Observable<PedidoResponse> {
-    return this.http.post<PedidoResponse>(`${this.baseUrl}/pedidos`, pedido);
-  }
-}
+obtenerMenuDisponible(): Observable<Producto[]>
+obtenerCategorias(): Observable<Categoria[]>
+obtenerProductoPorId(id: number): Observable<Producto>
+```
+
+### PersonalizacionService
+Gestión de opciones de personalización de productos.
+
+**Métodos principales:**
+```typescript
+obtenerOpcionesPersonalizacion(idProducto: number): Observable<OpcionPersonalizacion[]>
+calcularPrecioOpciones(opciones: OpcionPersonalizacion[]): number
+formatearOpcionesSeleccionadas(opciones: OpcionPersonalizacion[]): string
+```
+
+### PagoService
+Integración con Stripe para pagos.
+
+**Métodos principales:**
+```typescript
+inicializarStripe(publishableKey: string): Promise<void>
+crearElementoTarjeta(containerId: string): Promise<void>
+crearPaymentIntent(monto: number, idPedido: number): Observable<any>
+confirmarPago(paymentIntentId: string): Observable<any>
+```
+
+### CheckoutService
+Servicio para proceso de checkout.
+
+**Métodos principales:**
+```typescript
+crearPedidoEnBackend(datosPedido: DatosPedido): Promise<any>
+procesarPago(datosPago: DatosPago): Observable<any>
 ```
 
 ## Guards de Autenticación
 
-### Auth Guard
+### AuthGuard
+Protege rutas que requieren autenticación.
+
 ```typescript
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-  
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+  canActivate(): boolean {
     if (this.authService.isAuthenticated()) {
       return true;
-    } else {
-      this.router.navigate(['/login']);
-      return false;
     }
+    this.router.navigate(['/login']);
+    return false;
   }
 }
 ```
 
-### Admin Guard
+### AdminGuard
+Protege rutas exclusivas de administradores.
+
 ```typescript
-@Injectable({
-  providedIn: 'root'
-})
-export class AdminGuard implements CanActivate {
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-  
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    const usuario = this.authService.getUsuarioActual();
-    
-    if (usuario && usuario.rol === 'administrador') {
-      return true;
-    } else {
-      this.router.navigate(['/menu']);
-      return false;
-    }
+canActivate(): boolean {
+  const usuario = this.authService.getUsuarioActual();
+  if (usuario && usuario.rol === 'administrador') {
+    return true;
   }
+  this.router.navigate(['/menu']);
+  return false;
 }
 ```
+
+### RepartidorGuard
+Protege rutas exclusivas de repartidores.
 
 ## Modelos TypeScript
 
-### Usuario Model
+### Usuario
 ```typescript
 export interface Usuario {
   idUsuario: number;
   nombre: string;
   apellido: string;
   email: string;
+  username?: string;
   telefono?: string;
   direccion?: string;
-  rol: 'cliente' | 'administrador' | 'repartidor';
-  fechaRegistro: Date;
+  rol: 'cliente' | 'administrador' | 'repartidor' | 'vendedor';
   activo: boolean;
-}
-
-export interface LoginRequest {
-  email: string;
-  contrasena: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  usuario: Usuario;
-  mensaje: string;
+  fechaRegistro?: string;
 }
 ```
 
-### Producto Model
+### Producto
 ```typescript
 export interface Producto {
   idProducto: number;
   nombre: string;
   descripcion: string;
   precio: number;
-  imagen: string;
-  categoria: Categoria;
-  activo: boolean;
-  stock: number;
-}
-
-export interface Categoria {
-  idCategoria: number;
-  nombre: string;
-  descripcion?: string;
+  imagen_url: string;
+  categoria: Categoria | string;
+  estado: 'activo' | 'inactivo';
 }
 ```
 
-### Carrito Model
+### OpcionPersonalizacion
+```typescript
+export interface OpcionPersonalizacion {
+  idOpcion: number;
+  nombre: string;
+  descripcion?: string;
+  precioAdicional: number;
+  activa: boolean;
+  idProducto: number;
+}
+```
+
+### ItemCarrito
 ```typescript
 export interface ItemCarrito {
   id: number;
@@ -482,135 +383,194 @@ export interface ItemCarrito {
   cantidad: number;
   imagen: string;
   categoria: string;
-}
-
-export interface PedidoRequest {
-  items: ItemCarrito[];
-  total: number;
-  direccion: string;
-  telefono: string;
-  metodoPago: string;
+  opcionesSeleccionadas?: OpcionPersonalizacion[];
+  precioOpciones?: number;
 }
 ```
 
-## Autenticación
+## Rutas de la Aplicación
 
-### Guards
-- `AuthGuard` - Protege rutas que requieren autenticación
-- `AdminGuard` - Protege rutas de administración
-- `RepartidorGuard` - Protege rutas de repartidor
-
-### Servicios
-- `AuthService` - Gestión de autenticación
-- `UsuarioService` - Gestión de usuarios
-
-## Estilos
-
-- **Bootstrap 5** - Framework CSS
-- **CSS personalizado** - Estilos específicos
-- **Responsive** - Diseño adaptable
-
-## Comandos
-
-```
-# Desarrollo
-ng serve
-
-# Compilar
-ng build
-
-# Compilar para producción
-ng build --configuration production
-
-# Limpiar
-ng clean
-
-# Ayuda
-ng help
-```
-
-## Funcionalidades
-
-### Catálogo
-- Listado de productos
-- Filtros por categoría
-- Búsqueda por nombre
-- Modal de detalles
-
-### Carrito
-- Agregar/eliminar productos
-- Modificar cantidades
-- Cálculo de totales
-- Persistencia local
-
-### Checkout
-- Integración con Stripe
-- Formulario de pago
-- Validaciones
-- Confirmación de pedido
-
-### Administración
-- Dashboard con métricas
-- CRUD de productos
-- Gestión de pedidos
-- Gestión de usuarios
-
-## Configuración
-
-### Variables de Entorno
-El frontend se conecta al backend en `http://localhost:8089`
-
-### Stripe
-Configuración en `checkout.service.ts`:
-```typescript
-const stripe = Stripe('pk_test_tu_clave_publica');
-```
-
-### API
-Base URL configurada en los servicios:
-```typescript
-private baseUrl = 'http://localhost:8089/api';
-```
-
-## Estado de la Aplicación
-
-- **Servicios** - Gestión de estado global
-- **LocalStorage** - Persistencia de sesión
-- **RxJS** - Programación reactiva
-
-## Rutas
-
-### Públicas
+### Rutas Públicas
 - `/` - Redirige a menu
 - `/menu` - Catálogo de productos
 - `/login` - Inicio de sesión
 - `/registro` - Registro de usuario
+- `/recuperar-contrasena` - Recuperación de contraseña
+- `/restablecer-contrasena` - Restablecer contraseña con token
+- `/terminos-y-condiciones` - Términos y condiciones
+- `/politica-de-privacidad` - Política de privacidad
 
-### Protegidas
-- `/carrito` - Carrito de compras
-- `/checkout` - Proceso de pago
-- `/mis-pedidos` - Historial de pedidos
-- `/mi-perfil` - Perfil de usuario
+### Rutas Protegidas (Cliente)
+- `/carrito` - Carrito de compras (AuthGuard)
+- `/mis-pedidos` - Historial de pedidos (AuthGuard)
+- `/mis-cupones` - Cupones del usuario (AuthGuard)
+- `/mi-perfil/:username` - Perfil del usuario (AuthGuard)
+- `/editar-perfil` - Editar perfil (AuthGuard)
+- `/cambiar-contrasena` - Cambiar contraseña (AuthGuard)
+
+### Rutas de Administración
+- `/admin/dashboard` - Panel de administración (AdminGuard)
+- `/admin/productos` - Gestión de productos (AdminGuard)
+- `/admin/pedidos` - Gestión de pedidos (AdminGuard)
+
+### Rutas de Repartidor
+- `/repartidor/dashboard` - Dashboard de repartidor (RepartidorGuard)
+
+## Funcionalidades Principales
+
+### Catálogo de Productos
+- Listado completo de productos activos
+- Filtrado por categoría (Hamburguesas, Bebidas, etc.)
+- Búsqueda por nombre
+- Visualización de productos con imágenes
+- Modal de detalles con opciones de personalización
+
+### Personalización de Productos
+- Sistema tipo Rappi para personalizar productos
+- Opciones configurables por producto
+- Precios adicionales que afectan el total
+- Visualización en tiempo real del precio final
+- Persistencia de opciones en el carrito
+
+### Carrito de Compras
+- Agregar/eliminar productos
+- Modificar cantidades (máximo 99 por producto)
+- Persistencia en localStorage
+- Cálculo automático de totales
+- Consideración de precios de personalizaciones
+
+### Checkout y Pagos
+- Selección de método de pago:
+  - **Tarjeta**: Integración completa con Stripe
+  - **Billetera Virtual**: Confirmación manual
+  - **Efectivo**: Confirmación manual
+- Validación de datos de envío
+- Integración con Stripe Elements
+- Manejo de estados de pago
+- Notificaciones automáticas
+
+### Gestión de Perfil
+- Visualización de datos personales
+- Edición de información (nombre, apellido, teléfono, dirección)
+- Cambio de contraseña
+- Normalización automática de teléfono con +51
+- URLs amigables con username
+- Estadísticas personalizadas
 
 ### Administración
-- `/admin/dashboard` - Panel de administración
-- `/admin/productos` - Gestión de productos
-- `/admin/pedidos` - Gestión de pedidos
+- Dashboard con métricas en tiempo real
+- CRUD completo de productos
+- Gestión de opciones de personalización
+- Gestión de pedidos con cambio de estados
+- Gestión de usuarios (CRUD, roles, estado)
+- Sistema de cupones y promociones
 
-## Debugging
+## Características Especiales
 
-### Herramientas
-- Angular DevTools
-- Console del navegador
-- Network tab para API calls
+### Personalización de Productos
+- Opciones por defecto configuradas en base de datos
+- Precios adicionales que se suman al precio base
+- Cálculo en tiempo real del precio total
+- Persistencia en carrito y pedidos
 
-### Logs
-```typescript
-console.log('Debug info:', data);
+### URLs con Username
+- Rutas amigables: `/mi-perfil/{username}`
+- Generación automática de username único
+- Búsqueda de usuarios por username
+
+### Normalización de Teléfonos
+- Prefijo +51 automático para Perú
+- Validación de formato
+- Normalización en registro y edición
+
+## Estado de la Aplicación
+
+### Gestión de Estado
+- **Servicios Reactivos**: RxJS con Observables
+- **BehaviorSubject**: Para estado compartido
+- **LocalStorage**: Persistencia de sesión y carrito
+- **Signals** (Angular 20): Reactividad mejorada
+
+### Autenticación
+- Tokens JWT almacenados en localStorage
+- Validación automática de sesión
+- Refresh de token (opcional)
+- Guards para protección de rutas
+
+## Comandos de Desarrollo
+
+```bash
+# Desarrollo
+ng serve                    # Servidor de desarrollo
+ng serve -o                 # Abrir navegador automáticamente
+ng serve --port 4200        # Especificar puerto
+
+# Compilación
+ng build                    # Compilar para desarrollo
+ng build --prod             # Compilar para producción
+
+# Testing
+ng test                     # Ejecutar tests unitarios
+ng e2e                      # Ejecutar tests e2e
+
+# Utilidades
+ng generate component nombre # Generar nuevo componente
+ng generate service nombre   # Generar nuevo servicio
+ng lint                      # Linter del código
 ```
 
-## Responsive
+## Configuración
 
-- **Mobile First** - Diseño móvil primero
-- **Breakpoints** - Bootstrap breakpoints
-- **Flexible** - Adaptable a todos los dispositivos
+### API Base URL
+Configurado en `configuracion.service.ts`:
+```typescript
+private apiUrl = 'http://localhost:8089/api';
+```
+
+### Stripe
+Clave pública configurable en `pago.service.ts`:
+```typescript
+const stripeKey = 'pk_test_tu_clave_publica';
+```
+
+### Variables de Entorno
+El frontend se conecta al backend en `http://localhost:8089` por defecto.
+Para producción, actualizar en los servicios correspondientes.
+
+## Responsive Design
+
+- **Mobile First**: Diseño pensado primero para móviles
+- **Bootstrap Grid**: Sistema de grillas responsive
+- **Breakpoints**: Adaptación a diferentes tamaños de pantalla
+- **Flexible Layout**: Componentes adaptables
+
+## Estilos
+
+- **Bootstrap 5**: Framework CSS principal
+- **CSS Personalizado**: Estilos específicos por componente
+- **Component Scoped**: Estilos encapsulados por componente
+- **Global Styles**: Estilos compartidos en `styles.css`
+
+## Integraciones
+
+### Stripe.js
+- Integración completa para pagos con tarjeta
+- Stripe Elements para formularios seguros
+- Manejo de estados de pago
+- Confirmación de transacciones
+
+### Bootstrap 5
+- Sistema de componentes
+- Utilidades CSS
+- Grid system responsive
+- Iconos y componentes UI
+
+## Mejoras Futuras
+
+- Implementar Angular Signals para reactividad mejorada
+- Agregar PWA (Progressive Web App)
+- Implementar lazy loading de módulos
+- Agregar internacionalización (i18n)
+- Mejorar accesibilidad (a11y)
+- Implementar tests unitarios completos
+- Agregar animaciones con Angular Animations

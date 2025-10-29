@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuService } from '../../servicios/menu.service';
 import { FiltrosProductosService } from '../../servicios/filtros-productos.service';
-import { Producto } from '../../modelos/producto.model';
-import { DetalleProducto, ItemCarrito } from '../detalle-producto/detalle-producto';
+import { Producto, ItemCarrito } from '../../modelos/producto.model';
+import { DetalleProducto } from '../detalle-producto/detalle-producto';
 import { CarritoService } from '../../servicios/carrito.service';
 import { Notificacion, NotificacionData } from '../notificacion/notificacion';
 
@@ -49,12 +49,6 @@ export class Menu implements OnInit {
         this.productos = data;
         this.productosFiltrados = data;
         this.loading = false;
-        
-        // Debug: Mostrar las categorías que llegan de la API
-        console.log('Productos cargados:', data);
-        data.forEach(producto => {
-          console.log(`Producto: ${producto.nombre}, Categoría:`, producto.categoria);
-        });
       },
       error: (err) => {
         this.error = err.message;
@@ -117,7 +111,6 @@ export class Menu implements OnInit {
 
   // Filtrar productos por categoría
   filtrarPorCategoria(categoria: string): void {
-    console.log('Filtrando por categoría:', categoria);
     this.categoriaSeleccionada = categoria;
     
     if (categoria === 'todos') {
@@ -140,10 +133,8 @@ export class Menu implements OnInit {
           nombreCategoria.toLowerCase().includes(cat.toLowerCase()) || 
           cat.toLowerCase().includes(nombreCategoria.toLowerCase())
         );
-        console.log(`Producto: ${producto.nombre}, Categoría real: "${nombreCategoria}", Buscando: [${categoriasBuscar.join(', ')}], Coincide: ${coincide}`);
         return coincide;
       });
-      console.log('Productos filtrados encontrados:', this.productosFiltrados.length);
     }
   }
 }

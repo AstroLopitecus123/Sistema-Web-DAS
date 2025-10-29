@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UsuarioService, UsuarioAdmin, EstadisticasUsuarios } from '../../servicios/usuario.service';
 import { NotificacionService } from '../../servicios/notificacion.service';
+import { AuthService } from '../../servicios/auth.service';
+import { Usuario } from '../../modelos/usuario.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -51,6 +53,20 @@ export class AdminDashboard implements OnInit {
   // Modal de confirmación de eliminación
   mostrarModalEliminar: boolean = false;
   usuarioAEliminar: UsuarioAdmin | null = null;
+
+  // Cambio de contraseña
+  datosContrasena = {
+    contrasenaActual: '',
+    nuevaContrasena: '',
+    confirmarContrasena: ''
+  };
+  mostrarContrasenaActual: boolean = false;
+  mostrarNuevaContrasena: boolean = false;
+  mostrarConfirmarContrasena: boolean = false;
+  guardandoContrasena: boolean = false;
+  mensajeExitoContrasena: string | null = null;
+  mensajeErrorContrasena: string | null = null;
+  usuario: Usuario | null = null;
 
   // Productos para la tabla
   productos = [
@@ -128,17 +144,19 @@ export class AdminDashboard implements OnInit {
   constructor(
     private router: Router,
     private usuarioService: UsuarioService,
-    private notificacionService: NotificacionService
+    private notificacionService: NotificacionService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
     // Cargar datos del dashboard
     this.cargarDatosDashboard();
+    
+    // Obtener usuario actual
+    this.usuario = this.authService.getUsuarioActual();
   }
 
   cargarDatosDashboard() {
-    // Aquí se cargarían los datos reales desde el servicio
-    console.log('Cargando datos del dashboard...');
   }
   
   cargarUsuarios() {
@@ -150,7 +168,6 @@ export class AdminDashboard implements OnInit {
         this.usuarios = usuarios;
         this.usuariosFiltrados = usuarios;
         this.loadingUsuarios = false;
-        console.log('Usuarios cargados:', usuarios);
       },
       error: (error: any) => {
         this.notificacionService.mostrarError(
@@ -167,7 +184,6 @@ export class AdminDashboard implements OnInit {
     this.usuarioService.obtenerEstadisticas().subscribe({
       next: (estadisticas) => {
         this.estadisticas = estadisticas;
-        console.log('Estadísticas cargadas:', estadisticas);
       },
       error: (error) => {
         this.notificacionService.mostrarError(
@@ -186,7 +202,6 @@ export class AdminDashboard implements OnInit {
     }
     
     this.seccionActiva = seccion;
-    console.log('Navegando a:', seccion);
     
     // Cargar datos específicos según la sección
     if (seccion === 'usuarios') {
@@ -211,7 +226,6 @@ export class AdminDashboard implements OnInit {
   }
 
   buscarProducto(termino: string) {
-    console.log('Buscando producto:', termino);
     // Lógica para buscar productos
   }
 
@@ -251,7 +265,6 @@ export class AdminDashboard implements OnInit {
     
     this.usuarioService.eliminarUsuario(this.usuarioAEliminar.idUsuario).subscribe({
       next: (response: any) => {
-        console.log('Respuesta del servidor:', response);
         
         if (response.success) {
           if (response.accion === 'eliminado') {
@@ -294,7 +307,6 @@ export class AdminDashboard implements OnInit {
     
     this.usuarioService.cambiarEstadoUsuario(usuario.idUsuario, nuevoEstado).subscribe({
       next: (response: any) => {
-        console.log('Estado cambiado:', response);
         
         // Verificar si la respuesta es JSON o texto
         if (typeof response === 'object' && response.success) {
@@ -426,6 +438,105 @@ export class AdminDashboard implements OnInit {
           );
         }
       });
+  }
+
+  // Métodos para cambio de contraseña
+  toggleMostrarContrasenaActual() {
+    this.mostrarContrasenaActual = !this.mostrarContrasenaActual;
+  }
+
+  toggleMostrarNuevaContrasena() {
+    this.mostrarNuevaContrasena = !this.mostrarNuevaContrasena;
+  }
+
+  toggleMostrarConfirmarContrasena() {
+    this.mostrarConfirmarContrasena = !this.mostrarConfirmarContrasena;
+  }
+
+  validarFormularioContrasena(): boolean {
+    this.mensajeErrorContrasena = null;
+
+    if (!this.datosContrasena.contrasenaActual.trim()) {
+      this.mensajeErrorContrasena = 'La contraseña actual es requerida';
+      return false;
+    }
+    
+    if (!this.datosContrasena.nuevaContrasena.trim()) {
+      this.mensajeErrorContrasena = 'La nueva contraseña es requerida';
+      return false;
+    }
+    
+    if (this.datosContrasena.nuevaContrasena.length < 6) {
+      this.mensajeErrorContrasena = 'La nueva contraseña debe tener al menos 6 caracteres';
+      return false;
+    }
+    
+    if (this.datosContrasena.nuevaContrasena !== this.datosContrasena.confirmarContrasena) {
+      this.mensajeErrorContrasena = 'Las contraseñas no coinciden';
+      return false;
+    }
+    
+    if (this.datosContrasena.contrasenaActual === this.datosContrasena.nuevaContrasena) {
+      this.mensajeErrorContrasena = 'La nueva contraseña debe ser diferente a la actual';
+      return false;
+    }
+
+    return true;
+  }
+
+  guardarNuevaContrasena() {
+    if (!this.validarFormularioContrasena()) {
+      return;
+    }
+
+    if (!this.usuario || !this.usuario.idUsuario) {
+      this.mensajeErrorContrasena = 'No se pudo identificar al usuario';
+      return;
+    }
+
+    this.guardandoContrasena = true;
+    this.mensajeExitoContrasena = null;
+    this.mensajeErrorContrasena = null;
+
+    this.authService.cambiarContrasena(
+      this.usuario.idUsuario,
+      this.datosContrasena.contrasenaActual,
+      this.datosContrasena.nuevaContrasena
+    ).subscribe({
+      next: (response: any) => {
+        this.guardandoContrasena = false;
+        
+        if (response.success) {
+          this.mensajeExitoContrasena = 'Contraseña actualizada correctamente';
+          
+          // Limpiar formulario
+          this.datosContrasena = {
+            contrasenaActual: '',
+            nuevaContrasena: '',
+            confirmarContrasena: ''
+          };
+          
+          // Limpiar mensajes después de 3 segundos
+          setTimeout(() => {
+            this.mensajeExitoContrasena = null;
+          }, 3000);
+        } else {
+          this.mensajeErrorContrasena = response.mensaje || 'Error al cambiar la contraseña';
+        }
+      },
+      error: (err: any) => {
+        this.guardandoContrasena = false;
+        console.error('Error al cambiar contraseña:', err);
+        
+        if (err.status === 401 && err.error?.mensaje) {
+          this.mensajeErrorContrasena = err.error.mensaje;
+        } else if (err.status === 400 && err.error?.mensaje) {
+          this.mensajeErrorContrasena = err.error.mensaje;
+        } else {
+          this.mensajeErrorContrasena = 'Error al cambiar la contraseña. Por favor, intenta nuevamente.';
+        }
+      }
+    });
   }
 }
 

@@ -14,7 +14,7 @@ Sistema completo de gestión de pedidos y e-commerce desarrollado con **Angular 
          │                                   │
     Bootstrap 5                        ┌─────────────┐
     Stripe.js                          │   MySQL 8.0 │
-    RxJS                               │  (Database)  │
+                                       │  (Database)  │
                                        └─────────────┘
                                                │
                                        ┌─────────────┐

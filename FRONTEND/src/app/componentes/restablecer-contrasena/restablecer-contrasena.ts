@@ -36,8 +36,6 @@ export class RestablecerContrasena implements OnInit {
       
       if (!this.token) {
         this.errorMessage = 'Token de recuperación no válido.';
-      } else {
-        console.log('🔑 Token recibido:', this.token);
       }
     });
   }
@@ -76,13 +74,10 @@ export class RestablecerContrasena implements OnInit {
     }
 
     this.loading = true;
-    console.log('🔄 Restableciendo contraseña...');
 
-    // Llamada al servicio de autenticación
     this.authService.restablecerContrasena(this.token, this.nuevaContrasena).subscribe({
       next: (response) => {
         this.loading = false;
-        console.log('Respuesta del servidor:', response);
 
         if (response.success) {
           this.successMessage = response.mensaje || 'Tu contraseña ha sido restablecida exitosamente.';

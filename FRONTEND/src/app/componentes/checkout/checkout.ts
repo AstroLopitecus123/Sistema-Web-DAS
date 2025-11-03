@@ -8,6 +8,7 @@ import { AuthService } from '../../servicios/auth.service';
 import { ItemCarrito } from '../../modelos/producto.model';
 import { NotificacionService } from '../../servicios/notificacion.service';
 import { CheckoutService } from '../../servicios/checkout.service';
+import { CampoUbicacion } from '../campo-ubicacion/campo-ubicacion';
 
 export interface MetodoPago {
   id: string;
@@ -37,7 +38,7 @@ export interface InformacionPago {
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CampoUbicacion],
   templateUrl: './checkout.html',
   styleUrls: ['./checkout.css']
 })
@@ -136,9 +137,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
       }
       this.pasoActual = 2;
       
-      // Montar Stripe Elements si se seleccionó tarjeta
       if (this.informacionPago.metodoPago === 'tarjeta') {
-        // Esperar más tiempo para asegurar que el DOM esté listo
         setTimeout(() => this.montarStripeElements(), 300);
       }
     } else if (this.pasoActual === 2) {
@@ -149,10 +148,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // Monta el elemento de tarjeta de Stripe
   private async montarStripeElements(): Promise<void> {
-    console.log('Implementando solución ngAfterViewInit...');
-    
     const container = document.getElementById('stripe-card-element');
     if (!container) {
       console.error('Contenedor stripe-card-element no encontrado');
@@ -160,34 +156,27 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Verificar que el contenedor no tenga elementos hijos
     if (container.hasChildNodes()) {
-      console.log('Contenedor ya tiene elementos hijos - limpiando...');
       container.innerHTML = '';
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Destruir el elemento anterior si existe
     if (this.stripeCardElementMontado) {
-      console.log('Destruyendo elemento anterior...');
       this.pagoService.destroyCardElement();
       this.stripeCardElementMontado = false;
       await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     try {
-      console.log('Creando nuevo elemento de Stripe con verificación hasChildNodes...');
       const element = await this.pagoService.createCardElement('stripe-card-element');
       
       if (element) {
         setTimeout(() => {
           const containerAfter = document.getElementById('stripe-card-element');
           if (containerAfter && containerAfter.hasChildNodes()) {
-            console.log('Elemento montado correctamente');
             this.stripeCardElementMontado = true;
-            console.log('Stripe Elements completamente funcional');
           } else {
-            console.error('Elemento no se montó - no tiene elementos hijos');
+            console.error('Elemento no se montó correctamente');
           }
         }, 1000);
       } else {
@@ -254,13 +243,10 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async procesarPago(): Promise<void> {
-    // Evitar procesamiento múltiple
     if (this.procesandoPago) {
-      console.log('Pago ya en proceso, ignorando llamada duplicada');
       return;
     }
 
-    console.log('Iniciando procesamiento de pago...');
     this.procesandoPago = true;
     this.errorPago = null;
 
@@ -275,15 +261,11 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
       if (this.informacionPago.metodoPago === 'tarjeta') {
         await this.procesarPagoConStripe(pedidoCreado.idPedido);
       } else {
-        // Para efectivo y billetera virtual, el pago ya está confirmado en el backend
-        console.log('Pago manual confirmado (billetera virtual/efectivo)');
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      console.log('Pago procesado exitosamente');
       this.procesandoPago = false;
 
-      // Mostrar notificación de éxito con un pequeño delay
       setTimeout(() => {
         this.notificacionService.mostrarExito(
           '¡Pago exitoso!', 
@@ -291,14 +273,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
         );
       }, 100);
 
-      // El pedido fue creado exitosamente en backend
-      console.log('🧾 Pedido creado exitosamente en backend');
-
-      // Vaciar el carrito
       this.carritoService.vaciarCarrito();
-      console.log('🛒 Carrito vaciado');
-
-      // Emitir evento después de mostrar la notificación
       this.pagoExitoso.emit();
 
       this.cerrarModal();
@@ -346,7 +321,6 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
 
     try {
       // Paso 1: Generar PaymentIntent en el backend
-      console.log('💳 Creando PaymentIntent en Stripe...');
       const paymentResponse = await new Promise<any>((resolve, reject) => {
         this.pagoService.crearPaymentIntent({
           idPedido: idPedido,
@@ -362,10 +336,6 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
         throw new Error('No se pudo crear el PaymentIntent');
       }
 
-      console.log('PaymentIntent creado:', paymentResponse.paymentIntentId);
-
-      // Paso 2: Confirmar el pago con Stripe Elements
-      console.log('Confirmando pago con Stripe...');
       const resultado = await this.pagoService.confirmarPagoConTarjeta(
         paymentResponse.clientSecret,
         usuario.email,
@@ -376,14 +346,9 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
         throw new Error(resultado.error || 'Error al procesar el pago');
       }
 
-      console.log('Pago confirmado en Stripe:', resultado.paymentIntentId);
-
-      // Paso 3: Confirmar el pago en el backend
-      console.log('Actualizando estado del pago en backend...');
       await new Promise<void>((resolve, reject) => {
         this.pagoService.confirmarPagoEnBackend(resultado.paymentIntentId!).subscribe({
           next: () => {
-            console.log('Pago confirmado en backend');
             resolve();
           },
           error: (error) => {
@@ -400,15 +365,10 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // Confirma pago manual para billetera virtual y efectivo
   private async confirmarPagoManual(idPedido: number): Promise<void> {
     try {
-      console.log('Confirmando pago manual para pedido:', idPedido);
-      
-      // Para pagos manuales (efectivo/billetera virtual), el pago se confirma automáticamente
-      console.log('Pago manual confirmado automáticamente en backend');
       await new Promise<void>((resolve) => {
-        setTimeout(() => resolve(), 1000); // Simular delay
+        setTimeout(() => resolve(), 1000);
       });
       
     } catch (error: any) {
@@ -465,4 +425,5 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     const metodo = this.metodosPago.find(m => m.id === this.informacionPago.metodoPago);
     return metodo ? metodo.nombre : 'Método no seleccionado';
   }
+
 }

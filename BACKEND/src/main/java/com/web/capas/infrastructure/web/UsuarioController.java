@@ -1,15 +1,22 @@
 package com.web.capas.infrastructure.web;
 
-import com.web.capas.domain.RecursoNoEncontradoExcepcion;
-import com.web.capas.domain.ServiceException;
-import com.web.capas.infrastructure.persistence.entities.Usuario;
 import com.web.capas.application.service.UsuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import com.web.capas.domain.ServiceException;
+import com.web.capas.domain.dto.CambioRolRequest;
+import com.web.capas.domain.dto.UsuarioResponse;
+import com.web.capas.infrastructure.persistence.entities.Usuario;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/usuarios")
@@ -20,72 +27,48 @@ public class UsuarioController {
 
     // Obtiene todos los usuarios - solo administradores (GET /api/admin/usuarios)
     @GetMapping
-    public ResponseEntity<List<Usuario>> obtenerTodosLosUsuarios() {
-        List<Usuario> usuarios = usuarioService.obtenerTodosLosUsuarios();
+    public ResponseEntity<List<UsuarioResponse>> obtenerTodosLosUsuarios() {
+        List<UsuarioResponse> usuarios = usuarioService.obtenerTodosLosUsuariosComoDTO();
         return ResponseEntity.ok(usuarios);
     }
 
     // Obtiene un usuario por ID - solo administradores (GET /api/admin/usuarios/{id})
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Integer id) {
-        Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
-        
-        if (usuario == null) {
-            throw new RecursoNoEncontradoExcepcion("Usuario no encontrado");
-        }
-        
+    public ResponseEntity<UsuarioResponse> obtenerUsuarioPorId(@PathVariable Integer id) {
+        UsuarioResponse usuario = usuarioService.obtenerUsuarioPorIdComoDTO(id);
         return ResponseEntity.ok(usuario);
     }
 
     // Elimina un usuario por ID - solo administradores (DELETE /api/admin/usuarios/{id})
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> eliminarUsuario(@PathVariable Integer id) {
-        try {
-            boolean resultado = usuarioService.eliminarUsuario(id);
-            if (resultado) {
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Usuario eliminado exitosamente"
-                ));
-            } else {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "No se pudo eliminar el usuario"
-                ));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "Error: " + e.getMessage()
+        boolean resultado = usuarioService.eliminarUsuario(id);
+        if (resultado) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Usuario eliminado exitosamente"
             ));
+        } else {
+            throw new ServiceException("No se pudo eliminar el usuario");
         }
     }
 
     // Elimina un usuario de forma segura - solo administradores (DELETE /api/admin/usuarios/{id}/seguro)
     @DeleteMapping("/{id}/seguro")
     public ResponseEntity<Map<String, Object>> eliminarUsuarioSeguro(@PathVariable Integer id) {
-        try {
-            boolean eliminado = usuarioService.eliminarUsuarioSeguro(id);
-            
-            if (eliminado) {
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Usuario eliminado exitosamente",
-                    "accion", "eliminado"
-                ));
-            } else {
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Usuario desactivado exitosamente (no se pudo eliminar por restricciones de datos)",
-                    "accion", "desactivado"
-                ));
-            }
-        } catch (Exception e) {
-            System.err.println("Error en eliminarUsuarioSeguro: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "Error: " + e.getMessage()
+        boolean eliminado = usuarioService.eliminarUsuarioSeguro(id);
+        
+        if (eliminado) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Usuario eliminado exitosamente",
+                "accion", "eliminado"
+            ));
+        } else {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Usuario desactivado exitosamente (no se pudo eliminar por restricciones de datos)",
+                "accion", "desactivado"
             ));
         }
     }
@@ -93,27 +76,17 @@ public class UsuarioController {
     // Activa/Desactiva un usuario - solo administradores (PUT /api/admin/usuarios/{id}/estado)
     @PutMapping("/{id}/estado")
     public ResponseEntity<Map<String, Object>> cambiarEstadoUsuario(@PathVariable Integer id, @RequestParam boolean activo) {
-        try {
-            boolean resultado = usuarioService.cambiarEstadoUsuario(id, activo);
-            if (resultado) {
-                String mensaje = activo ? "Usuario activado exitosamente" : "Usuario desactivado exitosamente";
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", mensaje,
-                    "activo", activo
-                ));
-            } else {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "No se pudo cambiar el estado del usuario"
-                ));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "Error: " + e.getMessage()
-            ));
+        boolean resultado = usuarioService.cambiarEstadoUsuario(id, activo);
+        if (!resultado) {
+            throw new ServiceException("No se pudo cambiar el estado del usuario");
         }
+        
+        String mensaje = activo ? "Usuario activado exitosamente" : "Usuario desactivado exitosamente";
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", mensaje,
+            "activo", activo
+        ));
     }
 
     // Obtiene estadísticas de usuarios - solo administradores (GET /api/admin/usuarios/estadisticas)
@@ -140,8 +113,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/cambiar-rol/{id}")
-    public ResponseEntity<Map<String, Object>> cambiarRolUsuario(@PathVariable Integer id, @RequestBody Map<String, String> request) {
-        String nuevoRol = request.get("rol");
+    public ResponseEntity<Map<String, Object>> cambiarRolUsuario(@PathVariable Integer id, @RequestBody CambioRolRequest request) {
+        String nuevoRol = request.getRol();
         
         if (nuevoRol == null || nuevoRol.trim().isEmpty()) {
             throw new ServiceException("El rol no puede estar vacío");

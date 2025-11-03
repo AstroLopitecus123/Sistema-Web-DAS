@@ -25,8 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
 @Service
@@ -187,14 +191,33 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoRepository.findById(idPedido)
             .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
     }
+    
+    @Override
+    public PedidoResponse obtenerPedidoPorIdComoDTO(Integer idPedido) {
+        Pedido pedido = obtenerPedidoPorId(idPedido);
+        return convertirAPedidoResponse(pedido);
+    }
+    
+    private PedidoResponse convertirAPedidoResponse(Pedido pedido) {
+        PedidoResponse response = new PedidoResponse();
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        response.setIdPedido(pedido.getIdPedido());
+        response.setTotalPedido(pedido.getTotalPedido());
+        response.setDireccionEntrega(pedido.getDireccionEntrega());
+        response.setMetodoPago(pedido.getMetodoPago() != null ? pedido.getMetodoPago().toString() : null);
+        response.setEstadoPago(pedido.getEstadoPago() != null ? pedido.getEstadoPago().toString() : null);
+        response.setEstadoPedido(pedido.getEstadoPedido() != null ? pedido.getEstadoPedido().toString() : null);
+        response.setFechaPedido(pedido.getFechaPedido() != null ? pedido.getFechaPedido().format(formatter) : null);
+        
+        return response;
+    }
 
     @Override
     public List<Pedido> obtenerPedidosDelUsuario(Integer idUsuario) {
         try {
             // Filtrar pedidos por el ID del usuario (cliente)
             List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuario(idUsuario);
-            
-            System.out.println("Pedidos encontrados para usuario " + idUsuario + ": " + pedidos.size());
             return pedidos;
         } catch (Exception e) {
             System.err.println("Error al obtener pedidos del usuario " + idUsuario + ": " + e.getMessage());
@@ -207,7 +230,6 @@ public class PedidoServiceImpl implements PedidoService {
     public List<PedidoListaResponse> obtenerPedidosDelUsuarioComoDTO(Integer idUsuario) {
         try {
             List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuario(idUsuario);
-            System.out.println("Pedidos encontrados para usuario " + idUsuario + ": " + pedidos.size());
             
             return pedidos.stream()
                 .map(this::convertirAPedidoListaResponse)
@@ -288,5 +310,214 @@ public class PedidoServiceImpl implements PedidoService {
         }
         
         return response;
+    }
+
+    @Override
+    public List<PedidoListaResponse> obtenerPedidosDisponibles() {
+        try {
+            // Pedidos que están disponibles para ser aceptados por repartidores
+            // Estados: pendiente (recién creado), aceptado (restaurante aceptó) o en_preparacion (está listo para recoger)
+            List<Pedido.EstadoPedido> estados = java.util.Arrays.asList(
+                Pedido.EstadoPedido.pendiente,
+                Pedido.EstadoPedido.aceptado,
+                Pedido.EstadoPedido.en_preparacion
+            );
+            
+            List<Pedido> pedidos = pedidoRepository.findByRepartidorIsNullAndEstadoPedidoIn(estados);
+            
+            return pedidos.stream()
+                .map(this::convertirAPedidoListaResponse)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error al obtener pedidos disponibles: " + e.getMessage());
+            e.printStackTrace();
+            throw new ServiceException("Error al obtener pedidos disponibles", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponse aceptarPedido(Integer idPedido, Integer idRepartidor) {
+        try {
+            // Validar que el pedido existe
+            Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+            
+            // Validar que el pedido no tiene repartidor asignado
+            if (pedido.getRepartidor() != null) {
+                throw new ServiceException("Este pedido ya tiene un repartidor asignado");
+            }
+            
+            // Validar que el pedido está en un estado que permite asignación
+            if (pedido.getEstadoPedido() != Pedido.EstadoPedido.pendiente &&
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.aceptado && 
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.en_preparacion) {
+                throw new ServiceException("Este pedido no está disponible para ser aceptado en este momento");
+            }
+            
+            // Validar que el repartidor existe
+            Usuario repartidor = usuarioRepository.findById(idRepartidor)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Repartidor no encontrado"));
+            
+            // Validar que el usuario es un repartidor
+            if (repartidor.getRol() != Usuario.Rol.repartidor) {
+                throw new ServiceException("El usuario no es un repartidor");
+            }
+            
+            // Asignar repartidor y cambiar estado a en_camino
+            pedido.setRepartidor(repartidor);
+            pedido.setEstadoPedido(Pedido.EstadoPedido.en_camino);
+            
+            // Guardar cambios
+            Pedido pedidoActualizado = pedidoRepository.save(pedido);
+            
+            // Convertir a DTO
+            return convertirAPedidoResponse(pedidoActualizado);
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al aceptar pedido: " + e.getMessage());
+            e.printStackTrace();
+            throw new ServiceException("Error al aceptar el pedido", e);
+        }
+    }
+
+    @Override
+    public List<PedidoListaResponse> obtenerPedidosDelRepartidor(Integer idRepartidor) {
+        try {
+            List<Pedido> pedidos = pedidoRepository.findByRepartidor_IdUsuario(idRepartidor);
+            
+            return pedidos.stream()
+                .map(this::convertirAPedidoListaResponse)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error al obtener pedidos del repartidor: " + e.getMessage());
+            e.printStackTrace();
+            throw new ServiceException("Error al obtener pedidos del repartidor", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void marcarPedidoComoEntregado(Integer idPedido) {
+        try {
+            // Obtener el pedido
+            Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+            
+            // Validar que el pedido está en estado en_camino
+            if (pedido.getEstadoPedido() != Pedido.EstadoPedido.en_camino) {
+                throw new ServiceException("El pedido debe estar en curso para ser marcado como entregado");
+            }
+            
+            // Actualizar estado a entregado y establecer fecha de entrega
+            pedido.setEstadoPedido(Pedido.EstadoPedido.entregado);
+            pedido.setFechaEntrega(LocalDateTime.now());
+            
+            // Guardar cambios
+            pedidoRepository.save(pedido);
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al marcar pedido como entregado: " + e.getMessage());
+            e.printStackTrace();
+            throw new ServiceException("Error al marcar el pedido como entregado", e);
+        }
+    }
+
+    @Override
+    public List<PedidoListaResponse> obtenerHistorialEntregas(Integer idRepartidor) {
+        try {
+            // Obtener solo pedidos entregados del repartidor, ordenados por fecha de entrega descendente
+            List<Pedido> pedidosEntregados = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoOrderByFechaEntregaDesc(
+                idRepartidor, 
+                Pedido.EstadoPedido.entregado
+            );
+            
+            return pedidosEntregados.stream()
+                .map(this::convertirAPedidoListaResponse)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error al obtener historial de entregas: " + e.getMessage());
+            e.printStackTrace();
+            throw new ServiceException("Error al obtener historial de entregas", e);
+        }
+    }
+
+    @Override
+    public Map<String, Object> obtenerEstadisticasRepartidor(Integer idRepartidor) {
+        try {
+            // Validar que el repartidor existe
+            usuarioRepository.findById(idRepartidor)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Repartidor no encontrado"));
+            
+            LocalDateTime ahora = LocalDateTime.now();
+            LocalDateTime inicioHoy = ahora.toLocalDate().atStartOfDay();
+            LocalDateTime finHoy = ahora.toLocalDate().atTime(23, 59, 59);
+            
+            // Inicio de la semana (lunes)
+            LocalDate fechaHoy = ahora.toLocalDate();
+            LocalDate inicioSemana = fechaHoy.minusDays(fechaHoy.getDayOfWeek().getValue() - 1);
+            LocalDateTime inicioSemanaDateTime = inicioSemana.atStartOfDay();
+            
+            // Inicio del mes
+            LocalDate inicioMes = fechaHoy.withDayOfMonth(1);
+            LocalDateTime inicioMesDateTime = inicioMes.atStartOfDay();
+            
+            // Pedidos entregados HOY
+            List<Pedido> entregasHoy = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoAndFechaEntregaBetween(
+                idRepartidor, 
+                Pedido.EstadoPedido.entregado, 
+                inicioHoy, 
+                finHoy
+            );
+            
+            // Pedidos entregados ESTA SEMANA
+            List<Pedido> entregasSemana = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoAndFechaEntregaBetween(
+                idRepartidor, 
+                Pedido.EstadoPedido.entregado, 
+                inicioSemanaDateTime, 
+                finHoy
+            );
+            
+            // Pedidos entregados ESTE MES
+            List<Pedido> entregasMes = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoAndFechaEntregaBetween(
+                idRepartidor, 
+                Pedido.EstadoPedido.entregado, 
+                inicioMesDateTime, 
+                finHoy
+            );
+            
+            // Calcular ganado HOY
+            BigDecimal ganadoHoy = entregasHoy.stream()
+                .map(Pedido::getTotalPedido)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // Calcular ganado ESTA SEMANA
+            BigDecimal ganadoSemana = entregasSemana.stream()
+                .map(Pedido::getTotalPedido)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // Calcular ganado ESTE MES
+            BigDecimal ganadoMes = entregasMes.stream()
+                .map(Pedido::getTotalPedido)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            Map<String, Object> estadisticas = new HashMap<>();
+            estadisticas.put("entregasHoy", entregasHoy.size());
+            estadisticas.put("entregasSemana", entregasSemana.size());
+            estadisticas.put("entregasMes", entregasMes.size());
+            estadisticas.put("ganadoHoy", ganadoHoy.doubleValue());
+            estadisticas.put("ganadoSemana", ganadoSemana.doubleValue());
+            estadisticas.put("ganadoMes", ganadoMes.doubleValue());
+            
+            return estadisticas;
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al obtener estadísticas del repartidor: " + e.getMessage());
+            e.printStackTrace();
+            throw new ServiceException("Error al obtener estadísticas del repartidor", e);
+        }
     }
 }

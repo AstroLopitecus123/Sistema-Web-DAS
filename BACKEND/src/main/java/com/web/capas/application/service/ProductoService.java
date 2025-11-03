@@ -1,15 +1,16 @@
 package com.web.capas.application.service;
 
-import com.web.capas.infrastructure.persistence.entities.Producto;
+import com.web.capas.domain.dto.ProductoRequest;
+import com.web.capas.domain.dto.ProductoResponse;
 import java.util.List;
 
 public interface ProductoService {
 
-    public List<Producto> obtenerProductosActivos();
-    
-	public List<Producto> obtenerMenuDisponible();
+    List<ProductoResponse> obtenerProductosActivos();
 
-	public List<Producto> buscarProductos(String keyword);
+    List<ProductoResponse> obtenerMenuDisponible();
 
-	public Producto guardarProducto(Producto producto);
+    List<ProductoResponse> buscarProductos(String keyword);
+
+    ProductoResponse guardarProducto(ProductoRequest request);
 }

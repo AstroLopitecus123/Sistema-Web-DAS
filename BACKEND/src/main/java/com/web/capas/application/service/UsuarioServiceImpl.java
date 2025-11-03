@@ -3,6 +3,7 @@ package com.web.capas.application.service;
 import com.web.capas.domain.RecursoNoEncontradoExcepcion;
 import com.web.capas.domain.ServiceException;
 import com.web.capas.domain.CredencialesInvalidasException;
+import com.web.capas.domain.dto.UsuarioResponse;
 import com.web.capas.infrastructure.persistence.entities.PasswordResetToken;
 import com.web.capas.infrastructure.persistence.entities.Usuario;
 import com.web.capas.infrastructure.persistence.entities.Pedido;
@@ -217,14 +218,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 throw new ServiceException("No se puede eliminar un usuario administrador");
             }
             
-            System.out.println("Iniciando eliminación completa del usuario ID: " + id);
-            
-            // Eliminar datos relacionados en orden correcto
             eliminarDatosRelacionados(id);
-            
-            // Eliminar el usuario
             usuarioRepository.deleteById(id);
-            System.out.println("Usuario eliminado exitosamente ID: " + id);
             
             return true;
             
@@ -249,9 +244,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private void eliminarCarritoUsuario(Integer idUsuario) {
         try {
             carritoRepository.deleteByCliente_IdUsuario(idUsuario);
-            System.out.println("Carrito eliminado para usuario ID: " + idUsuario);
         } catch (Exception e) {
-            System.out.println("No se pudo eliminar carrito: " + e.getMessage());
         }
     }
     
@@ -259,16 +252,13 @@ public class UsuarioServiceImpl implements UsuarioService {
     private void eliminarTokensRecuperacion(Integer idUsuario) {
         try {
             passwordResetTokenRepository.deleteByUsuario_IdUsuario(idUsuario);
-            System.out.println("Tokens de recuperación eliminados para usuario ID: " + idUsuario);
         } catch (Exception e) {
-            System.out.println("No se pudo eliminar tokens de recuperación: " + e.getMessage());
         }
     }
     
     // Elimina los pedidos del usuario y sus pagos asociados
     private void eliminarPedidosUsuario(Integer idUsuario) {
         List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuario(idUsuario);
-        System.out.println("Encontrados " + pedidos.size() + " pedidos para el usuario ID: " + idUsuario);
         
         for (Pedido pedido : pedidos) {
             eliminarPagosPedido(pedido.getIdPedido());
@@ -282,10 +272,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         try {
             pagoRepository.findByPedido_IdPedido(idPedido).ifPresent(pago -> {
                 pagoRepository.delete(pago);
-                System.out.println("Pago eliminado ID: " + pago.getIdPago() + " para pedido ID: " + idPedido);
             });
         } catch (Exception e) {
-            System.out.println("No se encontró pago para pedido ID " + idPedido + ": " + e.getMessage());
         }
     }
     
@@ -293,9 +281,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private void eliminarPedido(Integer idPedido) {
         try {
             pedidoRepository.deleteById(idPedido);
-            System.out.println("Pedido eliminado ID: " + idPedido);
         } catch (Exception e) {
-            System.out.println("Error al eliminar pedido ID " + idPedido + ": " + e.getMessage());
         }
     }
     
@@ -448,13 +434,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                         token, 
                         usuario.getNombre() + " " + usuario.getApellido()
                     );
-                    
-                    System.out.println("Email de recuperación enviado a: " + email);
-                } else {
-                    System.out.println("Cuenta inactiva: " + email);
                 }
-            } else {
-                System.out.println("Email no registrado: " + email);
             }
             
         } catch (Exception e) {
@@ -498,8 +478,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             passwordResetToken.setUsado(true);
             passwordResetTokenRepository.save(passwordResetToken);
             
-            System.out.println("Contraseña restablecida para: " + usuario.getEmail());
-            
             return true;
             
         } catch (ServiceException | CredencialesInvalidasException e) {
@@ -539,5 +517,43 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         return "+51";
+    }
+    
+    @Override
+    public UsuarioResponse mapearAUsuarioResponse(Usuario usuario) {
+        if (usuario == null) {
+            return null;
+        }
+        
+        UsuarioResponse response = new UsuarioResponse();
+        response.setIdUsuario(usuario.getIdUsuario());
+        response.setNombre(usuario.getNombre());
+        response.setApellido(usuario.getApellido());
+        response.setEmail(usuario.getEmail());
+        response.setUsername(usuario.getUsername());
+        response.setTelefono(usuario.getTelefono());
+        response.setDireccion(usuario.getDireccion());
+        response.setRol(usuario.getRol() != null ? usuario.getRol().toString() : null);
+        response.setActivo(usuario.getActivo());
+        response.setFechaRegistro(usuario.getFechaRegistro());
+        
+        return response;
+    }
+    
+    @Override
+    public List<UsuarioResponse> obtenerTodosLosUsuariosComoDTO() {
+        List<Usuario> usuarios = obtenerTodosLosUsuarios();
+        return usuarios.stream()
+            .map(this::mapearAUsuarioResponse)
+            .collect(java.util.stream.Collectors.toList());
+    }
+    
+    @Override
+    public UsuarioResponse obtenerUsuarioPorIdComoDTO(Integer id) {
+        Usuario usuario = obtenerUsuarioPorId(id);
+        if (usuario == null) {
+            throw new RecursoNoEncontradoExcepcion("Usuario no encontrado");
+        }
+        return mapearAUsuarioResponse(usuario);
     }
 }

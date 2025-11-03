@@ -53,7 +53,6 @@ export class CuponesService {
     const cuponesDisponiblesCount = cuponesDisponibles.length;
     const cuponesUsadosCount = cuponesUsados.length;
     
-    // Simular ahorro del mes
     const ahorradoEsteMes = cuponesUsados.reduce((total, cupon) => {
       return total + (cupon.tipoDescuento === 'porcentaje' ? 15 : cupon.valorDescuento);
     }, 0);

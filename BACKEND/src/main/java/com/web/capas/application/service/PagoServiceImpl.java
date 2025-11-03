@@ -3,6 +3,7 @@ package com.web.capas.application.service;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.web.capas.domain.dto.PagoResponse;
 import com.web.capas.domain.dto.PaymentRequest;
 import com.web.capas.domain.dto.PaymentResponse;
 import com.web.capas.domain.RecursoNoEncontradoExcepcion;
@@ -36,10 +37,21 @@ public class PagoServiceImpl implements PagoService {
     @Transactional
     public PaymentResponse crearPaymentIntent(PaymentRequest request) {
         try {
-            
             // Validar que el pedido existe
             Pedido pedido = pedidoRepository.findById(request.getIdPedido())
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+            
+            // Validar que el cliente existe
+            if (pedido.getCliente() == null) {
+                throw new RecursoNoEncontradoExcepcion("Cliente asociado al pedido no encontrado");
+            }
+            
+            // Validar que el cliente corresponde al email en la request
+            if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+                if (!pedido.getCliente().getEmail().equals(request.getEmail())) {
+                    throw new ServiceException("El email proporcionado no corresponde al cliente del pedido");
+                }
+            }
             
             // Convertir a centavos para Stripe
             long amountInCents = request.getMonto()
@@ -53,7 +65,7 @@ public class PagoServiceImpl implements PagoService {
             // Crear PaymentIntent en Stripe
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
                 .setAmount(amountInCents)
-                .setCurrency("usd") // Puedes cambiarlo a "pen" para soles
+                .setCurrency("usd")
                 .setDescription("Pago por pedido #" + request.getIdPedido())
                 .putMetadata("id_pedido", request.getIdPedido().toString())
                 .setReceiptEmail(request.getEmail())
@@ -146,6 +158,35 @@ public class PagoServiceImpl implements PagoService {
     public Pago obtenerPagoPorReferencia(String referenciaTransaccion) {
         return pagoRepository.findByReferenciaTransaccion(referenciaTransaccion)
             .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pago no encontrado"));
+    }
+    
+    @Override
+    public PagoResponse confirmarPagoComoDTO(String paymentIntentId) {
+        Pago pago = confirmarPago(paymentIntentId);
+        return mapearAPagoResponse(pago);
+    }
+    
+    @Override
+    public PagoResponse obtenerPagoPorReferenciaComoDTO(String referenciaTransaccion) {
+        Pago pago = obtenerPagoPorReferencia(referenciaTransaccion);
+        return mapearAPagoResponse(pago);
+    }
+    
+    private PagoResponse mapearAPagoResponse(Pago pago) {
+        if (pago == null) {
+            return null;
+        }
+        
+        PagoResponse response = new PagoResponse();
+        response.setIdPago(pago.getIdPago());
+        response.setIdPedido(pago.getPedido() != null ? pago.getPedido().getIdPedido() : null);
+        response.setMonto(pago.getMonto());
+        response.setMetodoPago(pago.getMetodoPago() != null ? pago.getMetodoPago().toString() : null);
+        response.setEstadoTransaccion(pago.getEstadoTransaccion() != null ? pago.getEstadoTransaccion().toString() : null);
+        response.setReferenciaTransaccion(pago.getReferenciaTransaccion());
+        response.setFechaPago(pago.getFechaPago());
+        
+        return response;
     }
 
     @Override

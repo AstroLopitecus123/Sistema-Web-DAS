@@ -1,5 +1,6 @@
 package com.web.capas.application.service;
 
+import com.web.capas.domain.dto.UsuarioResponse;
 import com.web.capas.infrastructure.persistence.entities.Usuario;
 import java.util.List;
 
@@ -63,4 +64,13 @@ public interface UsuarioService {
     
     // Restablece la contraseña usando el token de recuperación
     boolean restablecerContrasena(String token, String nuevaContrasena);
+    
+    // Transforma una entidad Usuario a DTO UsuarioResponse
+    UsuarioResponse mapearAUsuarioResponse(Usuario usuario);
+    
+    // Obtiene todos los usuarios como DTOs
+    List<UsuarioResponse> obtenerTodosLosUsuariosComoDTO();
+    
+    // Obtiene un usuario por ID como DTO
+    UsuarioResponse obtenerUsuarioPorIdComoDTO(Integer id);
 }

@@ -1,27 +1,39 @@
 package com.web.capas.infrastructure.web;
 
+import com.twilio.http.Response;
+import com.web.capas.application.factory.NotificacionFactory;
+import com.web.capas.application.factory.NotificacionType;
+import com.web.capas.application.service.WhatsAppService;
+import com.web.capas.application.service.notificacion.NotificacionService;
 import com.web.capas.domain.RecursoNoEncontradoExcepcion;
 import com.web.capas.domain.ServiceException;
-import com.web.capas.infrastructure.persistence.entities.Pedido;
+import com.web.capas.domain.dto.MensajePersonalizadoRequest;
+import com.web.capas.domain.dto.NotificacionCancelacionRequest;
 import com.web.capas.domain.repository.PedidoRepository;
-import com.web.capas.application.service.WhatsAppService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import com.web.capas.infrastructure.persistence.entities.Pedido;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/notificaciones")
 public class NotificacionController {
-
+    //dependencias
     @Autowired
     private WhatsAppService whatsAppService;
     
     @Autowired
     private PedidoRepository pedidoRepository;
 
+    @Autowired
+    private NotificacionFactory notificacionFactory;
     // Notifica que un pedido está en camino (PUT /api/admin/notificaciones/pedido/{id}/en-camino)
     @PutMapping("/pedido/{id}/en-camino")
     public ResponseEntity<?> notificarPedidoEnCamino(@PathVariable Integer id) {
@@ -93,12 +105,12 @@ public class NotificacionController {
     @PutMapping("/pedido/{id}/cancelado")
     public ResponseEntity<?> notificarPedidoCancelado(
             @PathVariable Integer id, 
-            @RequestBody Map<String, String> request) {
+            @RequestBody NotificacionCancelacionRequest request) {
         
         Pedido pedido = pedidoRepository.findById(id)
             .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
 
-        String motivo = request.get("motivo");
+        String motivo = request.getMotivo();
         if (motivo == null || motivo.trim().isEmpty()) {
             motivo = "Cancelación por parte del restaurante";
         }
@@ -127,9 +139,9 @@ public class NotificacionController {
 
     // Envía mensaje personalizado por WhatsApp (POST /api/admin/notificaciones/mensaje-personalizado)
     @PostMapping("/mensaje-personalizado")
-    public ResponseEntity<?> enviarMensajePersonalizado(@RequestBody Map<String, String> request) {
-        String telefono = request.get("telefono");
-        String mensaje = request.get("mensaje");
+    public ResponseEntity<?> enviarMensajePersonalizado(@RequestBody MensajePersonalizadoRequest request) {
+        String telefono = request.getTelefono();
+        String mensaje = request.getMensaje();
 
         if (telefono == null || telefono.trim().isEmpty()) {
             throw new ServiceException("El teléfono es obligatorio");
@@ -148,4 +160,30 @@ public class NotificacionController {
 
         return ResponseEntity.ok(response);
     }
+
+    //ESTO ES NUEVO xdd
+    @PostMapping("/enviar-flexible")
+    public ResponseEntity<?> enviarNotificacionFlexible(@RequestBody Map<String, String> request) {
+        String tipo = request.get("tipo");
+        String destinatario = request.get("destinatario");
+        String mensaje = request.get("mensaje");
+
+        //validaciones
+        if (tipo == null || destinatario == null || mensaje == null) {
+            throw new ServiceException("tipo, destinatario y mensaje son obligatorios");
+        }
+
+        //Aqui entra la factory function
+        NotificacionType notificacionType = NotificacionType.valueOf(tipo.toUpperCase());
+        NotificacionService servicio = notificacionFactory.crearNotificacion(notificacionType);
+
+        servicio.enviarNotificacion(destinatario, mensaje);
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "mensaje", "Notificacion " + tipo + " enviada exitosamente",
+            "tipo", tipo,
+            "destinatario", destinatario
+        ));
+    }
+    
 }

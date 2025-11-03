@@ -47,7 +47,6 @@ export class Login {
     this.authService.login(this.loginData).subscribe({
       next: (response) => {
         this.loading = false;
-        console.log('Respuesta del backend:', response);
         
         if (response && response.success) {
           // Login exitoso, guardar datos
@@ -59,7 +58,6 @@ export class Login {
             'Has iniciado sesión correctamente.'
           );
           
-          // Pequeño delay para asegurar que el estado se actualice
           setTimeout(() => {
             // Redirigir según el rol
             this.authService.redirectByRole();
@@ -82,7 +80,13 @@ export class Login {
         console.error('URL:', err.url);
         
         // Verificar tipo de error
-        if (err.status === 403) {
+        if ((err as any).codigo === 'CUENTA_DESACTIVADA' || (err as any).error?.mensaje === 'CUENTA_DESACTIVADA') {
+          this.notificacionService.mostrarError(
+            'Cuenta desactivada',
+            'Tu cuenta ha sido desactivada por un administrador. Contacta con soporte para más información.'
+          );
+          console.log('Manejando CUENTA_DESACTIVADA desde backend');
+        } else if (err.status === 403) {
           // Error 403: Cuenta desactivada
           this.notificacionService.mostrarError(
             'Cuenta desactivada', 

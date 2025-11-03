@@ -63,7 +63,6 @@ export class Cupones implements OnInit {
   }
 
   cargarCupones() {
-    // Simular datos de cupones basados en la base de datos
     this.cupones = [
       {
         id: 1,
@@ -149,15 +148,10 @@ export class Cupones implements OnInit {
 
   copiarCodigo(codigo: string) {
     navigator.clipboard.writeText(codigo).then(() => {
-      // Aquí podrías mostrar una notificación de éxito
-      console.log('Código copiado:', codigo);
     });
   }
 
   aplicarCupon(cupon: Cupon) {
-    // Aquí implementarías la lógica para aplicar el cupón
-    console.log('Aplicando cupón:', cupon.codigo);
-    // Por ejemplo, navegar al carrito con el cupón aplicado
     this.router.navigate(['/carrito'], { queryParams: { cupon: cupon.codigo } });
   }
 

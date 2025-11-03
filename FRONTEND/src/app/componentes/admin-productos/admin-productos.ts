@@ -26,7 +26,6 @@ export class AdminProductos implements OnInit {
   }
 
   cargarProductos() {
-    // Datos de ejemplo - en producción vendría del servicio
     this.productos = [
       {
         idProducto: 1,

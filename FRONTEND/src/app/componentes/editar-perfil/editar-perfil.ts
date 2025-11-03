@@ -6,11 +6,13 @@ import { AuthService } from '../../servicios/auth.service';
 import { UsuarioService } from '../../servicios/usuario.service';
 import { Usuario } from '../../modelos/usuario.model';
 import { NotificacionService } from '../../servicios/notificacion.service';
+import { UbicacionService } from '../../servicios/ubicacion.service';
+import { CampoUbicacion } from '../campo-ubicacion/campo-ubicacion';
 
 @Component({
   selector: 'app-editar-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CampoUbicacion],
   templateUrl: './editar-perfil.html',
   styleUrls: ['./editar-perfil.css']
 })
@@ -33,20 +35,18 @@ export class EditarPerfil implements OnInit {
     private authService: AuthService,
     private router: Router,
     private usuarioService: UsuarioService,
-    private notificacionService: NotificacionService
+    private notificacionService: NotificacionService,
+    private ubicacionService: UbicacionService
   ) {}
 
   ngOnInit() {
-    // Cargar datos del usuario actual
     this.usuario = this.authService.getUsuarioActual();
     
-    // Si no hay usuario logueado, redirigir al login
     if (!this.usuario) {
       this.router.navigate(['/login']);
       return;
     }
 
-    // Cargar datos del usuario desde el backend
     this.cargarDatosUsuario();
   }
 
@@ -56,13 +56,11 @@ export class EditarPerfil implements OnInit {
       return;
     }
 
-    // Cargar datos completos del usuario desde el backend
     this.usuarioService.obtenerPerfil(this.usuario.idUsuario).subscribe({
       next: (response: any) => {
         this.loadingData = false;
         
         if (response && this.usuario) {
-          // Remover +51 del teléfono para mostrar solo los números al usuario
           let telefonoMostrar = response.telefono || '';
           if (telefonoMostrar.startsWith('+51')) {
             telefonoMostrar = telefonoMostrar.substring(3);
@@ -85,9 +83,7 @@ export class EditarPerfil implements OnInit {
           'Error al cargar los datos del perfil'
         );
         
-        // Cargar datos desde localStorage como fallback
         if (this.usuario) {
-          // Remover +51 del teléfono para mostrar solo los números al usuario
           let telefonoMostrar = this.usuario.telefono || '';
           if (telefonoMostrar && telefonoMostrar.startsWith('+51')) {
             telefonoMostrar = telefonoMostrar.substring(3);
@@ -122,8 +118,6 @@ export class EditarPerfil implements OnInit {
     this.errorMessage = null;
     this.successMessage = null;
 
-    // Preparar datos a enviar (sin el correo)
-    // Normalizar teléfono: asegurar que tenga +51
     let telefonoNormalizado = this.perfilData.telefono.trim();
     if (telefonoNormalizado && telefonoNormalizado !== '') {
       telefonoNormalizado = this.normalizarTelefono(telefonoNormalizado);
@@ -138,7 +132,11 @@ export class EditarPerfil implements OnInit {
       direccion: this.perfilData.direccion.trim()
     };
 
-    // Llamar al servicio real de actualización
+    const ubicacion = this.ubicacionService.obtenerUbicacionActual();
+    if (ubicacion) {
+      datosActualizacion.direccion = ubicacion.direccion.trim();
+    }
+
     this.authService.actualizarPerfil(this.usuario.idUsuario, datosActualizacion).subscribe({
       next: (response) => {
         this.loading = false;
@@ -149,10 +147,9 @@ export class EditarPerfil implements OnInit {
             response.mensaje || 'Perfil actualizado correctamente'
           );
           
-          // Refrescar el usuario actual en el AuthService
           if (response.usuario) {
             const usuarioActual = this.authService.getUsuarioActual();
-            
+
             const usuarioActualizado: Usuario = {
               idUsuario: response.usuario.idUsuario,
               nombre: response.usuario.nombre,
@@ -165,9 +162,9 @@ export class EditarPerfil implements OnInit {
               activo: true
             };
             this.authService.actualizarUsuarioActual(usuarioActualizado);
+            this.ubicacionService.limpiarUbicacion();
           }
           
-          // Redirigir al perfil después de 2 segundos
           setTimeout(() => {
             const usuario = this.authService.getUsuarioActual();
             if (usuario?.username) {

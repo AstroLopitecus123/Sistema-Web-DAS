@@ -132,18 +132,12 @@
           </div>
 
           <div class="form-group mb-3">
-            <label for="direccion" class="form-label">Dirección (opcional)</label>
-            <div class="input-with-icon">
-              <i class="fas fa-map-marker-alt input-icon"></i>
-              <input
-                type="text"
-                class="form-control"
-                id="direccion"
-                placeholder="Av. Principal 123"
-                [(ngModel)]="registroData.direccion"
-                name="direccion"
-              />
-            </div>
+            <app-campo-ubicacion
+              etiqueta="Dirección (opcional)"
+              nombreCampo="direccionRegistro"
+              [placeholder]="'Av. Principal 123'"
+              [(direccion)]="registroData.direccion">
+            </app-campo-ubicacion>
           </div>
 
           <!-- Contraseñas -->

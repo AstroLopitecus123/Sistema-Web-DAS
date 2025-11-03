@@ -51,9 +51,7 @@ export class PagoService {
   private async initializeStripe(): Promise<void> {
     try {
       const stripeConfig = this.configuracionService.getStripeConfig();
-      console.log('🔧 Inicializando Stripe con clave:', stripeConfig.publishableKey.substring(0, 20) + '...');
       
-      // Verificar que la clave tenga el formato correcto
       if (!stripeConfig.publishableKey.startsWith('pk_test_')) {
         throw new Error('La clave de Stripe no tiene el formato correcto para modo test');
       }
@@ -88,42 +86,29 @@ export class PagoService {
         return null;
       }
 
-      console.log('Creando elemento de tarjeta con nuevo enfoque');
-
-      // Destruir elemento anterior
       this.destroyCardElement();
 
-      // Verificar contenedor
       const container = document.getElementById(containerId);
       if (!container) {
         console.error(`No se encontró el contenedor #${containerId}`);
         return null;
       }
 
-      // SOLUCIÓN: Verificar que el contenedor no tenga elementos hijos antes de montar
       if (container.hasChildNodes()) {
-        console.log('Contenedor tiene elementos hijos - limpiando...');
         container.innerHTML = '';
-        // Esperar a que se limpie completamente
         await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      // Asegurar propiedades CSS
       container.style.display = 'block';
       container.style.visibility = 'visible';
       container.style.opacity = '1';
 
-      // Esperar un poco para que el DOM se estabilice
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Generar elementos con configuración básica
       this.elements = stripe.elements({
         locale: 'es'
       });
 
-      console.log('Stripe Elements creado');
-
-      // Generar elemento de tarjeta con configuración básica
       this.cardElement = this.elements.create('card' as any, {
         style: {
           base: {
@@ -142,20 +127,10 @@ export class PagoService {
         hidePostalCode: true,
       });
 
-      console.log('Card Element creado');
-
       await new Promise(resolve => setTimeout(resolve, 50));
       this.cardElement.mount(`#${containerId}`);
       
-      // Esperar a que se renderice
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('Elemento de tarjeta montado con nuevo enfoque');
-      
-      // Verificar que realmente se montó
-      const inputs = container.querySelectorAll('input');
-      const iframes = container.querySelectorAll('iframe');
-      console.log('Verificación final - Inputs:', inputs.length, 'Iframes:', iframes.length);
       
       return this.cardElement;
     } catch (error) {
@@ -171,7 +146,6 @@ export class PagoService {
         this.cardElement.unmount();
         this.cardElement.destroy();
         this.cardElement = null;
-        console.log('Card Element destruido');
       }
       if (this.elements) {
         this.elements = null;

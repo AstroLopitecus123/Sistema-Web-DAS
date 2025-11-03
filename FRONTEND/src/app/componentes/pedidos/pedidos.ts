@@ -83,34 +83,74 @@ export class Pedidos implements OnInit, OnDestroy {
         let pedidosFiltrados = [...this.listaPedidosOriginal];
 
         if (this.filtroEstado !== 'todos') {
-            pedidosFiltrados = pedidosFiltrados.filter(p => p.estadoPedido === this.filtroEstado);
+            // Mapear valores del filtro a valores del backend
+            const estadosBackend: { [key: string]: string[] } = {
+                'Entregado': ['entregado'],
+                'Enviado': ['en_camino', 'en camino'],
+                'Pendiente': ['pendiente', 'aceptado', 'en_preparacion']
+            };
+
+            const estadosABuscar = estadosBackend[this.filtroEstado] || [this.filtroEstado.toLowerCase()];
+            
+            pedidosFiltrados = pedidosFiltrados.filter(p => {
+                const estadoNormalizado = (p.estadoPedido || '').toLowerCase().trim();
+                return estadosABuscar.some(estado => estadoNormalizado === estado.toLowerCase());
+            });
         }
 
         // Filtrar por PERÍODO usando la fecha actual
         const hoy = new Date(); // Usar la fecha actual real
-        let fechaLimite = new Date(hoy);
+        hoy.setHours(23, 59, 59, 999); // Incluir todo el día de hoy
+        let fechaLimite = new Date();
         
         switch (this.filtroPeriodo) {
             case 'semana':
                 fechaLimite.setDate(hoy.getDate() - 7);
+                fechaLimite.setHours(0, 0, 0, 0);
                 break;
             case 'quinceDias':
                 fechaLimite.setDate(hoy.getDate() - 15);
+                fechaLimite.setHours(0, 0, 0, 0);
                 break;
             case 'treintaDias':
-                fechaLimite.setMonth(hoy.getMonth() - 1);
+                fechaLimite.setDate(hoy.getDate() - 30);
+                fechaLimite.setHours(0, 0, 0, 0);
                 break;
             case 'tresMeses':
                 fechaLimite.setMonth(hoy.getMonth() - 3);
+                fechaLimite.setHours(0, 0, 0, 0);
                 break;
             case 'seisMeses':
                 fechaLimite.setMonth(hoy.getMonth() - 6);
+                fechaLimite.setHours(0, 0, 0, 0);
+                break;
+            default:
+                // Si no hay filtro de período, no filtrar por fecha
+                fechaLimite = new Date(0); // Fecha mínima
                 break;
         }
 
         pedidosFiltrados = pedidosFiltrados.filter(p => {
-            const fechaPedido = new Date(p.fechaPedido);
-            return fechaPedido >= fechaLimite;
+            if (!p.fechaPedido) {
+                return false; // Si no hay fecha, excluir el pedido
+            }
+            
+            try {
+                const fechaPedido = new Date(p.fechaPedido);
+                
+                // Validar que la fecha sea válida
+                if (isNaN(fechaPedido.getTime())) {
+                    console.warn('Fecha inválida en pedido:', p.idPedido, p.fechaPedido);
+                    return false;
+                }
+                
+                // Comparar solo las fechas (sin hora)
+                fechaPedido.setHours(0, 0, 0, 0);
+                return fechaPedido >= fechaLimite;
+            } catch (error) {
+                console.error('Error al procesar fecha del pedido:', p.idPedido, error);
+                return false;
+            }
         });
 
         // Refrescar la lista visible
@@ -141,9 +181,7 @@ export class Pedidos implements OnInit, OnDestroy {
         }
     }
 
-    // Abre el modal de detalles del pedido
     verDetallesPedido(pedido: Pedido): void {
-        // Generar un objeto DetallePedido basado en los datos simulados
         this.pedidoSeleccionado = this.crearDetallePedidoSimulado(pedido);
         this.mostrarModalDetalle = true;
     }

@@ -62,7 +62,6 @@ export class Carrito implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Ya no necesitamos cargar items simulados, el servicio maneja el estado
   }
 
   // Se ejecuta cada vez que el usuario cambia la cantidad o usa los botones +/-

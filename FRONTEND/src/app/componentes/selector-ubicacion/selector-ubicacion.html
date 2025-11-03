@@ -1,0 +1,41 @@
+<div class="location-card">
+  <div class="location-header">
+    <div class="location-info">
+      <i class="fas fa-map-marker-alt"></i>
+      <div class="location-texts">
+        <span class="location-title">Entrega en</span>
+        <span class="location-address">
+          {{ direccionSeleccionada || 'Selecciona una dirección para tu pedido' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="location-actions">
+      <button class="btn-location" type="button" (click)="usarUbicacionActual()">
+        <i class="fas fa-location-crosshairs"></i>
+        Usar mi ubicación actual
+      </button>
+      <button *ngIf="mostrarCerrar" type="button" class="btn-close-modal" (click)="cerrarModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="location-input-wrapper">
+    <input #autocompleteInput type="text" class="location-autocomplete" placeholder="Escribe la dirección de entrega" (focus)="ubicacionError = null">
+  </div>
+
+  <div class="location-map" #mapContainer></div>
+
+  <p class="location-error" *ngIf="ubicacionError">
+    <i class="fas fa-circle-exclamation"></i>
+    {{ ubicacionError }}
+  </p>
+
+  <div class="location-footer">
+    <button class="btn-confirmar" type="button" [disabled]="!ubicacionActual" (click)="confirmarUbicacion()">
+      <i class="fas fa-check"></i>
+      Guardar dirección
+    </button>
+  </div>
+</div>

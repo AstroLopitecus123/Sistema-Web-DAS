@@ -25,7 +25,6 @@ export class AdminPedidos implements OnInit {
   }
 
   cargarPedidos() {
-    // Datos de ejemplo - en producción vendría del servicio
     this.pedidos = [
       {
         idPedido: 1847,
@@ -94,12 +93,10 @@ export class AdminPedidos implements OnInit {
     if (confirm(`¿Cambiar estado del pedido #${pedido.idPedido} a ${nuevoEstado}?`)) {
       pedido.estadoPedido = nuevoEstado as any;
       console.log('Estado cambiado:', pedido.idPedido, nuevoEstado);
-      // Aquí se enviaría la actualización al servicio
     }
   }
 
   asignarRepartidor(pedido: Pedido) {
-    // Lógica para asignar repartidor
     console.log('Asignando repartidor al pedido:', pedido.idPedido);
   }
 

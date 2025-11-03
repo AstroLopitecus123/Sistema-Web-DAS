@@ -22,7 +22,13 @@ export class NucleoService implements HttpInterceptor {
       'Expires': '0'
     };
 
-    if (token) {
+    const url = request.url || '';
+    const esAuthPublico = url.includes('/api/auth/login') ||
+      url.includes('/api/auth/registro') ||
+      url.includes('/api/auth/recuperar-contrasena') ||
+      url.includes('/api/auth/restablecer-contrasena');
+
+    if (token && !esAuthPublico) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -58,8 +64,12 @@ export class NucleoService implements HttpInterceptor {
 
       // Manejo especial para errores de login
       if (error.url && error.url.includes('/api/auth/login')) {
-        if (error.error && error.error.message) {
-          errorMessage = error.error.message;
+        const mensajeServidor = (error.error && (error.error.mensaje || error.error.message)) || '';
+        if (mensajeServidor === 'CUENTA_DESACTIVADA') {
+          errorMessage = 'Tu cuenta ha sido desactivada por un administrador. Contacta con soporte para más información.';
+          (error as any).codigo = 'CUENTA_DESACTIVADA';
+        } else if (error.error && (error.error.mensaje || error.error.message)) {
+          errorMessage = error.error.mensaje || error.error.message;
         } else {
           switch (error.status) {
             case 401:
@@ -100,6 +110,9 @@ export class NucleoService implements HttpInterceptor {
     (customError as any).statusText = error.statusText;
     (customError as any).error = error.error;
     (customError as any).url = error.url;
+    if ((error as any).codigo) {
+      (customError as any).codigo = (error as any).codigo;
+    }
 
     return throwError(() => customError);
   }

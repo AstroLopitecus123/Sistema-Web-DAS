@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router'; 
 import { AuthService } from '../../servicios/auth.service';
 import { NotificacionService } from '../../servicios/notificacion.service';
+import { CampoUbicacion } from '../campo-ubicacion/campo-ubicacion';
 
 interface RegistroData {
   nombre: string;
@@ -18,7 +19,7 @@ interface RegistroData {
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink], 
+  imports: [CommonModule, FormsModule, RouterLink, CampoUbicacion], 
   templateUrl: './registro.html',
   styleUrl: './registro.css'
 })

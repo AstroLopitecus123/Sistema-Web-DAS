@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../servicios/auth.service';
 import { RepartidorService } from '../../servicios/repartidor.service';
 import { UsuarioService } from '../../servicios/usuario.service';
+import { NotificacionService } from '../../servicios/notificacion.service';
 import { Usuario } from '../../modelos/usuario.model';
 
 @Component({
@@ -21,22 +22,22 @@ export class RepartidorDashboard implements OnInit {
   // Información del repartidor (se carga dinámicamente)
   usuario: Usuario | null = null;
 
-  // Estadísticas del día
-  entregasHoy = 12;
-  ganadoHoy = 180;
-  calificacion = 4.8;
-  
-  // Tendencias
-  tendenciaEntregas = 15.2;
-  tendenciaGanado = 8.5;
+  // Estadísticas del día (se cargan dinámicamente desde el backend)
+  entregasHoy = 0;
+  ganadoHoy = 0;
+  entregasMes = 0;
 
-  // Contadores de pedidos (solo para el dashboard)
-  pedidosPendientes = 3;
-  pedidosEnCurso = 1;
+  // Contadores de pedidos (se calculan dinámicamente)
+  pedidosPendientes = 0;
+  pedidosEnCurso = 0;
   pedidosCompletados = 0;
   
   // Modal de confirmación
   mostrarModalSalir = false;
+  mostrarModalAceptarPedido = false;
+  mostrarModalEntregarPedido = false;
+  pedidoSeleccionado: any | null = null;
+  pedidoParaEntregar: any | null = null;
   
   // Modo de edición
   modoEdicion = false;
@@ -70,80 +71,11 @@ export class RepartidorDashboard implements OnInit {
     confirmarContrasena: ''
   };
 
-  // Pedido actual
-  pedidoActual = {
-    id: 1847,
-    estado: 'PENDIENTE',
-    restaurante: 'Restaurant El Buen Sabor',
-    direccionEntrega: 'Av. Los Pinos 456, San Isidro',
-    cliente: 'María González',
-    telefono: '987 654 321'
-  };
-
-  // Lista de pedidos
-  pedidos = [
-    {
-      id: 1847,
-      estado: 'pendiente',
-      restaurante: 'Restaurant El Buen Sabor',
-      direccionEntrega: 'Av. Los Pinos 456, San Isidro',
-      cliente: 'María González',
-      telefono: '987 654 321',
-      total: 25.50,
-      horaPedido: '14:30'
-    },
-    {
-      id: 1848,
-      estado: 'en_curso',
-      restaurante: 'Pizza Palace',
-      direccionEntrega: 'Jr. Las Flores 123, Miraflores',
-      cliente: 'Juan Pérez',
-      telefono: '987 123 456',
-      total: 18.00,
-      horaPedido: '15:15'
-    },
-    {
-      id: 1849,
-      estado: 'entregado',
-      restaurante: 'Burger King',
-      direccionEntrega: 'Av. Arequipa 1234, Lima',
-      cliente: 'Ana García',
-      telefono: '987 789 012',
-      total: 32.00,
-      horaPedido: '13:45'
-    }
-  ];
+  // Lista de pedidos 
+  pedidos: any[] = [];
 
   // Historial de entregas
-  historialEntregas = [
-    {
-      id: 1840,
-      fecha: '2024-01-14',
-      cliente: 'Luis Martínez',
-      restaurante: 'McDonald\'s',
-      total: 28.50,
-      calificacion: 5,
-      comentario: 'Excelente servicio'
-    },
-    {
-      id: 1841,
-      fecha: '2024-01-14',
-      cliente: 'Carmen López',
-      restaurante: 'KFC',
-      total: 22.00,
-      calificacion: 4,
-      comentario: 'Muy rápido'
-    },
-    {
-      id: 1842,
-      fecha: '2024-01-13',
-      cliente: 'Roberto Silva',
-      restaurante: 'Papa John\'s',
-      total: 35.75,
-      calificacion: 5,
-      comentario: 'Perfecto'
-    }
-  ];
+  historialEntregas: any[] = [];
 
   // Perfil del repartidor
   perfilRepartidor = {
@@ -154,7 +86,6 @@ export class RepartidorDashboard implements OnInit {
     direccion: 'Av. Principal 123, Lima',
     fechaRegistro: '2024-01-01',
     totalEntregas: 156,
-    calificacionPromedio: 4.8,
     gananciaTotal: 2340.50
   };
 
@@ -164,17 +95,110 @@ export class RepartidorDashboard implements OnInit {
     private router: Router,
     private authService: AuthService,
     private repartidorService: RepartidorService,
-    private usuarioService: UsuarioService
+    private usuarioService: UsuarioService,
+    private notificacionService: NotificacionService
   ) {}
 
   ngOnInit() {
     this.cargarDatosRepartidor();
+    this.cargarPedidos();
+    this.cargarHistorialEntregas();
+    this.cargarEstadisticas();
   }
 
   cargarDatosRepartidor() {
-    // Cargar datos del usuario actual desde AuthService
     this.usuario = this.authService.getUsuarioActual();
-    console.log('Usuario cargado:', this.usuario);
+  }
+
+  cargarPedidos() {
+    if (!this.usuario || !this.usuario.idUsuario) {
+      return;
+    }
+    this.repartidorService.obtenerPedidosDisponibles().subscribe({
+      next: (pedidos: any[]) => {
+        this.pedidos = pedidos.map(p => this.mapearPedido(p));
+        this.actualizarContadores();
+      },
+      error: (err) => {
+        console.error('Error al cargar pedidos:', err);
+      }
+    });
+    
+    this.repartidorService.obtenerMisPedidos(this.usuario.idUsuario).subscribe({
+      next: (pedidos: any[]) => {
+        const pedidosAsignados = pedidos.map(p => this.mapearPedido(p));
+        const todosPedidos = [...this.pedidos];
+        pedidosAsignados.forEach(p => {
+          const index = todosPedidos.findIndex(ep => ep.id === p.id);
+          if (index >= 0) {
+            todosPedidos[index] = p;
+          } else {
+            todosPedidos.push(p);
+          }
+        });
+        this.pedidos = todosPedidos;
+        this.actualizarContadores();
+      },
+      error: (err) => {
+        console.error('Error al cargar mis pedidos:', err);
+      }
+    });
+  }
+
+  mapearPedido(pedidoBackend: any): any {
+    // Mapear estado del backend al formato del frontend
+    let estadoFrontend = 'pendiente';
+    const estadoBackend = pedidoBackend.estadoPedido || '';
+    
+    // Normalizar el estado del backend (en caso de que venga con diferentes formatos)
+    const estadoNormalizado = estadoBackend.toLowerCase().trim();
+    
+    if (estadoNormalizado === 'en_camino' || estadoNormalizado === 'en camino') {
+      estadoFrontend = 'en_curso';
+    } else if (estadoNormalizado === 'entregado') {
+      estadoFrontend = 'entregado';
+    } else if (estadoNormalizado === 'aceptado' || estadoNormalizado === 'en_preparacion' || estadoNormalizado === 'en preparacion' || estadoNormalizado === 'pendiente') {
+      estadoFrontend = 'pendiente';
+    }
+    
+    // Extraer hora del pedido
+    let horaPedido = '';
+    if (pedidoBackend.fechaPedido) {
+      try {
+        const fecha = new Date(pedidoBackend.fechaPedido);
+        horaPedido = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        horaPedido = '';
+      }
+    }
+    
+    let restaurante = 'Restaurante';
+    if (pedidoBackend.productos && pedidoBackend.productos.length > 0) {
+      restaurante = 'Restaurante';
+    }
+    
+    return {
+      id: pedidoBackend.idPedido,
+      estado: estadoFrontend,
+      estadoOriginal: pedidoBackend.estadoPedido, 
+      restaurante: restaurante,
+      direccionEntrega: pedidoBackend.direccionEntrega || '',
+      cliente: pedidoBackend.cliente ? 
+        `${pedidoBackend.cliente.nombre} ${pedidoBackend.cliente.apellido}` : 'Cliente',
+      telefono: pedidoBackend.cliente?.telefono || '',
+      total: pedidoBackend.totalPedido ? parseFloat(pedidoBackend.totalPedido.toString()) : 0,
+      horaPedido: horaPedido,
+      productos: pedidoBackend.productos || [],
+      notasCliente: pedidoBackend.notasCliente || '',
+      metodoPago: pedidoBackend.metodoPago || '',
+      fechaPedido: pedidoBackend.fechaPedido || ''
+    };
+  }
+
+  actualizarContadores() {
+    this.pedidosPendientes = this.obtenerPedidosPorEstado('pendientes').length;
+    this.pedidosEnCurso = this.obtenerPedidosPorEstado('en_curso').length;
+    this.pedidosCompletados = this.obtenerPedidosPorEstado('completadas').length;
   }
 
   cambiarTab(tab: string) {
@@ -183,33 +207,179 @@ export class RepartidorDashboard implements OnInit {
   }
 
   filtrarPedidos() {
-    // Lógica para filtrar pedidos según el tab activo
-    console.log('Filtrando pedidos por:', this.tabActivo);
   }
 
   aceptarPedido(pedidoId: number) {
-    if (confirm('¿Aceptar este pedido?')) {
-      console.log('Aceptando pedido:', pedidoId);
-      // Lógica para aceptar pedido
+    if (!this.usuario || !this.usuario.idUsuario) {
+      this.notificacionService.mostrarError('Error', 'No se pudo identificar al repartidor');
+      return;
     }
+
+    // Buscar el pedido completo en la lista
+    const pedidoCompleto = this.pedidos.find(p => p.id === pedidoId);
+    if (!pedidoCompleto) {
+      this.notificacionService.mostrarError('Error', 'No se pudo encontrar el pedido');
+      return;
+    }
+
+    this.pedidoSeleccionado = pedidoCompleto;
+    this.mostrarModalAceptarPedido = true;
+  }
+
+  cerrarModalAceptarPedido() {
+    this.mostrarModalAceptarPedido = false;
+    this.pedidoSeleccionado = null;
+  }
+
+  confirmarAceptarPedido() {
+    if (!this.usuario || !this.usuario.idUsuario || !this.pedidoSeleccionado || !this.pedidoSeleccionado.id) {
+      this.notificacionService.mostrarError('Error', 'No se pudo identificar al repartidor o el pedido');
+      this.cerrarModalAceptarPedido();
+      return;
+    }
+
+    this.repartidorService.aceptarPedido(this.pedidoSeleccionado.id, this.usuario.idUsuario).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.notificacionService.mostrarExito('Pedido aceptado', 'El pedido ha sido aceptado correctamente');
+          this.cerrarModalAceptarPedido();
+          
+          // Cambiar automáticamente a la pestaña "En Curso" 
+          this.tabActivo = 'en_curso';
+          
+          // Actualizar el pedido en la lista 
+          const pedidoIndex = this.pedidos.findIndex(p => p.id === this.pedidoSeleccionado?.id);
+          if (pedidoIndex >= 0) {
+            this.pedidos[pedidoIndex].estado = 'en_curso';
+            this.actualizarContadores();
+          }
+          
+          // Recargar pedidos del servidor para obtener datos actualizados
+          this.cargarPedidos();
+        } else {
+          this.notificacionService.mostrarError('Error', 'Error al aceptar el pedido');
+          this.cerrarModalAceptarPedido();
+        }
+      },
+      error: (err) => {
+        console.error('Error al aceptar pedido:', err);
+        const mensaje = err.error?.mensaje || 'Error al aceptar el pedido';
+        this.notificacionService.mostrarError('Error', mensaje);
+        this.cerrarModalAceptarPedido();
+      }
+    });
   }
 
   iniciarEntrega(pedidoId: number) {
     if (confirm('¿Iniciar entrega de este pedido?')) {
-      console.log('Iniciando entrega:', pedidoId);
-      // Lógica para iniciar entrega
     }
   }
 
   completarEntrega(pedidoId: number) {
-    if (confirm('¿Marcar como entregado?')) {
-      console.log('Completando entrega:', pedidoId);
-      // Lógica para completar entrega
+    // Buscar el pedido completo en la lista
+    const pedidoCompleto = this.pedidos.find(p => p.id === pedidoId);
+    if (!pedidoCompleto) {
+      this.notificacionService.mostrarError('Error', 'No se pudo encontrar el pedido');
+      return;
     }
+
+    this.pedidoParaEntregar = pedidoCompleto;
+    this.mostrarModalEntregarPedido = true;
+  }
+
+  cerrarModalEntregarPedido() {
+    this.mostrarModalEntregarPedido = false;
+    this.pedidoParaEntregar = null;
+  }
+
+  confirmarEntregarPedido() {
+    if (!this.pedidoParaEntregar || !this.pedidoParaEntregar.id) {
+      this.notificacionService.mostrarError('Error', 'No se pudo identificar el pedido');
+      this.cerrarModalEntregarPedido();
+      return;
+    }
+
+    this.repartidorService.marcarPedidoComoEntregado(this.pedidoParaEntregar.id).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.notificacionService.mostrarExito('Pedido entregado', 'El pedido ha sido marcado como entregado correctamente');
+          this.cerrarModalEntregarPedido();
+          
+          // Cambiar automáticamente a la pestaña "Completadas" 
+          this.tabActivo = 'completadas';
+          
+          // Actualizar el pedido en la lista
+          const pedidoIndex = this.pedidos.findIndex(p => p.id === this.pedidoParaEntregar?.id);
+          if (pedidoIndex >= 0) {
+            this.pedidos[pedidoIndex].estado = 'entregado';
+            this.actualizarContadores();
+          }
+          
+          // Recargar pedidos del servidor para obtener datos actualizados
+          this.cargarPedidos();
+          // Actualizar estadísticas después de marcar como entregado
+          this.cargarEstadisticas();
+        } else {
+          this.notificacionService.mostrarError('Error', 'Error al marcar el pedido como entregado');
+          this.cerrarModalEntregarPedido();
+        }
+      },
+      error: (err) => {
+        console.error('Error al completar entrega:', err);
+        this.notificacionService.mostrarError('Error', 'Error al completar la entrega');
+        this.cerrarModalEntregarPedido();
+      }
+    });
   }
 
   salir() {
     this.router.navigate(['/login']);
+  }
+
+  cargarHistorialEntregas() {
+    if (!this.usuario || !this.usuario.idUsuario) {
+      return;
+    }
+
+    this.repartidorService.obtenerHistorialEntregas(this.usuario.idUsuario).subscribe({
+      next: (entregas: any[]) => {
+        this.historialEntregas = entregas.map(entrega => ({
+          id: entrega.idPedido,
+          fecha: entrega.fechaEntrega || entrega.fechaPedido || '',
+          cliente: entrega.cliente ? 
+            `${entrega.cliente.nombre} ${entrega.cliente.apellido}` : 'Cliente',
+          direccionEntrega: entrega.direccionEntrega || '',
+          metodoPago: entrega.metodoPago || '',
+          total: entrega.totalPedido ? parseFloat(entrega.totalPedido.toString()) : 0
+        }));
+      },
+      error: (err) => {
+        console.error('Error al cargar historial de entregas:', err);
+        this.historialEntregas = [];
+      }
+    });
+  }
+
+  cargarEstadisticas() {
+    if (!this.usuario || !this.usuario.idUsuario) {
+      return;
+    }
+
+    this.repartidorService.obtenerEstadisticas(this.usuario.idUsuario).subscribe({
+      next: (estadisticas: any) => {
+        this.entregasHoy = estadisticas.entregasHoy || 0;
+        this.ganadoHoy = estadisticas.ganadoHoy || 0;
+        this.entregasMes = estadisticas.entregasMes || 0;
+      },
+      error: (err) => {
+        console.error('Error al cargar estadísticas:', err);
+      }
+    });
+  }
+
+  formatearEstado(estado: string): string {
+    if (!estado) return '';
+    return String(estado).replace(/_/g, ' ').toUpperCase();
   }
 
   obtenerPedidosPorEstado(estado: string) {
@@ -228,7 +398,6 @@ export class RepartidorDashboard implements OnInit {
   }
 
   navegarA(seccion: string, event?: Event) {
-    // Prevenir el comportamiento por defecto del enlace
     if (event) {
       event.preventDefault();
     }
@@ -237,7 +406,11 @@ export class RepartidorDashboard implements OnInit {
     const seccionesValidas = ['dashboard', 'historial', 'perfil'];
     if (seccionesValidas.includes(seccion)) {
       this.seccionActiva = seccion;
-      console.log('Navegando a:', seccion);
+      
+      // Cargar historial cuando se navega a esa sección
+      if (seccion === 'historial') {
+        this.cargarHistorialEntregas();
+      }
     }
   }
 
@@ -292,7 +465,6 @@ export class RepartidorDashboard implements OnInit {
     this.usuarioService.actualizarPerfil(this.usuario.idUsuario, this.datosEdicion).subscribe({
       next: (response: any) => {
         this.guardando = false;
-        console.log('Perfil actualizado:', response);
         
         if (response.success) {
           this.mensajeExito = 'Información actualizada correctamente';
@@ -312,7 +484,6 @@ export class RepartidorDashboard implements OnInit {
             
             this.usuario = usuarioActualizado;
             this.authService.actualizarUsuarioActual(usuarioActualizado);
-            console.log('Usuario actualizado en AuthService (repartidor)');
           }
           
           // Cerrar formulario después de 2 segundos
@@ -403,7 +574,6 @@ export class RepartidorDashboard implements OnInit {
     ).subscribe({
       next: (response: any) => {
         this.guardandoContrasena = false;
-        console.log('Contraseña actualizada:', response);
         
         if (response.success) {
           this.mensajeExitoContrasena = 'Contraseña actualizada correctamente';

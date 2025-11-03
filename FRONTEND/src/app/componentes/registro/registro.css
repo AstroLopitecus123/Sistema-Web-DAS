@@ -318,6 +318,7 @@
     text-decoration: underline;
 }
 
+
 /* Responsive */
 @media (max-width: 992px) {
     .register-page-container {
@@ -367,4 +368,5 @@
     .promo-title {
         font-size: 2rem;
     }
+
 }

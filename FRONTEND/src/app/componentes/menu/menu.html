@@ -33,6 +33,26 @@
     </div>
   </div>
 
+  <!-- Selección de ubicación -->
+  <div class="location-summary" (click)="abrirSelectorUbicacion()">
+    <div class="summary-icon">
+      <i class="fas fa-map-marker-alt"></i>
+    </div>
+    <div class="summary-texts">
+      <span class="summary-label">Entrega en</span>
+      <span class="summary-address">
+        {{ ubicacionSeleccionada?.direccion || 'Haz clic aquí para escoger tu dirección' }}
+      </span>
+      <small *ngIf="ubicacionSeleccionada" class="summary-origin">
+        {{ descripcionOrigenUbicacion[ubicacionSeleccionada.origen] }}
+      </small>
+    </div>
+    <div class="summary-action">
+      <span>Editar</span>
+      <i class="fas fa-angle-right"></i>
+    </div>
+  </div>
+
   <!-- Filtros de Categorías -->
   <div class="categories-filter mb-4">
     <div class="d-flex flex-wrap gap-2 justify-content-center">

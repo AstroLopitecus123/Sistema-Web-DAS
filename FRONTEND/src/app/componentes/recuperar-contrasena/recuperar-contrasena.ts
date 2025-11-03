@@ -43,7 +43,6 @@ export class RecuperarContrasena {
       .subscribe({
         next: (response) => {
           this.loading = false;
-          console.log('Respuesta del servidor:', response);
 
           if (response.success) {
             this.successMessage = response.mensaje || 'Se ha enviado un correo con instrucciones para restablecer tu contraseña. Revisa tu bandeja de entrada.';

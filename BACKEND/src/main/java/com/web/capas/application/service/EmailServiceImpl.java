@@ -1,5 +1,6 @@
 package com.web.capas.application.service;
 
+import com.web.capas.config.ApplicationUrlsProperties;
 import com.web.capas.domain.ServiceException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -23,14 +24,17 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${app.url.frontend}")
-    private String frontendUrl;
+    private final ApplicationUrlsProperties applicationUrlsProperties;
+
+    public EmailServiceImpl(ApplicationUrlsProperties applicationUrlsProperties) {
+        this.applicationUrlsProperties = applicationUrlsProperties;
+    }
 
     public void enviarCorreoRecuperacion(String emailDestino, String token, String nombreUsuario) {
         try {
             System.out.println("Enviando correo a: " + emailDestino);
             
-            String enlaceRecuperacion = frontendUrl + "/restablecer-contrasena?token=" + token;
+            String enlaceRecuperacion = applicationUrlsProperties.getFrontend() + "/restablecer-contrasena?token=" + token;
             
             String htmlTemplate = cargarPlantillaHTML();
             

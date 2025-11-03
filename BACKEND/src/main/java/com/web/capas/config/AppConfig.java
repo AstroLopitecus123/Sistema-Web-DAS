@@ -2,10 +2,9 @@ package com.web.capas.config;
 
 import com.stripe.Stripe;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -16,6 +15,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 // Configuración principal de la aplicación
 // Maneja seguridad, CORS y Stripe
@@ -23,19 +23,25 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class AppConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final StripeProperties stripeProperties;
+    private final ApplicationUrlsProperties applicationUrlsProperties;
 
-    @Value("${stripe.secret.key}")
-    private String stripeSecretKey;
-
-    @Value("${app.cors.allowed-origins:http://localhost:4200}")
-    private String allowedOrigins;
+    public AppConfig(
+        JwtAuthenticationFilter jwtAuthenticationFilter,
+        StripeProperties stripeProperties,
+        ApplicationUrlsProperties applicationUrlsProperties) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.stripeProperties = stripeProperties;
+        this.applicationUrlsProperties = applicationUrlsProperties;
+    }
 
     // Inicializar Stripe con la clave secreta
     @PostConstruct
     public void initStripe() {
-        Stripe.apiKey = stripeSecretKey;
+        if (stripeProperties.getSecretKey() != null && !stripeProperties.getSecretKey().isBlank()) {
+            Stripe.apiKey = stripeProperties.getSecretKey();
+        }
     }
 
     // Configurar seguridad y filtros JWT
@@ -45,11 +51,25 @@ public class AppConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .anonymous(anonymous -> anonymous.authorities("ROLE_INVITADO"))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/v1/menu/**").permitAll()
-                .requestMatchers("/api/productos/**").permitAll()
-                .requestMatchers("/api/usuarios/**").permitAll()
+                .requestMatchers(HttpMethod.POST,
+                    "/api/auth/login",
+                    "/api/auth/registro",
+                    "/api/auth/recuperar-contrasena",
+                    "/api/auth/restablecer-contrasena")
+                    .hasRole("INVITADO")
+                .requestMatchers("/api/auth/**")
+                    .hasAnyRole("CLIENTE", "ADMINISTRADOR", "REPARTIDOR", "VENDEDOR")
+                .requestMatchers(HttpMethod.GET, "/api/v1/menu/**").hasAnyRole("INVITADO", "CLIENTE", "ADMINISTRADOR", "REPARTIDOR", "VENDEDOR")
+                .requestMatchers("/api/v1/menu/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("/api/v1/carrito/**").hasRole("CLIENTE")
+                .requestMatchers("/api/v1/pedidos/**").hasAnyRole("CLIENTE", "ADMINISTRADOR", "REPARTIDOR")
+                .requestMatchers("/api/v1/pagos/**").hasAnyRole("CLIENTE", "ADMINISTRADOR")
+                .requestMatchers("/api/repartidor/**").hasRole("REPARTIDOR")
+                .requestMatchers("/api/admin/notificaciones/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("/api/v1/usuarios/**").hasAnyRole("CLIENTE", "ADMINISTRADOR", "REPARTIDOR", "VENDEDOR")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -61,7 +81,16 @@ public class AppConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        List<String> allowedOrigins = applicationUrlsProperties.getCorsAllowed();
+        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
+            allowedOrigins = List.of(applicationUrlsProperties.getFrontend());
+        }
+        if (applicationUrlsProperties.getBackend() != null && !applicationUrlsProperties.getBackend().isBlank()
+            && !allowedOrigins.contains(applicationUrlsProperties.getBackend())) {
+            allowedOrigins = new java.util.ArrayList<>(allowedOrigins);
+            allowedOrigins.add(applicationUrlsProperties.getBackend());
+        }
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

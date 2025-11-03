@@ -6,7 +6,7 @@
       <img src="/Logo.ico" alt="Logo de la Tienda" class="d-inline-block align-text-top me-2 logo-img">
       <span class="d-none d-sm-inline">Tienda de Alimentos Online</span>
     </div>
-    
+
     <!-- Botón de colapso para móvil -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -54,3 +54,10 @@
     </div>
   </div>
 </nav>
+
+<div class="modal-ubicacion-overlay" *ngIf="mostrarModalUbicacion">
+  <div class="modal-ubicacion-backdrop" (click)="cerrarModalUbicacion()"></div>
+  <div class="modal-ubicacion-contenido">
+    <app-selector-ubicacion (cerrar)="cerrarModalUbicacion()"></app-selector-ubicacion>
+  </div>
+</div>

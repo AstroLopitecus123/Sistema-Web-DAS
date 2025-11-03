@@ -30,7 +30,7 @@ export class EstadisticasService {
 
   // Obtiene las estadísticas del usuario desde el backend
   obtenerEstadisticasUsuario(idUsuario: number): Observable<EstadisticasUsuario> {
-    const url = `${this.configuracionService.getApiUrl()}/usuarios/estadisticas/${idUsuario}`;
+    const url = `${this.configuracionService.getApiV1Url()}/usuarios/estadisticas/${idUsuario}`;
     
     return this.http.get<EstadisticasUsuario>(url).pipe(
       map(response => ({
@@ -73,7 +73,6 @@ export class EstadisticasService {
     const cuponesDisponiblesCount = cuponesDisponibles.length;
     const cuponesUsadosCount = cuponesUsados.length;
     
-    // Simular ahorro del mes
     const ahorradoEsteMes = cuponesUsados.reduce((total, cupon) => {
       return total + (cupon.tipoDescuento === 'porcentaje' ? 15 : cupon.valorDescuento);
     }, 0);

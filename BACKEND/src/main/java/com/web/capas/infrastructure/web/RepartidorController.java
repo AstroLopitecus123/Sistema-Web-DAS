@@ -1,15 +1,21 @@
 package com.web.capas.infrastructure.web;
 
-import com.web.capas.domain.RecursoNoEncontradoExcepcion;
-import com.web.capas.domain.ServiceException;
-import com.web.capas.infrastructure.persistence.entities.Pedido;
 import com.web.capas.application.service.PedidoService;
+import com.web.capas.domain.ServiceException;
+import com.web.capas.domain.dto.ActualizarEstadoPedidoRequest;
+import com.web.capas.domain.dto.PedidoListaResponse;
+import com.web.capas.domain.dto.PedidoResponse;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/repartidor")
@@ -18,44 +24,82 @@ public class RepartidorController {
     @Autowired
     private PedidoService pedidoService;
 
-    // Actualiza el estado de un pedido (PUT /api/repartidor/pedidos/{id}/estado)
-    @PutMapping("/pedidos/{id}/estado")
-    public ResponseEntity<?> actualizarEstadoPedido(
+    // Obtiene pedidos disponibles para aceptar (GET /api/repartidor/pedidos/disponibles)
+    @GetMapping("/pedidos/disponibles")
+    public ResponseEntity<List<PedidoListaResponse>> obtenerPedidosDisponibles() {
+        List<PedidoListaResponse> pedidos = pedidoService.obtenerPedidosDisponibles();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    // Obtiene pedidos asignados a un repartidor (GET /api/repartidor/pedidos/mios/{idRepartidor})
+    @GetMapping("/pedidos/mios/{idRepartidor}")
+    public ResponseEntity<List<PedidoListaResponse>> obtenerMisPedidos(@PathVariable Integer idRepartidor) {
+        List<PedidoListaResponse> pedidos = pedidoService.obtenerPedidosDelRepartidor(idRepartidor);
+        return ResponseEntity.ok(pedidos);
+    }
+
+    // Acepta un pedido (POST /api/repartidor/pedidos/{id}/aceptar)
+    @PostMapping("/pedidos/{id}/aceptar")
+    public ResponseEntity<Map<String, Object>> aceptarPedido(
             @PathVariable Integer id,
-            @RequestBody Map<String, Object> request) {
+            @RequestBody Map<String, Integer> request) {
         
-        Pedido pedido = pedidoService.obtenerPedidoPorId(id);
-        if (pedido == null) {
-            throw new RecursoNoEncontradoExcepcion("Pedido no encontrado");
+        Integer idRepartidor = request.get("idRepartidor");
+        if (idRepartidor == null) {
+            throw new ServiceException("idRepartidor es requerido");
         }
         
-        String nuevoEstado = (String) request.get("nuevoEstado");
+        PedidoResponse pedido = pedidoService.aceptarPedido(id, idRepartidor);
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "mensaje", "Pedido aceptado correctamente",
+            "pedido", pedido
+        ));
+    }
+
+    // Actualiza el estado de un pedido (PUT /api/repartidor/pedidos/{id}/estado)
+    @PutMapping("/pedidos/{id}/estado")
+    public ResponseEntity<Map<String, Object>> actualizarEstadoPedido(
+            @PathVariable Integer id,
+            @RequestBody ActualizarEstadoPedidoRequest request) {
+        
+        // El servicio ya valida que el pedido exista y lanza RecursoNoEncontradoExcepcion si no existe
+        pedidoService.obtenerPedidoPorId(id);
+        
+        String nuevoEstado = request.getNuevoEstado();
         if (nuevoEstado == null) {
             throw new ServiceException("nuevoEstado es requerido");
         }
         
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("mensaje", "Estado del pedido actualizado correctamente");
-        
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "mensaje", "Estado del pedido actualizado correctamente"
+        ));
     }
 
     // Marca un pedido como entregado (PUT /api/repartidor/pedidos/{id}/entregado)
     @PutMapping("/pedidos/{id}/entregado")
-    public ResponseEntity<?> marcarPedidoComoEntregado(
-            @PathVariable Integer id,
-            @RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, Object>> marcarPedidoComoEntregado(@PathVariable Integer id) {
+        pedidoService.marcarPedidoComoEntregado(id);
         
-        Pedido pedido = pedidoService.obtenerPedidoPorId(id);
-        if (pedido == null) {
-            throw new RecursoNoEncontradoExcepcion("Pedido no encontrado");
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("mensaje", "Pedido marcado como entregado");
-        
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "mensaje", "Pedido marcado como entregado correctamente"
+        ));
+    }
+
+    // Obtiene historial de entregas completadas de un repartidor (GET /api/repartidor/historial/{idRepartidor})
+    @GetMapping("/historial/{idRepartidor}")
+    public ResponseEntity<List<PedidoListaResponse>> obtenerHistorialEntregas(@PathVariable Integer idRepartidor) {
+        List<PedidoListaResponse> historial = pedidoService.obtenerHistorialEntregas(idRepartidor);
+        return ResponseEntity.ok(historial);
+    }
+
+    // Obtiene estadísticas del repartidor (GET /api/repartidor/estadisticas/{idRepartidor})
+    @GetMapping("/estadisticas/{idRepartidor}")
+    public ResponseEntity<Map<String, Object>> obtenerEstadisticas(@PathVariable Integer idRepartidor) {
+        Map<String, Object> estadisticas = pedidoService.obtenerEstadisticasRepartidor(idRepartidor);
+        return ResponseEntity.ok(estadisticas);
     }
 }

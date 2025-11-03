@@ -10,6 +10,23 @@ export class RepartidorService {
 
   constructor(private http: HttpClient) {}
 
+  // Obtiene pedidos disponibles para aceptar
+  obtenerPedidosDisponibles(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/pedidos/disponibles`);
+  }
+
+  // Obtiene pedidos asignados a un repartidor
+  obtenerMisPedidos(idRepartidor: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/pedidos/mios/${idRepartidor}`);
+  }
+
+  // Acepta un pedido (asigna repartidor)
+  aceptarPedido(idPedido: number, idRepartidor: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/pedidos/${idPedido}/aceptar`, {
+      idRepartidor: idRepartidor
+    });
+  }
+
   actualizarEstadoPedido(idPedido: number, nuevoEstado: string, datos?: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/pedidos/${idPedido}/estado`, {
       nuevoEstado,
@@ -19,5 +36,15 @@ export class RepartidorService {
 
   marcarPedidoComoEntregado(idPedido: number, datosEntrega?: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/pedidos/${idPedido}/entregado`, datosEntrega);
+  }
+
+  // Obtiene historial de entregas completadas de un repartidor
+  obtenerHistorialEntregas(idRepartidor: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/historial/${idRepartidor}`);
+  }
+
+  // Obtiene estadísticas del repartidor (entregas hoy, esta semana, este mes, ganado)
+  obtenerEstadisticas(idRepartidor: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/estadisticas/${idRepartidor}`);
   }
 }

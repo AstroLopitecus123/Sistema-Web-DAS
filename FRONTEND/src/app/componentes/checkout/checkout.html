@@ -64,13 +64,15 @@
         
         <!-- Dirección de Entrega -->
         <div class="form-group">
-          <label for="direccion">Dirección de Entrega *</label>
-          <textarea id="direccion"
-                    class="form-control"
-                    [(ngModel)]="informacionPago.direccionEntrega"
-                    placeholder="Ingresa tu dirección completa"
-                    rows="3"
-                    required></textarea>
+          <app-campo-ubicacion
+            etiqueta="Dirección de Entrega *"
+            nombreCampo="direccionEntrega"
+            [placeholder]="'Ingresa tu dirección completa'"
+            [multilinea]="true"
+            [filas]="3"
+            [requerido]="true"
+            [(direccion)]="informacionPago.direccionEntrega">
+          </app-campo-ubicacion>
         </div>
 
         <!-- Notas del Cliente -->

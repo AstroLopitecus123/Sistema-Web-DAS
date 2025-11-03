@@ -1,9 +1,8 @@
 package com.web.capas.infrastructure.web;
 
+import com.web.capas.domain.dto.PagoResponse;
 import com.web.capas.domain.dto.PaymentRequest;
 import com.web.capas.domain.dto.PaymentResponse;
-import com.web.capas.domain.RecursoNoEncontradoExcepcion;
-import com.web.capas.infrastructure.persistence.entities.Pago;
 import com.web.capas.application.service.PagoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,33 +19,23 @@ public class PagoController {
     // POST /api/v1/pagos/crear-intent
     @PostMapping("/crear-intent")
     public ResponseEntity<PaymentResponse> crearPaymentIntent(@RequestBody PaymentRequest request) {
-        try {
-            PaymentResponse response = pagoService.crearPaymentIntent(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(null);
-        }
+        PaymentResponse response = pagoService.crearPaymentIntent(request);
+        return ResponseEntity.ok(response);
     }
 
     // CU (CLIENTE): CONFIRMAR PAGO DESPUÉS DE STRIPE
     // POST /api/v1/pagos/confirmar/{paymentIntentId}
     @PostMapping("/confirmar/{paymentIntentId}")
-    public ResponseEntity<Pago> confirmarPago(@PathVariable String paymentIntentId) {
-        Pago pago = pagoService.confirmarPago(paymentIntentId);
-        
-        if (pago == null) {
-            throw new RecursoNoEncontradoExcepcion("Pago no encontrado");
-        }
-        
+    public ResponseEntity<PagoResponse> confirmarPago(@PathVariable String paymentIntentId) {
+        PagoResponse pago = pagoService.confirmarPagoComoDTO(paymentIntentId);
         return ResponseEntity.ok(pago);
     }
 
     // CU (ADMINISTRADOR/CLIENTE): CONSULTAR ESTADO DE PAGO
     // GET /api/v1/pagos/estado/{referenciaTransaccion}
     @GetMapping("/estado/{referenciaTransaccion}")
-    public ResponseEntity<Pago> obtenerEstadoPago(@PathVariable String referenciaTransaccion) {
-        Pago pago = pagoService.obtenerPagoPorReferencia(referenciaTransaccion);
+    public ResponseEntity<PagoResponse> obtenerEstadoPago(@PathVariable String referenciaTransaccion) {
+        PagoResponse pago = pagoService.obtenerPagoPorReferenciaComoDTO(referenciaTransaccion);
         return ResponseEntity.ok(pago);
     }
 

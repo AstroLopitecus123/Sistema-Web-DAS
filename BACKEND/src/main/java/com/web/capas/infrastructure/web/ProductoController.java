@@ -1,6 +1,7 @@
 package com.web.capas.infrastructure.web;
 
-import com.web.capas.infrastructure.persistence.entities.Producto;
+import com.web.capas.domain.dto.ProductoRequest;
+import com.web.capas.domain.dto.ProductoResponse;
 import com.web.capas.infrastructure.persistence.entities.OpcionPersonalizacion;
 import com.web.capas.application.service.ProductoService;
 import com.web.capas.infrastructure.persistence.repositories.OpcionPersonalizacionRepository;
@@ -31,16 +32,16 @@ public class ProductoController {
     // CU (CLIENTE): VER MENÚ
     // GET /api/v1/menu/productos
     @GetMapping("/productos")
-    public ResponseEntity<List<Producto>> obtenerMenu() {
-        List<Producto> productos = productoService.obtenerMenuDisponible();
+    public ResponseEntity<List<ProductoResponse>> obtenerMenu() {
+        List<ProductoResponse> productos = productoService.obtenerMenuDisponible();
         return ResponseEntity.ok(productos);
     }
 
     // CU (CLIENTE): BUSCAR PRODUCTOS (Búsqueda por letras)
     // GET /api/v1/menu/productos/buscar?keyword=hamburg
     @GetMapping("/productos/buscar")
-    public ResponseEntity<List<Producto>> buscarProductosPorNombre(@RequestParam String keyword) {
-        List<Producto> productosEncontrados = productoService.buscarProductos(keyword);
+    public ResponseEntity<List<ProductoResponse>> buscarProductosPorNombre(@RequestParam String keyword) {
+        List<ProductoResponse> productosEncontrados = productoService.buscarProductos(keyword);
         return ResponseEntity.ok(productosEncontrados);
     }
 
@@ -60,8 +61,8 @@ public class ProductoController {
     // CU (ADMINISTRADOR): GESTIONAR EL MENÚ (Crear/Actualizar)
     // POST /api/v1/menu/productos
     @PostMapping("/productos")
-    public ResponseEntity<Producto> crearOActualizarProducto(@RequestBody Producto producto) {
-        Producto productoGuardado = productoService.guardarProducto(producto);
+    public ResponseEntity<ProductoResponse> crearOActualizarProducto(@RequestBody ProductoRequest request) {
+        ProductoResponse productoGuardado = productoService.guardarProducto(request);
         return new ResponseEntity<>(productoGuardado, HttpStatus.CREATED);
     }
 }

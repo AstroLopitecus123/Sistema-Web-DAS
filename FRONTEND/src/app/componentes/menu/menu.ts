@@ -1,21 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { MenuService } from '../../servicios/menu.service';
 import { FiltrosProductosService } from '../../servicios/filtros-productos.service';
 import { Producto, ItemCarrito } from '../../modelos/producto.model';
 import { DetalleProducto } from '../detalle-producto/detalle-producto';
 import { CarritoService } from '../../servicios/carrito.service';
 import { Notificacion, NotificacionData } from '../notificacion/notificacion';
+import { UbicacionService, UbicacionSeleccionada } from '../../servicios/ubicacion.service';
+import { ModalUbicacionService } from '../../servicios/modal-ubicacion.service';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, FormsModule, DetalleProducto, Notificacion],
+  imports: [CommonModule, NgIf, FormsModule, DetalleProducto, Notificacion],
   templateUrl: './menu.html',
   styleUrl: './menu.css'
 })
-export class Menu implements OnInit {
+export class Menu implements OnInit, OnDestroy {
 
   productos: Producto[] = [];
   productosFiltrados: Producto[] = [];
@@ -23,7 +26,16 @@ export class Menu implements OnInit {
   error: string | null = null;
   keyword = '';
   categoriaSeleccionada = 'todos';
-  
+
+  ubicacionSeleccionada: UbicacionSeleccionada | null = null;
+  descripcionOrigenUbicacion = {
+    gps: 'Detectada por GPS',
+    ip: 'Detectada automáticamente',
+    autocomplete: 'Seleccionada en el mapa',
+    manual: 'Ingresada manualmente'
+  } as const;
+  private ubicacionSub?: Subscription;
+
   // Variables para el modal de detalle
   productoSeleccionado: Producto | null = null;
   mostrarModalDetalle = false;
@@ -35,11 +47,21 @@ export class Menu implements OnInit {
   constructor(
     private menuService: MenuService,
     private carritoService: CarritoService,
-    private filtrosProductosService: FiltrosProductosService
+    private filtrosProductosService: FiltrosProductosService,
+    private ubicacionService: UbicacionService,
+    private modalUbicacionService: ModalUbicacionService
   ) {}
 
   ngOnInit(): void {
     this.cargarProductos();
+    this.ubicacionSeleccionada = this.ubicacionService.obtenerUbicacionActual();
+    this.ubicacionSub = this.ubicacionService.obtenerUbicacion().subscribe((ubicacion) => {
+      this.ubicacionSeleccionada = ubicacion;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.ubicacionSub?.unsubscribe();
   }
 
   cargarProductos(): void {
@@ -64,6 +86,10 @@ export class Menu implements OnInit {
     };
     
     this.productosFiltrados = this.filtrosProductosService.filtrarProductos(this.productos, filtros);
+  }
+
+  abrirSelectorUbicacion(): void {
+    this.modalUbicacionService.abrir();
   }
 
   addToCart(producto: Producto): void {

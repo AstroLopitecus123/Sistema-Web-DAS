@@ -29,6 +29,13 @@ public class Carrito {
     @Column(name = "fecha_adicion")
     private LocalDateTime fechaAdicion;
 
+    @PrePersist
+    public void prePersist() {
+        if (fechaAdicion == null) {
+            fechaAdicion = LocalDateTime.now();
+        }
+    }
+
     public Integer getIdCarrito() {
         return idCarrito;
     }

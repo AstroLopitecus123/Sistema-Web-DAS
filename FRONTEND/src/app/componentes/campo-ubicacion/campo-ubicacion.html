@@ -1,0 +1,54 @@
+<div class="campo-ubicacion">
+  <label class="campo-etiqueta" [attr.for]="nombreCampo">
+    <i [class]="iconoEtiqueta"></i>
+    <span>{{ etiqueta }}</span>
+    <span *ngIf="requerido" class="campo-obligatorio">*</span>
+  </label>
+
+  <ng-container *ngIf="!multilinea; else campoMultilinea">
+    <input
+      [id]="nombreCampo"
+      [name]="nombreCampo"
+      class="form-control"
+      [placeholder]="placeholder"
+      [required]="requerido"
+      [disabled]="deshabilitado"
+      [ngModel]="direccion"
+      (ngModelChange)="onDireccionManualChange($event)"
+      autocomplete="street-address"
+    />
+  </ng-container>
+
+  <ng-template #campoMultilinea>
+    <textarea
+      [id]="nombreCampo"
+      [name]="nombreCampo"
+      class="form-control"
+      [placeholder]="placeholder"
+      [rows]="filas"
+      [required]="requerido"
+      [disabled]="deshabilitado"
+      [ngModel]="direccion"
+      (ngModelChange)="onDireccionManualChange($event)"
+      autocomplete="street-address"
+    ></textarea>
+  </ng-template>
+
+  <button type="button"
+          class="btn-seleccionar-mapa"
+          (click)="abrirSelectorUbicacion()"
+          [disabled]="deshabilitado">
+    <i class="fas fa-map-location-dot"></i>
+    {{ textoBoton }}
+  </button>
+
+  <div class="detalle-ubicacion"
+       *ngIf="mostrarOrigen && ubicacionSeleccionada">
+    <i class="fas fa-location-crosshairs"></i>
+    <span>{{ descripcionOrigenUbicacion[ubicacionSeleccionada.origen] }}</span>
+    <span *ngIf="mostrarCoordenadas && ubicacionSeleccionada.latitud !== null && ubicacionSeleccionada.longitud !== null">
+      · {{ ubicacionSeleccionada.latitud | number:'1.5-5' }}, {{ ubicacionSeleccionada.longitud | number:'1.5-5' }}
+    </span>
+  </div>
+</div>
+

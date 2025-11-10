@@ -36,8 +36,21 @@ export class RepartidorDashboard implements OnInit {
   mostrarModalSalir = false;
   mostrarModalAceptarPedido = false;
   mostrarModalEntregarPedido = false;
+  mostrarModalReporteProblema = false;
+  mostrarModalHistorialCliente = false;
   pedidoSeleccionado: any | null = null;
   pedidoParaEntregar: any | null = null;
+  pedidoParaReporte: any | null = null;
+  clienteHistorialSeleccionado: { id: number | null; nombre: string; telefono: string } = {
+    id: null,
+    nombre: '',
+    telefono: ''
+  };
+  historialClientePedidos: any[] = [];
+  cargandoHistorialCliente = false;
+  mensajeHistorialCliente: string | null = null;
+  descripcionProblema: string = '';
+  enviandoReporte = false;
   
   // Modo de edición
   modoEdicion = false;
@@ -185,13 +198,17 @@ export class RepartidorDashboard implements OnInit {
       direccionEntrega: pedidoBackend.direccionEntrega || '',
       cliente: pedidoBackend.cliente ? 
         `${pedidoBackend.cliente.nombre} ${pedidoBackend.cliente.apellido}` : 'Cliente',
+      clienteId: pedidoBackend.cliente?.idUsuario || null,
       telefono: pedidoBackend.cliente?.telefono || '',
       total: pedidoBackend.totalPedido ? parseFloat(pedidoBackend.totalPedido.toString()) : 0,
       horaPedido: horaPedido,
       productos: pedidoBackend.productos || [],
       notasCliente: pedidoBackend.notasCliente || '',
       metodoPago: pedidoBackend.metodoPago || '',
-      fechaPedido: pedidoBackend.fechaPedido || ''
+      fechaPedido: pedidoBackend.fechaPedido || '',
+      problemaReportado: pedidoBackend.problemaReportado || false,
+      detalleProblema: pedidoBackend.detalleProblema || null,
+      fechaProblema: pedidoBackend.fechaProblema || null
     };
   }
 
@@ -287,9 +304,111 @@ export class RepartidorDashboard implements OnInit {
     this.mostrarModalEntregarPedido = true;
   }
 
+  cancelarPedido(pedidoId: number) {
+    if (!this.usuario || !this.usuario.idUsuario) {
+      this.notificacionService.mostrarError('Error', 'No se pudo identificar al repartidor');
+      return;
+    }
+
+    const pedido = this.pedidos.find(p => p.id === pedidoId);
+    if (!pedido) {
+      this.notificacionService.mostrarError('Error', 'No se encontró el pedido');
+      return;
+    }
+
+    this.repartidorService.cancelarPedido(pedidoId, this.usuario.idUsuario).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.notificacionService.mostrarInfo('Pedido liberado', 'El pedido ha sido devuelto a la cola de pendientes.');
+          const indice = this.pedidos.findIndex(p => p.id === pedidoId);
+          if (indice >= 0) {
+            this.pedidos[indice].estado = 'pendiente';
+            this.pedidos[indice].problemaReportado = false;
+            this.pedidos[indice].detalleProblema = null;
+            this.pedidos[indice].fechaProblema = null;
+          }
+          this.actualizarContadores();
+          this.tabActivo = 'pendientes';
+          this.cargarPedidos();
+        } else {
+          this.notificacionService.mostrarError('Error', response.mensaje || 'No se pudo cancelar el pedido');
+        }
+      },
+      error: (err) => {
+        console.error('Error al cancelar pedido:', err);
+        const mensaje = err.error?.mensaje || 'No se pudo cancelar el pedido';
+        this.notificacionService.mostrarError('Error', mensaje);
+      }
+    });
+  }
+
+  abrirModalReporteProblema(pedidoId: number) {
+    const pedido = this.pedidos.find(p => p.id === pedidoId);
+    if (!pedido) {
+      this.notificacionService.mostrarError('Error', 'No se encontró el pedido.');
+      return;
+    }
+    this.pedidoParaReporte = pedido;
+    this.descripcionProblema = '';
+    this.mostrarModalReporteProblema = true;
+  }
+
+  reportarProblema() {
+    if (!this.usuario || !this.usuario.idUsuario || !this.pedidoParaReporte) {
+      this.notificacionService.mostrarError('Error', 'No se pudo identificar al repartidor o pedido.');
+      return;
+    }
+    if (!this.descripcionProblema.trim()) {
+      this.notificacionService.mostrarError('Reporte', 'Describe brevemente el problema.');
+      return;
+    }
+    this.enviandoReporte = true;
+    this.repartidorService.reportarProblema(
+      this.pedidoParaReporte.id,
+      this.usuario.idUsuario,
+      this.descripcionProblema.trim()
+    ).subscribe({
+      next: (response: any) => {
+        this.enviandoReporte = false;
+        if (response.success) {
+          this.notificacionService.mostrarExito('Problema reportado', 'Se notificó el inconveniente.');
+          const index = this.pedidos.findIndex(p => p.id === this.pedidoParaReporte?.id);
+          if (index >= 0) {
+            this.pedidos[index].problemaReportado = true;
+            this.pedidos[index].detalleProblema = this.descripcionProblema.trim();
+            this.pedidos[index].fechaProblema = new Date().toISOString();
+          }
+          this.cerrarModalReporteProblema();
+        } else {
+          this.notificacionService.mostrarError('Reporte', response.mensaje || 'No se pudo reportar el problema');
+        }
+      },
+      error: (err) => {
+        console.error('Error al reportar problema:', err);
+        this.enviandoReporte = false;
+        const mensaje = err.error?.mensaje || 'No se pudo reportar el problema';
+        this.notificacionService.mostrarError('Reporte', mensaje);
+      }
+    });
+  }
+
   cerrarModalEntregarPedido() {
     this.mostrarModalEntregarPedido = false;
     this.pedidoParaEntregar = null;
+  }
+
+  cerrarModalReporteProblema() {
+    this.mostrarModalReporteProblema = false;
+    this.pedidoParaReporte = null;
+    this.descripcionProblema = '';
+    this.enviandoReporte = false;
+  }
+
+  cerrarModalHistorialCliente() {
+    this.mostrarModalHistorialCliente = false;
+    this.historialClientePedidos = [];
+    this.mensajeHistorialCliente = null;
+    this.cargandoHistorialCliente = false;
   }
 
   confirmarEntregarPedido() {
@@ -360,6 +479,44 @@ export class RepartidorDashboard implements OnInit {
     });
   }
 
+  abrirHistorialCliente(pedido: any) {
+    if (!pedido || !pedido.clienteId) {
+      this.notificacionService.mostrarError('Historial de cliente', 'No se encontró la información del cliente.');
+      return;
+    }
+
+    this.clienteHistorialSeleccionado = {
+      id: pedido.clienteId,
+      nombre: pedido.cliente,
+      telefono: pedido.telefono || ''
+    };
+    this.mostrarModalHistorialCliente = true;
+    this.cargandoHistorialCliente = true;
+    this.historialClientePedidos = [];
+    this.mensajeHistorialCliente = null;
+
+    this.repartidorService.obtenerHistorialCliente(pedido.clienteId, 10).subscribe({
+      next: (pedidos: any[]) => {
+        this.historialClientePedidos = (pedidos || []).map(p => ({
+          id: p.idPedido,
+          fecha: this.formatearFechaCorta(p.fechaPedido || p.fechaEntrega),
+          direccion: p.direccionEntrega || '',
+          total: p.totalPedido ? parseFloat(p.totalPedido) : 0,
+          estado: p.estadoPedido || ''
+        }));
+        if (this.historialClientePedidos.length === 0) {
+          this.mensajeHistorialCliente = 'El cliente no tiene pedidos anteriores.';
+        }
+        this.cargandoHistorialCliente = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar historial de cliente:', err);
+        this.mensajeHistorialCliente = err.error?.mensaje || 'No se pudo cargar el historial.';
+        this.cargandoHistorialCliente = false;
+      }
+    });
+  }
+
   cargarEstadisticas() {
     if (!this.usuario || !this.usuario.idUsuario) {
       return;
@@ -380,6 +537,18 @@ export class RepartidorDashboard implements OnInit {
   formatearEstado(estado: string): string {
     if (!estado) return '';
     return String(estado).replace(/_/g, ' ').toUpperCase();
+  }
+
+  formatearFechaCorta(fecha?: string): string {
+    if (!fecha) {
+      return '';
+    }
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return fecha;
+    }
   }
 
   obtenerPedidosPorEstado(estado: string) {

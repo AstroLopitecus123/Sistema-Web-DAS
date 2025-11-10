@@ -40,4 +40,15 @@ public interface PedidoService {
     
     // Obtener estadísticas del repartidor
     java.util.Map<String, Object> obtenerEstadisticasRepartidor(Integer idRepartidor);
+    
+    // Obtener los últimos pedidos de un cliente
+    List<PedidoListaResponse> obtenerHistorialCliente(Integer idCliente, int limite);
+    
+    // Cancelar pedido en curso por parte del repartidor
+    PedidoResponse cancelarPedidoRepartidor(Integer idPedido, Integer idRepartidor);
+    
+    // Reportar problema con un pedido
+    PedidoResponse reportarProblema(Integer idPedido, Integer idRepartidor, String descripcion);
+
+    List<com.web.capas.domain.dto.ReporteProblemaResponse> obtenerReportesProblemas();
 }

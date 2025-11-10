@@ -72,6 +72,15 @@ public class Pedido {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<com.web.capas.infrastructure.persistence.entities.DetallePedido> productos;
 
+    @Column(name = "problema_reportado")
+    private Boolean problemaReportado = Boolean.FALSE;
+
+    @Column(name = "detalle_problema", columnDefinition = "TEXT")
+    private String detalleProblema;
+
+    @Column(name = "fecha_problema")
+    private LocalDateTime fechaProblema;
+
     public Integer getIdPedido() {
         return idPedido;
     }
@@ -176,5 +185,29 @@ public class Pedido {
 
     public void setProductos(List<DetallePedido> productos) {
         this.productos = productos;
+    }
+
+    public Boolean getProblemaReportado() {
+        return problemaReportado;
+    }
+
+    public void setProblemaReportado(Boolean problemaReportado) {
+        this.problemaReportado = problemaReportado;
+    }
+
+    public String getDetalleProblema() {
+        return detalleProblema;
+    }
+
+    public void setDetalleProblema(String detalleProblema) {
+        this.detalleProblema = detalleProblema;
+    }
+
+    public LocalDateTime getFechaProblema() {
+        return fechaProblema;
+    }
+
+    public void setFechaProblema(LocalDateTime fechaProblema) {
+        this.fechaProblema = fechaProblema;
     }
 }

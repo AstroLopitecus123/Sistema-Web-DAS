@@ -1,6 +1,7 @@
 package com.web.capas.application.decorator;
 
 import com.web.capas.application.service.notificacion.NotificacionService;
+import com.web.capas.application.singleton.NotificacionConfiguracion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,9 @@ public class LoggingNotificacionDecorator extends NotificacionDecorator {
 
     @Override
     public void enviarNotificacion(String destinatario, String mensaje) {
-        logger.info("INICIANDO notificación para: {}", destinatario);
+        String prefijo = NotificacionConfiguracion.getInstance().getPrefijoAplicacion();
+
+        logger.info("{} INICIANDO notificación para: {}", prefijo, destinatario);
         logger.info("Mensaje: {}", mensaje);
         
         long startTime = System.currentTimeMillis();
@@ -26,10 +29,10 @@ public class LoggingNotificacionDecorator extends NotificacionDecorator {
             super.enviarNotificacion(destinatario, mensaje);
             
             long endTime = System.currentTimeMillis();
-            logger.info("NOTIFICACIÓN EXITOSA para: {} ({}ms)", destinatario, (endTime - startTime));
+            logger.info("{} NOTIFICACIÓN EXITOSA para: {} ({}ms)", prefijo, destinatario, (endTime - startTime));
             
         } catch (Exception e) {
-            logger.error("ERROR enviando notificación a {}: {}", destinatario, e.getMessage());
+            logger.error("{} ERROR enviando notificación a {}: {}", prefijo, destinatario, e.getMessage());
             throw e; // Re-lanzar la excepción
         }
     }

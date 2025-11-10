@@ -26,6 +26,9 @@ public class ProductoRequest {
     @JsonProperty("estado")
     private String estado;
 
+    @JsonProperty("stock")
+    private Integer stock;
+
     public Integer getIdProducto() {
         return idProducto;
     }
@@ -80,6 +83,14 @@ public class ProductoRequest {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 }
 

@@ -113,7 +113,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
         
         // Si la cuenta está desactivada
-        if (!usuario.getActivo()) {
+        Boolean activo = usuario.getActivo();
+        if (activo != null && !activo) {
             throw new CredencialesInvalidasException("CUENTA_DESACTIVADA");
         }
         
@@ -162,7 +163,10 @@ public class UsuarioServiceImpl implements UsuarioService {
             
             // Verificar si es un administrador - no permitir eliminar administradores
             if (usuario.getRol() == Usuario.Rol.administrador) {
-                throw new ServiceException("No se puede eliminar un usuario administrador");
+                long totalAdministradores = usuarioRepository.countByRol(Usuario.Rol.administrador);
+                if (totalAdministradores <= 1) {
+                    throw new ServiceException("Debe existir al menos un administrador en el sistema");
+                }
             }
             
             // Intentar eliminar el usuario
@@ -215,7 +219,10 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Usuario no encontrado"));
             
             if (usuario.getRol() == Usuario.Rol.administrador) {
-                throw new ServiceException("No se puede eliminar un usuario administrador");
+                long totalAdministradores = usuarioRepository.countByRol(Usuario.Rol.administrador);
+                if (totalAdministradores <= 1) {
+                    throw new ServiceException("Debe existir al menos un administrador en el sistema");
+                }
             }
             
             eliminarDatosRelacionados(id);

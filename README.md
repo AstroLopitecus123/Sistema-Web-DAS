@@ -3,6 +3,7 @@
 Sistema completo de gestión de pedidos y e-commerce desarrollado con **Angular 20** y **Spring Boot 3.5**, implementando arquitectura REST con autenticación JWT, integración de pagos con Stripe, notificaciones por WhatsApp y gestión multi-rol.
 
 ## Arquitectura General
+El backend aplica patrones de diseño (Factory, Decorator, Strategy, Proxy, Observer y Singleton) para orquestar el envío de notificaciones y mantener un código desacoplado y extensible. En el panel administrativo los productos pueden activarse o desactivarse; sólo los activos se exponen al catálogo público.
 
 ```
 ┌─────────────────┐    HTTP/REST    ┌─────────────────┐
@@ -43,7 +44,7 @@ El sistema utiliza MySQL con las siguientes tablas principales:
 
 ### Tablas Principales
 - **Usuarios** - Gestión de usuarios con roles (cliente, administrador, repartidor, vendedor)
-- **Productos** - Catálogo de productos con categorías
+- **Productos** - Catálogo de productos con estado (activo/inactivo) y stock
 - **Opciones de Personalización** - Opciones personalizables por producto con precios adicionales
 - **Pedidos** - Gestión completa de pedidos con estados
 - **Detalle_Pedido** - Items de cada pedido con personalizaciones
@@ -204,7 +205,7 @@ El frontend estará disponible en: `http://localhost:4200`
 
 ### Para Administradores
 - ✅ Dashboard con estadísticas generales
-- ✅ Gestión completa de productos (CRUD)
+- ✅ Gestión completa de productos (CRUD) con activación/desactivación y control de stock
 - ✅ Gestión de opciones de personalización por producto
 - ✅ Gestión de pedidos (visualización, cambio de estados)
 - ✅ Gestión de usuarios (CRUD, cambio de roles, activación/desactivación)
@@ -308,6 +309,7 @@ ng test
 Ver el script SQL completo para la estructura de todas las tablas. El esquema incluye:
 
 - **Usuarios** con campo `username` único
+- **Productos** con estado y stock visibles en el panel admin
 - **Opciones de personalización** vinculadas a productos
 - **Detalle de pedidos** con campos para opciones seleccionadas y precios
 - **Sistema completo de cupones** con restricciones
@@ -319,7 +321,7 @@ Ver el script SQL completo para la estructura de todas las tablas. El esquema in
 El script incluye:
 - 3 usuarios de prueba (admin, repartidor, cliente)
 - 5 categorías de productos
-- 6 productos de ejemplo
+- 6 productos de ejemplo con stock inicial
 - Opciones de personalización por producto
 - 3 cupones de prueba
 - 1 pedido de ejemplo

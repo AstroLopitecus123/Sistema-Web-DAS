@@ -13,6 +13,8 @@ Backend desarrollado con **Spring Boot 3.5.6** implementando arquitectura por ca
 ├─────────────────────────────────────────────────────────────┤
 │  Service Layer        │  @Service, @Transactional          │
 │  (Application)                                               │
+│   • Factory, Strategy, Proxy, Observer y Decorator para      │
+│     orquestar notificaciones y contenido                     │
 ├─────────────────────────────────────────────────────────────┤
 │  Repository Layer    │  @Repository, JPA Repositories       │
 │  (Domain/Infrastructure)                                     │
@@ -55,6 +57,13 @@ Backend desarrollado con **Spring Boot 3.5.6** implementando arquitectura por ca
 ### Capa de Aplicación (`application/`)
 - **Servicios** - Lógica de negocio e implementaciones
 - **Interfaces de Servicio** - Contratos de servicios
+- **Patrones GoF implementados**:
+  - *Factory* para construir servicios de notificación decorados
+  - *Decorator* para agregar métricas, validaciones y logging
+  - *Strategy* para generar contenido dinámico (email, SMS, WhatsApp)
+  - *Proxy* como capa de seguridad frente al proveedor real (WhatsApp)
+  - *Observer* para auditar envíos de notificación
+  - *Singleton* para exponer configuraciones comunes
 
 ### Capa de Infraestructura (`infrastructure/`)
 - **Web** - Controladores REST
@@ -143,6 +152,7 @@ La API estará disponible en: `http://localhost:8089`
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/v1/menu/productos` | Obtener todos los productos | No |
+| GET | `/api/v1/menu/admin/productos` | Productos para el panel admin (activos e inactivos) | Sí |
 | GET | `/api/v1/menu/categorias` | Obtener todas las categorías | No |
 | GET | `/api/v1/menu/productos/{id}/opciones` | Opciones de personalización | No |
 
@@ -251,6 +261,9 @@ public class Pedido {
     private MetodoPago metodoPago; // tarjeta, billetera_virtual, efectivo
     
     private BigDecimal totalPedido;
+    private Boolean problemaReportado;
+    private String detalleProblema;
+    private LocalDateTime fechaProblema;
     // ... otros campos
 }
 ```
@@ -265,8 +278,7 @@ public class Pedido {
 - Validación de existencia de email y username
 
 ### ProductoService
-- Gestión de catálogo de productos
-- Filtrado por categoría y estado
+- Filtrado por categoría y estado (menú público sólo ve activos)
 - Búsqueda de productos
 - Gestión de opciones de personalización
 

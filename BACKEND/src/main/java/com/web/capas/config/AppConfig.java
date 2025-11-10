@@ -67,7 +67,7 @@ public class AppConfig {
                 .requestMatchers("/api/v1/carrito/**").hasRole("CLIENTE")
                 .requestMatchers("/api/v1/pedidos/**").hasAnyRole("CLIENTE", "ADMINISTRADOR", "REPARTIDOR")
                 .requestMatchers("/api/v1/pagos/**").hasAnyRole("CLIENTE", "ADMINISTRADOR")
-                .requestMatchers("/api/repartidor/**").hasRole("REPARTIDOR")
+                .requestMatchers("/api/repartidor/**").hasAnyRole("REPARTIDOR", "ADMINISTRADOR")
                 .requestMatchers("/api/admin/notificaciones/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/usuarios/**").hasAnyRole("CLIENTE", "ADMINISTRADOR", "REPARTIDOR", "VENDEDOR")
                 .anyRequest().authenticated()

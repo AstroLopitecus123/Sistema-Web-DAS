@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController 
 @RequestMapping("/api/v1/menu") 
@@ -45,6 +47,12 @@ public class ProductoController {
         return ResponseEntity.ok(productosEncontrados);
     }
 
+    @GetMapping("/productos/{id}")
+    public ResponseEntity<ProductoResponse> obtenerProducto(@PathVariable Integer id) {
+        ProductoResponse producto = productoService.obtenerProductoPorId(id);
+        return ResponseEntity.ok(producto);
+    }
+
     // CU (CLIENTE): OBTENER OPCIONES DE PERSONALIZACIÓN
     // GET /api/v1/menu/productos/{id}/opciones
     @GetMapping("/productos/{id}/opciones")
@@ -58,11 +66,31 @@ public class ProductoController {
         }
     }
 
+    @GetMapping("/admin/productos")
+    public ResponseEntity<List<ProductoResponse>> obtenerProductosParaAdmin() {
+        List<ProductoResponse> productos = productoService.obtenerProductosParaAdmin();
+        return ResponseEntity.ok(productos);
+    }
+
     // CU (ADMINISTRADOR): GESTIONAR EL MENÚ (Crear/Actualizar)
     // POST /api/v1/menu/productos
     @PostMapping("/productos")
     public ResponseEntity<ProductoResponse> crearOActualizarProducto(@RequestBody ProductoRequest request) {
         ProductoResponse productoGuardado = productoService.guardarProducto(request);
         return new ResponseEntity<>(productoGuardado, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/productos/{id}")
+    public ResponseEntity<Map<String, Object>> eliminarProducto(@PathVariable Integer id) {
+        boolean eliminado = productoService.eliminarProducto(id);
+        String accion = eliminado ? "ELIMINADO" : "DESACTIVADO";
+        String mensaje = eliminado
+            ? "Producto eliminado correctamente"
+            : "El producto tiene registros asociados. Se marcó como inactivo.";
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "accion", accion,
+            "mensaje", mensaje
+        ));
     }
 }

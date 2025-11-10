@@ -32,7 +32,7 @@
             <path d="M9 7h6v4H9z"></path>
           </svg>
         </span>
-        <span class="nav-text">Pedidos</span>
+        <span class="nav-text">Problemas</span>
       </a>
       <a href="#" class="nav-item" [class.active]="seccionActiva === 'cupones'" (click)="navegarA('cupones', $event)">
         <span class="nav-icon">
@@ -205,65 +205,196 @@
         </div>
 
         <div class="products-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (producto of productos; track producto.id) {
-              <tr>
-                <td class="product-cell">
-                  <img [src]="producto.imagenUrl" [alt]="producto.nombre" class="product-image">
-                  <span class="product-name">{{ producto.nombre }}</span>
-                </td>
-                <td>{{ producto.categoria }}</td>
-                <td>S/. {{ producto.precio | number:'1.2-2' }}</td>
-                <td>{{ producto.stock }} unidades</td>
-                <td>
-                  <span class="status-badge available">{{ producto.estado }}</span>
-                </td>
-                <td>
-                  <div class="actions">
-                    <button class="btn-edit" (click)="editarProducto(producto.id)" title="Editar">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                    </button>
-                    <button class="btn-delete" (click)="eliminarProducto(producto.id)" title="Eliminar">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3,6 5,6 21,6"></polyline>
-                        <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+          @if (!productosCargando) {
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (productosFiltrados.length > 0) {
+                  @for (producto of productosFiltrados; track producto.idProducto) {
+                <tr>
+                  <td class="product-cell">
+                    <img [src]="producto.imagenUrl" [alt]="producto.nombre" class="product-image">
+                    <span class="product-name">{{ producto.nombre }}</span>
+                  </td>
+                  <td>{{ obtenerNombreCategoriaProducto(producto) }}</td>
+                  <td>S/. {{ producto.precio | number:'1.2-2' }}</td>
+                  <td>{{ (producto.stock ?? 0) | number:'1.0-0' }} unidades</td>
+                  <td>
+                    <span class="status-badge" [class.available]="producto.estado === 'activo'" [class.disabled]="producto.estado !== 'activo'">
+                      {{ producto.estado | uppercase }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <button class="btn-edit" (click)="editarProducto(producto.idProducto)" title="Editar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                      <button class="btn-delete" (click)="eliminarProducto(producto.idProducto)" title="Eliminar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="3,6 5,6 21,6"></polyline>
+                          <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td colspan="6" class="empty-state">
+                      No hay productos que coincidan con tu búsqueda.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+          <div class="loading-state">
+            Cargando productos...
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (mostrarModalEditarProducto && productoEnEdicion) {
+    <div class="modal-overlay" (click)="cancelarEdicionProducto()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </div>
+            <div class="modal-title-text">
+              <h3>{{ esNuevoProducto ? 'Añadir producto' : 'Editar producto' }}</h3>
+              <p>{{ esNuevoProducto ? 'Registra un nuevo producto para el menú.' : 'Actualiza los datos disponibles en el menú.' }}</p>
+            </div>
+          </div>
+          <button class="modal-close" (click)="cancelarEdicionProducto()">
+            <span>&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" [(ngModel)]="productoEnEdicion.nombre" />
+            </div>
+            <div class="form-group">
+              <label>Precio (S/.)</label>
+              <input type="number" min="0" step="0.1" [(ngModel)]="productoEnEdicion.precio" />
+            </div>
+            <div class="form-group">
+              <label>Stock</label>
+              <input type="number" min="0" step="1" [(ngModel)]="productoEnEdicion.stock" />
+            </div>
+            <div class="form-group">
+              <label>Estado</label>
+              <select [(ngModel)]="productoEnEdicion.estado">
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select
+                [(ngModel)]="productoEnEdicion.categoriaId"
+                (ngModelChange)="actualizarCategoriaSeleccionada($event)"
+                [disabled]="categoriasDisponibles.length === 0"
+              >
+                <option [ngValue]="undefined" disabled>Selecciona una categoría</option>
+                @for (categoria of categoriasDisponibles; track categoria.id) {
+                <option [ngValue]="categoria.id">{{ categoria.nombre }}</option>
+                }
+              </select>
+              @if (categoriasDisponibles.length === 0) {
+              <small class="helper-text">Crea primero una categoría desde el sistema.</small>
               }
-            </tbody>
-          </table>
+            </div>
+            <div class="form-group full-width">
+              <label>Descripción</label>
+              <textarea rows="3" [(ngModel)]="productoEnEdicion.descripcion"></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label>Imagen (URL)</label>
+              <input type="text" [(ngModel)]="productoEnEdicion.imagenUrl" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cancelarEdicionProducto()">Cancelar</button>
+          <button class="btn-primary" [disabled]="guardandoProducto" (click)="guardarProductoEditado()">
+            {{ guardandoProducto ? (esNuevoProducto ? 'Creando...' : 'Guardando...') : (esNuevoProducto ? 'Crear producto' : 'Guardar cambios') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (mostrarModalEliminarProducto && productoAEliminar) {
+    <div class="modal-overlay" (click)="cancelarEliminacionProducto()">
+      <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon delete-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"></polyline>
+                <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </div>
+            <div class="modal-title-text">
+              <h3>Eliminar producto</h3>
+              <p>Esta acción no se puede deshacer manualmente.</p>
+            </div>
+          </div>
+          <button class="modal-close" (click)="cancelarEliminacionProducto()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>¿Seguro que deseas eliminar el producto <strong>{{ productoAEliminar.nombre }}</strong>?</p>
+          <p class="modal-note">Si el producto tiene pedidos relacionados se marcará como inactivo automáticamente.</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cancelarEliminacionProducto()">Cancelar</button>
+          <button class="btn-danger" [disabled]="eliminandoProducto" (click)="confirmarEliminacionProducto()">
+            {{ eliminandoProducto ? 'Procesando...' : 'Eliminar' }}
+          </button>
         </div>
       </div>
     </div>
     }
 
 
-    <!-- Pedidos Section -->
+    <!-- Problemas Reportados Section -->
     @if (seccionActiva === 'pedidos') {
     <div class="content-section">
       <div class="content-header">
         <div class="welcome-section">
-          <h1>Gestión de Pedidos</h1>
-          <p>Administra todos los pedidos de tus clientes</p>
+          <h1>Problemas Reportados</h1>
+          <p>Revisa y gestiona los inconvenientes comunicados por los repartidores</p>
         </div>
       </div>
 
@@ -273,43 +404,28 @@
             <tr>
               <th>ID Pedido</th>
               <th>Cliente</th>
-              <th>Productos</th>
-              <th>Total</th>
+              <th>Teléfono</th>
+              <th>Detalle</th>
+              <th>Repartidor</th>
               <th>Estado</th>
               <th>Fecha</th>
-              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (pedido of pedidos; track pedido.id) {
+            @for (reporte of reportesProblemas; track reporte.idPedido) {
             <tr>
-              <td>#{{ pedido.id }}</td>
-              <td>{{ pedido.cliente }}</td>
-              <td>{{ pedido.productos }}</td>
-              <td>S/. {{ pedido.total | number:'1.2-2' }}</td>
+              <td>#{{ reporte.idPedido }}</td>
+              <td>{{ reporte.clienteNombre }}</td>
+              <td>{{ reporte.clienteTelefono || 'Sin teléfono' }}</td>
+              <td>{{ reporte.detalleProblema }}</td>
+              <td>{{ reporte.repartidorNombre || 'Sin asignar' }}</td>
               <td>
-                <span class="status-badge" [class.en-proceso]="pedido.estado === 'En Proceso'" 
-                      [class.entregado]="pedido.estado === 'Entregado'">
-                  {{ pedido.estado }}
+                <span class="status-badge" [class.en-proceso]="reporte.estadoPedido === 'en_camino' || reporte.estadoPedido === 'pendiente'" 
+                      [class.entregado]="reporte.estadoPedido === 'entregado'">
+                  {{ reporte.estadoPedido | uppercase }}
                 </span>
               </td>
-              <td>{{ pedido.fecha }}</td>
-              <td>
-                <div class="actions">
-                  <button class="btn-edit" title="Ver Detalles">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                  <button class="btn-edit" title="Actualizar Estado">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </button>
-                </div>
-              </td>
+              <td>{{ reporte.fechaProblema }}</td>
             </tr>
             }
           </tbody>

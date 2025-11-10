@@ -36,6 +36,9 @@ public class Producto {
     @Enumerated(EnumType.STRING)
     private EstadoProducto estado;
 
+    @Column(name = "stock", nullable = false)
+    private Integer stock = 0;
+
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
@@ -46,7 +49,7 @@ public class Producto {
     }
 
     public Producto(String nombre, String descripcion, BigDecimal precio, Categoria categoria,
-                    String imagenUrl, EstadoProducto estado, LocalDateTime fechaCreacion,
+                    String imagenUrl, EstadoProducto estado, Integer stock, LocalDateTime fechaCreacion,
                     LocalDateTime ultimaActualizacion) {
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -54,6 +57,7 @@ public class Producto {
         this.categoria = categoria;
         this.imagenUrl = imagenUrl;
         this.estado = estado;
+        this.stock = stock != null && stock >= 0 ? stock : 0;
         this.fechaCreacion = fechaCreacion;
         this.ultimaActualizacion = ultimaActualizacion;
     }
@@ -112,6 +116,14 @@ public class Producto {
 
     public void setEstado(EstadoProducto estado) {
         this.estado = estado;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock != null && stock >= 0 ? stock : 0;
     }
 
     public LocalDateTime getFechaCreacion() {

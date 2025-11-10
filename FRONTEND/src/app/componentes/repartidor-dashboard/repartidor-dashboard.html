@@ -188,8 +188,13 @@
                   </span>
                   <span class="order-id">Pedido #{{ pedido.id }}</span>
                 </div>
-                <div class="order-status" [ngClass]="'status-' + pedido.estado">
-                  {{ formatearEstado(pedido.estado) }}
+                <div class="order-status-group">
+                  <div class="order-status" [ngClass]="'status-' + pedido.estado">
+                    {{ formatearEstado(pedido.estado) }}
+                  </div>
+                  @if (pedido.problemaReportado) {
+                    <span class="badge-problema">Problema reportado</span>
+                  }
                 </div>
               </div>
 
@@ -230,6 +235,13 @@
                   <div class="section-content">
                     <div class="section-label">Cliente</div>
                     <div class="section-value">{{ pedido.cliente }} - {{ pedido.telefono }}</div>
+                    <button class="btn-historial-cliente" (click)="abrirHistorialCliente(pedido)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 4h18"></path>
+                        <path d="M8 4v16l4-4 4 4V4"></path>
+                      </svg>
+                      Historial del cliente
+                    </button>
                   </div>
                 </div>
 
@@ -280,12 +292,40 @@
 
               @if (pedido.estado === 'en_curso') {
                 <div class="order-actions">
+                  <button class="btn-problema" (click)="abrirModalReporteProblema(pedido.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 9v4"></path>
+                      <path d="M12 17h.01"></path>
+                      <path d="M10 2h4l2 4h4l-2 4 2 4h-4l-2 4h-4l-2-4H4l2-4-2-4h4z"></path>
+                    </svg>
+                    Reportar problema
+                  </button>
+                  <button class="btn-cancelar-pedido" (click)="cancelarPedido(pedido.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M6 6l12 12"></path>
+                      <path d="M6 18L18 6"></path>
+                    </svg>
+                    Cancelar Pedido
+                  </button>
                   <button class="btn-completar" (click)="completarEntrega(pedido.id)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M9 12l2 2 4-4"></path>
                       <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c4.97 0 9 4.03 9 9z"></path>
                     </svg>
                     Marcar como Entregado
+                  </button>
+                </div>
+              }
+
+              @if (pedido.estado === 'entregado') {
+                <div class="order-actions">
+                  <button class="btn-problema" (click)="abrirModalReporteProblema(pedido.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 9v4"></path>
+                      <path d="M12 17h.01"></path>
+                      <path d="M10 2h4l2 4h4l-2 4 2 4h-4l-2 4h-4l-2-4H4l2-4-2-4h4z"></path>
+                    </svg>
+                    Reportar problema
                   </button>
                 </div>
               }
@@ -758,6 +798,87 @@
           </button>
           <button class="btn-confirm" (click)="confirmarAceptarPedido()" style="background-color: #10b981;">
             Aceptar Pedido
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal historial de cliente -->
+  @if (mostrarModalHistorialCliente) {
+    <div class="modal-overlay" (click)="cerrarModalHistorialCliente()">
+      <div class="modal-content modal-historial-cliente" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon" style="background-color:#3b82f6;color:white;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20l9-5-9-5-9 5 9 5z"></path>
+              <path d="M12 12l9-5-9-5-9 5 9 5z"></path>
+            </svg>
+          </div>
+          <h3>Historial de {{ clienteHistorialSeleccionado.nombre }}</h3>
+        </div>
+        <div class="modal-body">
+          <p class="historial-cliente-info">
+            Teléfono: {{ clienteHistorialSeleccionado.telefono || 'No registrado' }}
+          </p>
+
+          @if (cargandoHistorialCliente) {
+            <div class="historial-loading">Cargando historial...</div>
+          } @else {
+            @if (historialClientePedidos.length > 0) {
+              <ul class="historial-lista">
+                @for (pedido of historialClientePedidos; track pedido.id) {
+                  <li class="historial-item">
+                    <div class="historial-detalle">
+                      <span class="historial-id">Pedido #{{ pedido.id }}</span>
+                      <span class="historial-fecha">{{ pedido.fecha }}</span>
+                    </div>
+                    <div class="historial-detalle">
+                      <span class="historial-estado">{{ formatearEstado(pedido.estado) }}</span>
+                      <span class="historial-total">S/. {{ pedido.total | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="historial-direccion">{{ pedido.direccion }}</div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="historial-empty">{{ mensajeHistorialCliente || 'El cliente no tiene pedidos anteriores.' }}</div>
+            }
+          }
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="cerrarModalHistorialCliente()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal reporte problema -->
+  @if (mostrarModalReporteProblema && pedidoParaReporte) {
+    <div class="modal-overlay" (click)="cerrarModalReporteProblema()">
+      <div class="modal-content modal-reporte-problema" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon" style="background-color:#f97316;color:white;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 3l6 6-6 6"></path>
+              <path d="M18 21l-6-6 6-6"></path>
+            </svg>
+          </div>
+          <h3>Reportar problema - Pedido #{{ pedidoParaReporte.id }}</h3>
+        </div>
+        <div class="modal-body">
+          <p class="historial-cliente-info">Describe el problema encontrado durante la entrega.</p>
+          <textarea
+            class="textarea-problema"
+            [(ngModel)]="descripcionProblema"
+            rows="4"
+            placeholder="Ejemplo: el cliente no estaba en casa, dirección incorrecta, etc."
+          ></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="cerrarModalReporteProblema()">Cancelar</button>
+          <button class="btn-confirm btn-confirm-problema" (click)="reportarProblema()" [disabled]="enviandoReporte">
+            {{ enviandoReporte ? 'Enviando...' : 'Enviar reporte' }}
           </button>
         </div>
       </div>

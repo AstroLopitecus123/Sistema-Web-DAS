@@ -586,6 +586,34 @@ div.order-status.status-entregado,
   flex: 1;
 }
 
+.btn-historial-cliente {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  background-color: #eff6ff;
+  border: 1px solid rgba(29, 78, 216, 0.15);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-historial-cliente svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.btn-historial-cliente:hover {
+  background-color: #dbeafe;
+  border-color: rgba(29, 78, 216, 0.25);
+  color: #1e3a8a;
+}
+
 .section-label {
   font-size: 12px;
   color: #6c757d;
@@ -599,11 +627,59 @@ div.order-status.status-entregado,
   font-weight: 500;
 }
 
+.order-status-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.badge-problema {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .order-actions {
   display: flex;
   justify-content: center;
   padding-top: 15px;
   border-top: 1px solid #e9ecef;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-problema {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-problema:hover {
+  background: #ea580c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.btn-problema svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 .btn-aceptar, .btn-completar {
@@ -619,6 +695,33 @@ div.order-status.status-entregado,
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.btn-cancelar-pedido {
+  background: #f87171;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancelar-pedido:hover {
+  background: #ef4444;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
+}
+
+.btn-cancelar-pedido svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 .btn-aceptar:hover, .btn-completar:hover {
@@ -792,6 +895,119 @@ div.order-status.status-entregado,
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   width: 100%;
+}
+
+.modal-historial-cliente {
+  max-width: 520px;
+  width: 100%;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.modal-reporte-problema {
+  max-width: 480px;
+  width: 100%;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.historial-cliente-info {
+  margin-bottom: 16px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.historial-loading {
+  text-align: center;
+  padding: 24px 0;
+  color: #4b5563;
+}
+
+.historial-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historial-item {
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background-color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historial-detalle {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #1f2937;
+}
+
+.historial-id {
+  font-weight: 700;
+  color: #111827;
+}
+
+.historial-fecha {
+  color: #6b7280;
+}
+
+.historial-estado {
+  font-weight: 600;
+  color: #2563eb;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.historial-total {
+  font-weight: 700;
+  color: #15803d;
+}
+
+.historial-direccion {
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.historial-empty {
+  text-align: center;
+  padding: 24px;
+  color: #6b7280;
+}
+
+.textarea-problema {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 12px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #111827;
+  min-height: 120px;
+  background-color: #f9fafb;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textarea-problema:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  background-color: #fff;
+}
+
+.btn-confirm-problema {
+  background: #f97316;
+}
+
+.btn-confirm-problema:hover {
+  background: #ea580c;
 }
 
 @keyframes modalSlideIn {

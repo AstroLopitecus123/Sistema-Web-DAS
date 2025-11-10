@@ -19,6 +19,12 @@ export class MenuService {
     return this.http.get<Producto[]>(url);
   }
 
+  obtenerProductosAdmin(): Observable<Producto[]> {
+    const url = `${this.baseUrl}/admin/productos`;
+    console.log(`[MenuService] Solicitando productos admin a: ${url}`);
+    return this.http.get<Producto[]>(url);
+  }
+
   buscarProductos(keyword: string): Observable<Producto[]> {
     const url = `${this.baseUrl}/productos/buscar`;
     console.log(`[MenuService] Buscando '${keyword}' en: ${url}`);
@@ -26,5 +32,29 @@ export class MenuService {
     const params = new HttpParams().set('keyword', keyword);
     
     return this.http.get<Producto[]>(url, { params });
+  }
+
+  obtenerProductoPorId(idProducto: number): Observable<Producto> {
+    const url = `${this.baseUrl}/productos/${idProducto}`;
+    return this.http.get<Producto>(url);
+  }
+
+  guardarProducto(request: {
+    idProducto?: number;
+    nombre: string;
+    descripcion?: string;
+    precio: number;
+    idCategoria: number;
+    imagenUrl?: string;
+    estado?: string;
+    stock?: number;
+  }): Observable<Producto> {
+    const url = `${this.baseUrl}/productos`;
+    return this.http.post<Producto>(url, request);
+  }
+
+  eliminarProducto(idProducto: number): Observable<{ success: boolean; accion: string; mensaje: string }> {
+    const url = `${this.baseUrl}/productos/${idProducto}`;
+    return this.http.delete<{ success: boolean; accion: string; mensaje: string }>(url);
   }
 }

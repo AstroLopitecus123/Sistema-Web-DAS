@@ -1,6 +1,7 @@
 package com.web.capas.domain.repository;
 
 import com.web.capas.infrastructure.persistence.entities.Pedido;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -30,5 +31,10 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
         java.time.LocalDateTime fechaInicio, 
         java.time.LocalDateTime fechaFin
     );
+    
+    // Obtener los últimos pedidos de un cliente con límite
+    List<Pedido> findByCliente_IdUsuarioOrderByFechaPedidoDesc(Integer idUsuario, Pageable pageable);
+
+    List<Pedido> findByProblemaReportadoTrueOrderByFechaProblemaDesc();
     
 }

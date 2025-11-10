@@ -47,4 +47,28 @@ export class RepartidorService {
   obtenerEstadisticas(idRepartidor: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/estadisticas/${idRepartidor}`);
   }
+
+  // Obtiene historial reciente del cliente
+  obtenerHistorialCliente(idCliente: number, limite: number = 10): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/pedidos/cliente/${idCliente}/historial`, {
+      params: { limite }
+    });
+  }
+
+  cancelarPedido(idPedido: number, idRepartidor: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/pedidos/${idPedido}/cancelar`, {
+      idRepartidor
+    });
+  }
+
+  reportarProblema(idPedido: number, idRepartidor: number, descripcion: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/pedidos/${idPedido}/reportar-problema`, {
+      idRepartidor,
+      descripcion
+    });
+  }
+
+  obtenerReportesProblemas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/pedidos/reportes`);
+  }
 }

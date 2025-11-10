@@ -7,6 +7,7 @@ import com.web.capas.domain.dto.ProductoPedidoRequest;
 import com.web.capas.domain.dto.ProductoDetalleResponse;
 import com.web.capas.domain.dto.ClienteResponse;
 import com.web.capas.domain.dto.RepartidorResponse;
+import com.web.capas.domain.dto.ReporteProblemaResponse;
 import com.web.capas.domain.RecursoNoEncontradoExcepcion;
 import com.web.capas.domain.ServiceException;
 import com.web.capas.infrastructure.persistence.entities.Pedido;
@@ -21,6 +22,7 @@ import com.web.capas.domain.repository.DetallePedidoRepository;
 import com.web.capas.domain.repository.PagoRepository;
 import com.web.capas.application.service.WhatsAppService; 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,6 +106,16 @@ public class PedidoServiceImpl implements PedidoService {
                 // Validar que el producto existe
                 Producto producto = productoRepository.findById(productoRequest.getIdProducto())
                     .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Producto no encontrado: " + productoRequest.getIdProducto()));
+
+                int cantidadSolicitada = productoRequest.getCantidad();
+                int stockDisponible = producto.getStock() != null ? producto.getStock() : 0;
+
+                if (stockDisponible < cantidadSolicitada) {
+                    throw new ServiceException("Stock insuficiente para el producto: " + producto.getNombre());
+                }
+
+                producto.setStock(stockDisponible - cantidadSolicitada);
+                productoRepository.save(producto);
                 
                 // Nuevo detalle
                 DetallePedido detalle = new DetallePedido();
@@ -255,6 +267,9 @@ public class PedidoServiceImpl implements PedidoService {
         response.setMetodoPago(pedido.getMetodoPago().toString());
         response.setEstadoPago(pedido.getEstadoPago().toString());
         response.setFechaEntrega(pedido.getFechaEntrega() != null ? pedido.getFechaEntrega().toString() : null);
+        response.setProblemaReportado(pedido.getProblemaReportado());
+        response.setDetalleProblema(pedido.getDetalleProblema());
+        response.setFechaProblema(pedido.getFechaProblema() != null ? pedido.getFechaProblema().toString() : null);
         
         // Cliente
         if (pedido.getCliente() != null) {
@@ -518,6 +533,108 @@ public class PedidoServiceImpl implements PedidoService {
             System.err.println("Error al obtener estadísticas del repartidor: " + e.getMessage());
             e.printStackTrace();
             throw new ServiceException("Error al obtener estadísticas del repartidor", e);
+        }
+    }
+
+    @Override
+    public List<PedidoListaResponse> obtenerHistorialCliente(Integer idCliente, int limite) {
+        try {
+            int limiteSeguro = limite > 0 ? Math.min(limite, 20) : 10;
+            List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuarioOrderByFechaPedidoDesc(
+                idCliente,
+                PageRequest.of(0, limiteSeguro)
+            );
+            return pedidos.stream()
+                .map(this::convertirAPedidoListaResponse)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error al obtener historial del cliente " + idCliente + ": " + e.getMessage());
+            throw new ServiceException("Error al obtener historial del cliente", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponse cancelarPedidoRepartidor(Integer idPedido, Integer idRepartidor) {
+        try {
+            Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+
+            if (pedido.getRepartidor() == null || !pedido.getRepartidor().getIdUsuario().equals(idRepartidor)) {
+                throw new ServiceException("El pedido no está asignado a este repartidor");
+            }
+
+            if (pedido.getEstadoPedido() != Pedido.EstadoPedido.en_camino &&
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.aceptado) {
+                throw new ServiceException("No se puede cancelar el pedido en su estado actual");
+            }
+
+            pedido.setRepartidor(null);
+            pedido.setEstadoPedido(Pedido.EstadoPedido.pendiente);
+            pedidoRepository.save(pedido);
+
+            return convertirAPedidoResponse(pedido);
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al cancelar pedido del repartidor: " + e.getMessage());
+            throw new ServiceException("Error al cancelar el pedido", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponse reportarProblema(Integer idPedido, Integer idRepartidor, String descripcion) {
+        try {
+            Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+
+            if (pedido.getRepartidor() == null || !pedido.getRepartidor().getIdUsuario().equals(idRepartidor)) {
+                throw new ServiceException("El pedido no está asignado a este repartidor");
+            }
+
+            if (pedido.getEstadoPedido() != Pedido.EstadoPedido.en_camino &&
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.entregado) {
+                throw new ServiceException("Solo puedes reportar problemas de pedidos en curso o entregados");
+            }
+
+            pedido.setProblemaReportado(Boolean.TRUE);
+            pedido.setDetalleProblema(descripcion);
+            pedido.setFechaProblema(LocalDateTime.now());
+            pedidoRepository.save(pedido);
+
+            return convertirAPedidoResponse(pedido);
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al reportar problema: " + e.getMessage());
+            throw new ServiceException("Error al reportar el problema", e);
+        }
+    }
+
+    @Override
+    public List<ReporteProblemaResponse> obtenerReportesProblemas() {
+        try {
+            List<Pedido> pedidos = pedidoRepository.findByProblemaReportadoTrueOrderByFechaProblemaDesc();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return pedidos.stream().map(pedido -> {
+                ReporteProblemaResponse response = new ReporteProblemaResponse();
+                response.setIdPedido(pedido.getIdPedido());
+                if (pedido.getCliente() != null) {
+                    String nombre = pedido.getCliente().getNombre() != null ? pedido.getCliente().getNombre() : "";
+                    String apellido = pedido.getCliente().getApellido() != null ? pedido.getCliente().getApellido() : "";
+                    response.setClienteNombre((nombre + " " + apellido).trim());
+                    response.setClienteTelefono(pedido.getCliente().getTelefono());
+                }
+                response.setDetalleProblema(pedido.getDetalleProblema());
+                response.setEstadoPedido(pedido.getEstadoPedido() != null ? pedido.getEstadoPedido().toString() : null);
+                response.setFechaProblema(pedido.getFechaProblema() != null ? pedido.getFechaProblema().format(formatter) : null);
+                response.setRepartidorNombre(pedido.getRepartidor() != null ?
+                        pedido.getRepartidor().getNombre() + " " + pedido.getRepartidor().getApellido() : null);
+                return response;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ServiceException("Error al obtener los reportes de problemas", e);
         }
     }
 }

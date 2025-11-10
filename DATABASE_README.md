@@ -81,6 +81,7 @@ CREATE TABLE Productos (
   id_categoria INT NOT NULL,
   imagen_url VARCHAR(255),
   estado ENUM('activo', 'inactivo') DEFAULT 'activo',
+  stock INT NOT NULL DEFAULT 0,
   fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id_producto),
@@ -89,7 +90,7 @@ CREATE TABLE Productos (
 ```
 
 **Campos importantes**:
-- `estado`: Controla si el producto aparece en el menú ('activo' o 'inactivo')
+- `stock`: Inventario disponible para el producto (usado por el panel admin)
 - `precio`: Precio base del producto con precisión DECIMAL(10,2)
 - `imagen_url`: URL de la imagen del producto
 - `ultima_actualizacion`: Se actualiza automáticamente al modificar el registro
@@ -147,6 +148,9 @@ CREATE TABLE Pedidos (
   metodo_pago ENUM('tarjeta', 'billetera_virtual', 'efectivo') NOT NULL,
   estado_pago ENUM('pendiente', 'pagado', 'fallido', 'reembolsado') NOT NULL DEFAULT 'pendiente',
   fecha_entrega DATETIME,
+  problema_reportado TINYINT(1) DEFAULT 0,
+  detalle_problema TEXT,
+  fecha_problema DATETIME,
   PRIMARY KEY (id_pedido),
   FOREIGN KEY (id_cliente) REFERENCES Usuarios(id_usuario),
   FOREIGN KEY (id_repartidor) REFERENCES Usuarios(id_usuario),
@@ -453,6 +457,7 @@ CREATE TABLE Productos (
   id_categoria INT NOT NULL,
   imagen_url VARCHAR(255),
   estado ENUM('activo', 'inactivo') DEFAULT 'activo',
+  stock INT NOT NULL DEFAULT 0,
   fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id_producto),
@@ -504,6 +509,9 @@ CREATE TABLE Pedidos (
   metodo_pago ENUM('tarjeta', 'billetera_virtual', 'efectivo') NOT NULL,
   estado_pago ENUM('pendiente', 'pagado', 'fallido', 'reembolsado') NOT NULL DEFAULT 'pendiente',
   fecha_entrega DATETIME,
+  problema_reportado TINYINT(1) DEFAULT 0,
+  detalle_problema TEXT,
+  fecha_problema DATETIME,
   PRIMARY KEY (id_pedido),
   FOREIGN KEY (id_cliente) REFERENCES Usuarios(id_usuario),
   FOREIGN KEY (id_repartidor) REFERENCES Usuarios(id_usuario),
@@ -654,25 +662,25 @@ VALUES
 
 ```sql
 -- INSERTAR PRODUCTOS
-INSERT INTO productos (id_producto, nombre, descripcion, precio, id_categoria, imagen_url, estado) 
+INSERT INTO productos (id_producto, nombre, descripcion, precio, id_categoria, imagen_url, estado, stock) 
 VALUES
 (1, 'Hamburguesa Clásica', 'Doble carne, queso cheddar y salsa especial.', 15.00, 1, 
- 'https://png.pngtree.com/png-vector/20240715/ourmid/pngtree-hamburger-png-image_13094305.png', 'activo'),
+ 'https://png.pngtree.com/png-vector/20240715/ourmid/pngtree-hamburger-png-image_13094305.png', 'activo', 50),
  
 (2, 'Papas Fritas', 'Porción grande de papas crujientes y doradas.', 5.50, 2, 
- 'https://static.vecteezy.com/system/resources/thumbnails/025/063/639/small/french-fries-with-ai-generated-free-png.png', 'activo'),
+ 'https://static.vecteezy.com/system/resources/thumbnails/025/063/639/small/french-fries-with-ai-generated-free-png.png', 'activo', 50),
  
 (3, 'Refresco Coca-Cola', 'Lata de 355ml.', 4.50, 3, 
- 'https://static.vecteezy.com/system/resources/previews/036/573/453/non_2x/a-can-of-coca-cola-drink-isolated-free-png.png', 'activo'),
+ 'https://static.vecteezy.com/system/resources/previews/036/573/453/non_2x/a-can-of-coca-cola-drink-isolated-free-png.png', 'activo', 50),
  
 (4, 'Ensalada César', 'Fresca con pollo y aderezo césar.', 9.90, 5, 
- 'https://png.pngtree.com/png-vector/20240510/ourmid/pngtree-veg-caesar-salad-png-image_12372147.png', 'activo'),
+ 'https://png.pngtree.com/png-vector/20240510/ourmid/pngtree-veg-caesar-salad-png-image_12372147.png', 'activo', 50),
  
 (5, 'Postre Brownie', 'Brownie con helado de vainilla.', 8.00, 4, 
- 'https://www.nicepng.com/png/full/197-1973214_milk-shakes-brownie-brownie-con-helado-de-vainilla.png', 'activo'),
+ 'https://www.nicepng.com/png/full/197-1973214_milk-shakes-brownie-brownie-con-helado-de-vainilla.png', 'activo', 50),
  
 (6, 'Jugo de Naranja', 'Jugo natural de naranja.', 6.00, 3, 
- 'https://png.pngtree.com/png-clipart/20250604/original/pngtree-orange-juice-png-image_21121883.png', 'activo');
+ 'https://png.pngtree.com/png-clipart/20250604/original/pngtree-orange-juice-png-image_21121883.png', 'activo', 50);
 ```
 
 ### Opciones de Personalización

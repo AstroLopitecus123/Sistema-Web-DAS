@@ -10,6 +10,7 @@ import com.web.capas.infrastructure.persistence.entities.Producto;
 import com.web.capas.domain.repository.ProductoRepository;
 import com.web.capas.infrastructure.persistence.repositories.JpaCategoriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -75,6 +76,14 @@ public class ProductoServiceImpl implements ProductoService {
                 ? parsearEstado(request.getEstado())
                 : (producto.getEstado() != null ? producto.getEstado() : Producto.EstadoProducto.activo);
             producto.setEstado(estado);
+            if (request.getStock() != null) {
+                if (request.getStock() < 0) {
+                    throw new ServiceException("El stock no puede ser negativo");
+                }
+                producto.setStock(request.getStock());
+            } else if (producto.getStock() == null) {
+                producto.setStock(0);
+            }
             producto.setUltimaActualizacion(LocalDateTime.now());
 
             Producto guardado = productoRepository.save(producto);
@@ -102,6 +111,53 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
+    @Override
+    public ProductoResponse obtenerProductoPorId(Integer id) {
+        try {
+            Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Producto no encontrado"));
+            return mapearAResponse(producto);
+        } catch (RecursoNoEncontradoExcepcion e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al obtener el producto", e);
+        }
+    }
+
+    @Override
+    public boolean eliminarProducto(Integer id) {
+        try {
+            Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Producto no encontrado"));
+            try {
+                productoRepository.delete(producto);
+                productoRepository.flush();
+                return true;
+            } catch (DataIntegrityViolationException ex) {
+                producto.setEstado(Producto.EstadoProducto.inactivo);
+                producto.setUltimaActualizacion(LocalDateTime.now());
+                productoRepository.save(producto);
+                return false;
+            }
+        } catch (RecursoNoEncontradoExcepcion e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("No se pudo eliminar el producto", e);
+        }
+    }
+
+    @Override
+    public List<ProductoResponse> obtenerProductosParaAdmin() {
+        try {
+            return productoRepository.findAll()
+                .stream()
+                .map(this::mapearAResponse)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ServiceException("Error al obtener productos", e);
+        }
+    }
+
     private void validarRequest(ProductoRequest request) {
         if (request == null) {
             throw new ServiceException("El payload de producto es obligatorio");
@@ -114,6 +170,9 @@ public class ProductoServiceImpl implements ProductoService {
         }
         if (request.getIdCategoria() == null) {
             throw new ServiceException("La categoría es obligatoria");
+        }
+        if (request.getStock() != null && request.getStock() < 0) {
+            throw new ServiceException("El stock no puede ser negativo");
         }
     }
 
@@ -136,6 +195,7 @@ public class ProductoServiceImpl implements ProductoService {
         response.setPrecio(producto.getPrecio());
         response.setImagenUrl(producto.getImagenUrl());
         response.setEstado(producto.getEstado() != null ? producto.getEstado().toString() : null);
+        response.setStock(producto.getStock());
         response.setFechaCreacion(producto.getFechaCreacion());
         response.setUltimaActualizacion(producto.getUltimaActualizacion());
 

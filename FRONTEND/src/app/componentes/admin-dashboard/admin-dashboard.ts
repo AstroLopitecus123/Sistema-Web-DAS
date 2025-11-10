@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,6 +6,29 @@ import { UsuarioService, UsuarioAdmin, EstadisticasUsuarios } from '../../servic
 import { NotificacionService } from '../../servicios/notificacion.service';
 import { AuthService } from '../../servicios/auth.service';
 import { Usuario } from '../../modelos/usuario.model';
+import { RepartidorService } from '../../servicios/repartidor.service';
+import { MenuService } from '../../servicios/menu.service';
+import { Producto } from '../../modelos/producto.model';
+import { Subscription, interval } from 'rxjs';
+
+interface ProductoAdmin extends Producto {
+  categoriaId?: number;
+}
+
+interface CategoriaOpcion {
+  id: number;
+  nombre: string;
+}
+
+interface ReporteProblema {
+  idPedido: number;
+  clienteNombre: string;
+  clienteTelefono: string;
+  detalleProblema: string;
+  repartidorNombre?: string;
+  estadoPedido: string;
+  fechaProblema: string;
+}
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -14,7 +37,7 @@ import { Usuario } from '../../modelos/usuario.model';
   templateUrl: './admin-dashboard.html',
   styleUrls: ['./admin-dashboard.css']
 })
-export class AdminDashboard implements OnInit {
+export class AdminDashboard implements OnInit, OnDestroy {
   // Sección activa
   seccionActiva: string = 'dashboard';
 
@@ -68,56 +91,22 @@ export class AdminDashboard implements OnInit {
   mensajeErrorContrasena: string | null = null;
   usuario: Usuario | null = null;
 
-  // Productos para la tabla
-  productos = [
-    {
-      id: 1,
-      nombre: 'Hamburguesa Clásica',
-      categoria: 'Hamburguesas',
-      precio: 15.00,
-      stock: 45,
-      estado: 'Disponible',
-      imagenUrl: 'https://png.pngtree.com/png-vector/20240715/ourmid/pngtree-hamburger-png-image_13094305.png'
-    },
-    {
-      id: 2,
-      nombre: 'Pizza Margherita',
-      categoria: 'Pizzas',
-      precio: 25.00,
-      stock: 30,
-      estado: 'Disponible',
-      imagenUrl: 'https://placehold.co/300x200/FF6B35/FFFFFF?text=Pizza'
-    },
-    {
-      id: 3,
-      nombre: 'Coca Cola',
-      categoria: 'Bebidas',
-      precio: 5.00,
-      stock: 100,
-      estado: 'Disponible',
-      imagenUrl: 'https://placehold.co/300x200/FF6B35/FFFFFF?text=Coca+Cola'
-    }
-  ];
+  productos: ProductoAdmin[] = [];
+  productosFiltrados: ProductoAdmin[] = [];
+  productosCargando = false;
+  productosError: string | null = null;
+  productosPollingSub?: Subscription;
+  terminoBusquedaProducto = '';
+  mostrarModalEditarProducto = false;
+  mostrarModalEliminarProducto = false;
+  productoEnEdicion: ProductoAdmin | null = null;
+  productoAEliminar: ProductoAdmin | null = null;
+  guardandoProducto = false;
+  eliminandoProducto = false;
+  esNuevoProducto = false;
+  categoriasDisponibles: CategoriaOpcion[] = [];
 
-  // Pedidos para la sección de pedidos
-  pedidos = [
-    {
-      id: 1,
-      cliente: 'José Ogosi',
-      productos: 'Hamburguesa Clásica x2',
-      total: 30.00,
-      estado: 'En Proceso',
-      fecha: '2024-01-15'
-    },
-    {
-      id: 2,
-      cliente: 'María González',
-      productos: 'Pizza Margherita x1',
-      total: 25.00,
-      estado: 'Entregado',
-      fecha: '2024-01-15'
-    }
-  ];
+  reportesProblemas: ReporteProblema[] = [];
 
   // Cupones para la sección de cupones
   cupones = [
@@ -145,15 +134,59 @@ export class AdminDashboard implements OnInit {
     private router: Router,
     private usuarioService: UsuarioService,
     private notificacionService: NotificacionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private repartidorService: RepartidorService,
+    private menuService: MenuService
   ) {}
 
   ngOnInit() {
-    // Cargar datos del dashboard
     this.cargarDatosDashboard();
     
     // Obtener usuario actual
     this.usuario = this.authService.getUsuarioActual();
+
+    this.cargarReportesProblemas();
+    this.cargarProductos();
+    this.productosPollingSub = interval(15000).subscribe(() => this.cargarProductos());
+  }
+
+  ngOnDestroy(): void {
+    if (this.productosPollingSub) {
+      this.productosPollingSub.unsubscribe();
+    }
+  }
+  cargarProductos() {
+    this.productosCargando = true;
+    this.menuService.obtenerProductosAdmin().subscribe({
+      next: (respuesta) => {
+        const productosNormalizados: ProductoAdmin[] = (respuesta || []).map((producto) => {
+          const categoriaId: number | undefined = typeof producto.categoria === 'object' && producto.categoria
+            ? (producto.categoria as any).idCategoria
+            : (producto as any).categoriaId ?? undefined;
+          const estadoNormalizado = ((producto.estado || 'activo') as string).toLowerCase() as 'activo' | 'inactivo';
+          return {
+            ...producto,
+            stock: producto.stock ?? 0,
+            estado: estadoNormalizado,
+            imagenUrl: producto.imagenUrl || 'https://placehold.co/300x200/FF6B35/FFFFFF?text=Producto',
+            categoriaId
+          };
+        });
+
+        this.productos = productosNormalizados;
+        this.productosFiltrados = this.filtrarProductos(this.terminoBusquedaProducto);
+        this.productosActivos = this.productos.filter(producto => producto.estado === 'activo').length;
+        this.categoriasDisponibles = this.obtenerCategoriasDisponibles(productosNormalizados);
+        this.productosCargando = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar productos:', error);
+        this.productosError = 'No se pudieron cargar los productos';
+        this.productosCargando = false;
+        this.productos = [];
+        this.productosFiltrados = [];
+      }
+    });
   }
 
   cargarDatosDashboard() {
@@ -195,6 +228,18 @@ export class AdminDashboard implements OnInit {
     });
   }
 
+  cargarReportesProblemas() {
+    this.repartidorService.obtenerReportesProblemas().subscribe({
+      next: (reportes: ReporteProblema[]) => {
+        this.reportesProblemas = reportes ?? [];
+      },
+      error: () => {
+        console.error('No se pudieron cargar los reportes de problemas (el backend puede no exponer este recurso).');
+        this.reportesProblemas = [];
+      }
+    });
+  }
+
   navegarA(seccion: string, event?: Event) {
     // Prevenir el comportamiento por defecto del enlace
     if (event) {
@@ -210,23 +255,195 @@ export class AdminDashboard implements OnInit {
     }
   }
 
+
   nuevoProducto() {
-    this.router.navigate(['/admin/productos/nuevo']);
+    this.esNuevoProducto = true;
+    const categoriaDefault = this.categoriasDisponibles[0];
+    this.productoEnEdicion = {
+      idProducto: 0,
+      nombre: '',
+      descripcion: '',
+      precio: 0,
+      categoria: categoriaDefault ? categoriaDefault.nombre : '',
+      estado: 'activo',
+      stock: 0,
+      imagenUrl: '',
+      categoriaId: categoriaDefault ? categoriaDefault.id : undefined
+    } as ProductoAdmin;
+    this.actualizarCategoriaSeleccionada(this.productoEnEdicion.categoriaId);
+    this.mostrarModalEditarProducto = true;
   }
 
-  editarProducto(id: number) {
-    this.router.navigate(['/admin/productos/editar', id]);
+  editarProducto(id?: number) {
+    if (!id) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'No se encontró el identificador del producto.');
+      return;
+    }
+    const producto = this.productos.find(p => p.idProducto === id);
+    if (!producto) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'No se pudo cargar la información del producto.');
+      return;
+    }
+    this.productoEnEdicion = {
+      ...producto,
+      categoriaId: producto.categoriaId
+    };
+    this.esNuevoProducto = false;
+    this.actualizarCategoriaSeleccionada(this.productoEnEdicion.categoriaId);
+    this.mostrarModalEditarProducto = true;
   }
 
-  eliminarProducto(id: number) {
-    this.notificacionService.mostrarAdvertencia(
-      'Función no implementada', 
-      'La eliminación de productos no está implementada aún'
-    );
+  eliminarProducto(id?: number) {
+    if (!id) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'No se encontró el identificador del producto.');
+      return;
+    }
+    const producto = this.productos.find(p => p.idProducto === id);
+    if (!producto) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'No se pudo cargar la información del producto.');
+      return;
+    }
+    this.productoAEliminar = producto;
+    this.mostrarModalEliminarProducto = true;
   }
 
   buscarProducto(termino: string) {
-    // Lógica para buscar productos
+    this.terminoBusquedaProducto = termino;
+    this.productosFiltrados = this.filtrarProductos(termino);
+  }
+
+  guardarProductoEditado() {
+    if (!this.productoEnEdicion) {
+      return;
+    }
+    const producto = this.productoEnEdicion;
+    if (!producto.nombre || !producto.nombre.trim()) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'El nombre es obligatorio.');
+      return;
+    }
+    if (!producto.categoriaId) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'Selecciona una categoría válida.');
+      return;
+    }
+    if (producto.precio === undefined || producto.precio === null || Number(producto.precio) <= 0) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'El precio debe ser mayor a cero.');
+      return;
+    }
+    if (producto.stock === undefined || producto.stock === null || Number(producto.stock) < 0) {
+      this.notificacionService.mostrarAdvertencia('Producto', 'El stock no puede ser negativo.');
+      return;
+    }
+    this.guardandoProducto = true;
+    const esNuevo = !producto.idProducto;
+    this.menuService.guardarProducto({
+      idProducto: esNuevo ? undefined : producto.idProducto,
+      nombre: producto.nombre.trim(),
+      descripcion: producto.descripcion || '',
+      precio: Number(producto.precio),
+      idCategoria: producto.categoriaId,
+      imagenUrl: producto.imagenUrl,
+      estado: producto.estado,
+      stock: Number(producto.stock)
+    }).subscribe({
+      next: () => {
+        this.notificacionService.mostrarExito('Producto', esNuevo ? 'Producto creado correctamente.' : 'Producto actualizado correctamente.');
+        this.guardandoProducto = false;
+        this.mostrarModalEditarProducto = false;
+        this.productoEnEdicion = null;
+        this.esNuevoProducto = false;
+        this.cargarProductos();
+      },
+      error: (error) => {
+        console.error('Error al actualizar producto:', error);
+        this.guardandoProducto = false;
+        this.notificacionService.mostrarError('Producto', 'No se pudo actualizar el producto.');
+      }
+    });
+  }
+
+  cancelarEdicionProducto() {
+    this.mostrarModalEditarProducto = false;
+    this.productoEnEdicion = null;
+    this.guardandoProducto = false;
+    this.esNuevoProducto = false;
+  }
+
+  confirmarEliminacionProducto() {
+    if (!this.productoAEliminar || !this.productoAEliminar.idProducto) {
+      return;
+    }
+    this.eliminandoProducto = true;
+    this.menuService.eliminarProducto(this.productoAEliminar.idProducto).subscribe({
+      next: (respuesta) => {
+        this.eliminandoProducto = false;
+        this.mostrarModalEliminarProducto = false;
+        const mensaje = respuesta?.mensaje || 'Operación realizada.';
+        if (respuesta?.accion === 'ELIMINADO') {
+          this.notificacionService.mostrarExito('Producto', mensaje);
+        } else {
+          this.notificacionService.mostrarAdvertencia('Producto', mensaje);
+        }
+        this.productoAEliminar = null;
+        this.cargarProductos();
+      },
+      error: (error) => {
+        console.error('Error al eliminar producto:', error);
+        this.eliminandoProducto = false;
+        this.notificacionService.mostrarError('Producto', 'No se pudo eliminar el producto.');
+      }
+    });
+  }
+
+  cancelarEliminacionProducto() {
+    this.mostrarModalEliminarProducto = false;
+    this.productoAEliminar = null;
+    this.eliminandoProducto = false;
+  }
+
+  private filtrarProductos(termino: string): ProductoAdmin[] {
+    const filtro = termino.trim().toLowerCase();
+    if (!filtro) {
+      return [...this.productos];
+    }
+    return this.productos.filter(producto =>
+      producto.nombre.toLowerCase().includes(filtro) ||
+      this.obtenerNombreCategoriaProducto(producto).toLowerCase().includes(filtro)
+    );
+  }
+
+  obtenerNombreCategoriaProducto(producto: ProductoAdmin): string {
+    if (!producto.categoria) {
+      return 'Sin categoría';
+    }
+    if (typeof producto.categoria === 'string') {
+      return producto.categoria;
+    }
+    return (producto.categoria as any).nombreCategoria || (producto.categoria as any).nombre || 'Sin categoría';
+  }
+
+  actualizarCategoriaSeleccionada(idCategoria?: number | null) {
+    if (!this.productoEnEdicion) {
+      return;
+    }
+    const categoriaSeleccionada = this.categoriasDisponibles.find(c => c.id === Number(idCategoria));
+    this.productoEnEdicion.categoriaId = idCategoria !== null ? Number(idCategoria) : undefined;
+    this.productoEnEdicion.categoria = categoriaSeleccionada ? categoriaSeleccionada.nombre : '';
+  }
+
+  private obtenerCategoriasDisponibles(productos: ProductoAdmin[]): CategoriaOpcion[] {
+    const mapa = new Map<number, string>();
+    productos.forEach(producto => {
+      const idCategoria = producto.categoriaId;
+      if (idCategoria !== undefined && idCategoria !== null) {
+        const nombre = this.obtenerNombreCategoriaProducto(producto);
+        if (!mapa.has(idCategoria)) {
+          mapa.set(idCategoria, nombre);
+        }
+      }
+    });
+    return Array.from(mapa.entries())
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   mostrarConfirmacionSalir(event?: Event) {

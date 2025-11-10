@@ -27,6 +27,9 @@ public class ProductoResponse {
     @JsonProperty("categoria")
     private CategoriaResponse categoria;
 
+    @JsonProperty("stock")
+    private Integer stock;
+
     @JsonProperty("fechaCreacion")
     private LocalDateTime fechaCreacion;
 
@@ -87,6 +90,14 @@ public class ProductoResponse {
 
     public void setCategoria(CategoriaResponse categoria) {
         this.categoria = categoria;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public LocalDateTime getFechaCreacion() {

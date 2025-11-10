@@ -43,6 +43,15 @@ public class PedidoListaResponse {
     @JsonProperty("repartidor")
     private RepartidorResponse repartidor;
     
+    @JsonProperty("problemaReportado")
+    private Boolean problemaReportado;
+    
+    @JsonProperty("detalleProblema")
+    private String detalleProblema;
+    
+    @JsonProperty("fechaProblema")
+    private String fechaProblema;
+    
     public PedidoListaResponse() {
     }
     
@@ -50,7 +59,8 @@ public class PedidoListaResponse {
                               BigDecimal totalPedido, String direccionEntrega, String notasCliente,
                               String metodoPago, String estadoPago, String fechaEntrega,
                               List<ProductoDetalleResponse> productos, ClienteResponse cliente,
-                              RepartidorResponse repartidor) {
+                              RepartidorResponse repartidor, Boolean problemaReportado,
+                              String detalleProblema, String fechaProblema) {
         this.idPedido = idPedido;
         this.fechaPedido = fechaPedido;
         this.estadoPedido = estadoPedido;
@@ -63,6 +73,9 @@ public class PedidoListaResponse {
         this.productos = productos;
         this.cliente = cliente;
         this.repartidor = repartidor;
+        this.problemaReportado = problemaReportado;
+        this.detalleProblema = detalleProblema;
+        this.fechaProblema = fechaProblema;
     }
 
     public Integer getIdPedido() {
@@ -159,5 +172,29 @@ public class PedidoListaResponse {
 
     public void setRepartidor(RepartidorResponse repartidor) {
         this.repartidor = repartidor;
+    }
+
+    public Boolean getProblemaReportado() {
+        return problemaReportado;
+    }
+
+    public void setProblemaReportado(Boolean problemaReportado) {
+        this.problemaReportado = problemaReportado;
+    }
+
+    public String getDetalleProblema() {
+        return detalleProblema;
+    }
+
+    public void setDetalleProblema(String detalleProblema) {
+        this.detalleProblema = detalleProblema;
+    }
+
+    public String getFechaProblema() {
+        return fechaProblema;
+    }
+
+    public void setFechaProblema(String fechaProblema) {
+        this.fechaProblema = fechaProblema;
     }
 }

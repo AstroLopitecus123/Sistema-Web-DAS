@@ -1,10 +1,8 @@
 package com.web.capas.infrastructure.web;
 
-import com.twilio.http.Response;
-import com.web.capas.application.factory.NotificacionFactory;
 import com.web.capas.application.factory.NotificacionType;
 import com.web.capas.application.service.WhatsAppService;
-import com.web.capas.application.service.notificacion.NotificacionService;
+import com.web.capas.application.service.notificacion.NotificacionOrchestrator;
 import com.web.capas.domain.RecursoNoEncontradoExcepcion;
 import com.web.capas.domain.ServiceException;
 import com.web.capas.domain.dto.MensajePersonalizadoRequest;
@@ -33,7 +31,7 @@ public class NotificacionController {
     private PedidoRepository pedidoRepository;
 
     @Autowired
-    private NotificacionFactory notificacionFactory;
+    private NotificacionOrchestrator notificacionOrchestrator;
     // Notifica que un pedido está en camino (PUT /api/admin/notificaciones/pedido/{id}/en-camino)
     @PutMapping("/pedido/{id}/en-camino")
     public ResponseEntity<?> notificarPedidoEnCamino(@PathVariable Integer id) {
@@ -173,11 +171,8 @@ public class NotificacionController {
             throw new ServiceException("tipo, destinatario y mensaje son obligatorios");
         }
 
-        //Aqui entra la factory function
         NotificacionType notificacionType = NotificacionType.valueOf(tipo.toUpperCase());
-        NotificacionService servicio = notificacionFactory.crearNotificacion(notificacionType);
-
-        servicio.enviarNotificacion(destinatario, mensaje);
+        notificacionOrchestrator.enviar(notificacionType, destinatario, mensaje);
         return ResponseEntity.ok(Map.of(
             "success", true,
             "mensaje", "Notificacion " + tipo + " enviada exitosamente",

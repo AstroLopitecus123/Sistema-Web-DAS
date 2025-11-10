@@ -13,4 +13,10 @@ public interface ProductoService {
     List<ProductoResponse> buscarProductos(String keyword);
 
     ProductoResponse guardarProducto(ProductoRequest request);
+
+    ProductoResponse obtenerProductoPorId(Integer id);
+
+    boolean eliminarProducto(Integer id);
+
+    List<ProductoResponse> obtenerProductosParaAdmin();
 }

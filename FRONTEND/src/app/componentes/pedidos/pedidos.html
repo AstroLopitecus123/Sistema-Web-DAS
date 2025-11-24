@@ -1,5 +1,5 @@
 <div class="pedidos-container">
-  <!-- Header -->
+  
   <div class="pedidos-header">
     <div class="header-content">
       <div class="header-title">
@@ -17,9 +17,9 @@
     </div>
   </div>
   <div class="pedidos-content">
-    <!-- Columna Principal -->
+    
     <div class="main-content">
-      <!-- Indicador de Carga -->
+      
       @if (isLoading) {
         <div class="loading-card">
           <div class="loading-spinner">
@@ -29,11 +29,11 @@
         </div>
       }
       
-      <!-- Lista de Pedidos -->
+      
       @if (!isLoading && listaPedidos.length > 0) {
         <div class="pedidos-list">
           @for (pedido of listaPedidos; track pedido.idPedido) {
-            <div class="pedido-card" (click)="verDetallesPedido(pedido)">
+            <div class="pedido-card">
               <div class="pedido-header">
                 <div class="pedido-id">
                   <span class="id-label">Pedido</span>
@@ -57,13 +57,40 @@
               <div class="pedido-footer">
                 <div class="pedido-status">
                   <span class="status-badge" [ngClass]="getEstadoClase(pedido.estadoPedido)">
-                    {{ pedido.estadoPedido }}
+                    {{ formatearEstado(pedido.estadoPedido) }}
                   </span>
                 </div>
-                <div class="pedido-arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9,18 15,12 9,6"></polyline>
-                  </svg>
+                <div class="pedido-actions">
+                  @if (puedeCancelar(pedido.estadoPedido)) {
+                    <button class="btn-cancelar" (click)="cancelarPedido(pedido.idPedido, $event)" title="Cancelar pedido">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                      </svg>
+                      Cancelar
+                    </button>
+                  }
+                  @if (mostrarConfirmacionPago(pedido)) {
+                    <div class="confirmacion-pago">
+                      <label class="checkbox-pago">
+                        <input 
+                          type="checkbox" 
+                          [checked]="pedido.pagoEfectivoConfirmadoPorCliente"
+                          [disabled]="pedido.pagoEfectivoConfirmadoPorCliente"
+                          (change)="confirmarPagoEfectivo(pedido.idPedido, $event)">
+                        <span class="checkmark"></span>
+                        <span class="checkbox-label" [class.confirmado]="pedido.pagoEfectivoConfirmadoPorCliente">
+                          Confirmar entrega de pago
+                        </span>
+                      </label>
+                    </div>
+                  }
+                  <div class="pedido-arrow" (click)="verDetallesPedido(pedido)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9,18 15,12 9,6"></polyline>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
@@ -71,7 +98,7 @@
         </div>
       } 
       
-      <!-- Estado Vacío -->
+      
       @if (!isLoading && listaPedidos.length === 0) {
         <div class="empty-state">
           <div class="empty-icon">
@@ -91,7 +118,7 @@
 
     </div>
 
-    <!-- Panel de Filtros -->
+    
     <div class="filters-sidebar">
       <div class="filters-card">
         <div class="filters-header">
@@ -162,9 +189,46 @@
   </div>
 </div>
 
-<!-- Modal de Detalles del Pedido -->
+
 <app-detalle-pedido 
     [pedido]="pedidoSeleccionado"
     [mostrar]="mostrarModalDetalle"
     (cerrar)="cerrarModalDetalle()">
 </app-detalle-pedido>
+
+
+@if (mostrarModalCancelar) {
+  <div class="modal-overlay" (click)="cerrarModalCancelar()">
+    <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <div>
+          <h3>Cancelar Pedido</h3>
+          <p>Confirma la cancelación del pedido</p>
+        </div>
+        <button class="btn-close" (click)="cerrarModalCancelar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas cancelar este pedido?</p>
+        <p style="color: #ef4444; margin-top: 12px; font-weight: 500;">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="cerrarModalCancelar()">Cancelar</button>
+        <button class="btn-primary" (click)="confirmarCancelarPedido()" style="margin-left: auto; background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
+          Confirmar Cancelación
+        </button>
+      </div>
+    </div>
+  </div>
+}

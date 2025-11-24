@@ -11,7 +11,7 @@
       <p class="subtitle">Ingresa tu nueva contraseña</p>
     </div>
 
-    <!-- Mensajes de error y éxito -->
+    
     <div *ngIf="errorMessage" class="alert alert-error">
       <strong>Error:</strong> {{ errorMessage }}
     </div>
@@ -21,9 +21,9 @@
       <p class="redirect-message">Serás redirigido al inicio de sesión en unos segundos...</p>
     </div>
 
-    <!-- Formulario -->
+    
     <form *ngIf="!successMessage" (ngSubmit)="onSubmit()" class="recuperar-form">
-      <!-- Nueva Contraseña -->
+      
       <div class="form-group">
         <label for="nuevaContrasena">Nueva Contraseña *</label>
         <div class="password-input-container">
@@ -48,7 +48,7 @@
         </div>
       </div>
 
-      <!-- Confirmar Contraseña -->
+      
       <div class="form-group">
         <label for="confirmarContrasena">Confirmar Contraseña *</label>
         <div class="password-input-container">
@@ -73,7 +73,7 @@
         </div>
       </div>
 
-      <!-- Requisitos de contraseña -->
+      
       <div class="password-requirements">
         <p><strong>Requisitos de la contraseña:</strong></p>
         <ul>
@@ -82,7 +82,7 @@
         </ul>
       </div>
 
-      <!-- Botón de envío -->
+      
       <button
         type="submit"
         class="btn-submit"
@@ -95,7 +95,7 @@
       </button>
     </form>
 
-    <!-- Enlaces -->
+    
     <div class="recuperar-footer">
       <p>
         <a routerLink="/login" class="link">← Volver a Iniciar Sesión</a>

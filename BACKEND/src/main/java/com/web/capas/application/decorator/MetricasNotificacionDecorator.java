@@ -3,7 +3,6 @@ package com.web.capas.application.decorator;
 import com.web.capas.application.service.notificacion.NotificacionService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-//recopila métricas de performance y uso de las notificaciones, monitorea el rendimiento del sistema.
 public class MetricasNotificacionDecorator extends NotificacionDecorator {
     
     private final AtomicInteger totalNotificaciones = new AtomicInteger(0);

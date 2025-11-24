@@ -10,7 +10,6 @@ public class EmailNotificacionService implements NotificacionService {
         // Lógica específica para enviar email
         System.out.println("Enviando EMAIL a: " + destinatario);
         System.out.println("Mensaje: " + mensaje);
-        //Integrar con emaillmpl (Ya que de momento solo sirve para enviar el correo pa recuperar la contraseña)
     }
     
     @Override

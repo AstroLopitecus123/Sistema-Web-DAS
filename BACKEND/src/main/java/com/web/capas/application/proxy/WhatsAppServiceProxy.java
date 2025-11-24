@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-// Proxy que valida datos y reintenta antes de usar el servicio real.
 @Service
 @Primary
 public class WhatsAppServiceProxy implements WhatsAppService {

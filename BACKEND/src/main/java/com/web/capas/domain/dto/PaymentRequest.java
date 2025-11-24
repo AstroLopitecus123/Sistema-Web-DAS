@@ -6,7 +6,7 @@ public class PaymentRequest {
     
     private Integer idPedido;
     private BigDecimal monto;
-    private String email; // Correo del cliente para Stripe
+    private String email; 
     
     public PaymentRequest() {
     }

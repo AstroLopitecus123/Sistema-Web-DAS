@@ -16,6 +16,9 @@ La base de datos está diseñada para gestionar un sistema completo de e-commerc
 - Normalización automática de teléfonos con código de país (+51)
 - Reportes y auditoría
 - Recuperación de contraseñas
+- Notificaciones push con OneSignal (player_id)
+- Configuración dinámica del sistema
+- Confirmación de pagos en efectivo (cliente y repartidor)
 
 ## Tablas del Sistema
 
@@ -35,6 +38,7 @@ CREATE TABLE Usuarios (
   rol ENUM('cliente', 'administrador', 'repartidor', 'vendedor') NOT NULL,
   fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   activo BOOLEAN DEFAULT TRUE,
+  player_id VARCHAR(255) NULL,
   PRIMARY KEY (id_usuario)
 );
 ```
@@ -46,6 +50,7 @@ CREATE TABLE Usuarios (
 - `rol`: Define el tipo de usuario (cliente, administrador, repartidor, vendedor)
 - `activo`: Controla si el usuario puede acceder al sistema
 - `contraseña_encriptada`: Almacena la contraseña hasheada con BCrypt
+- `player_id`: Player ID de OneSignal para notificaciones push (solo para repartidores)
 
 **Relaciones**:
 - Referenciada por: Pedidos, Carrito, Cupones, Reportes, Historial_Estado_Pedido
@@ -151,6 +156,12 @@ CREATE TABLE Pedidos (
   problema_reportado TINYINT(1) DEFAULT 0,
   detalle_problema TEXT,
   fecha_problema DATETIME,
+  pago_efectivo_confirmado_cliente BOOLEAN DEFAULT FALSE,
+  pago_efectivo_confirmado_repartidor BOOLEAN DEFAULT FALSE,
+  fecha_confirmacion_pago_cliente DATETIME NULL,
+  fecha_confirmacion_pago_repartidor DATETIME NULL,
+  monto_pagado_cliente DECIMAL(10, 2) NULL,
+  codigo_cupon VARCHAR(50) NULL,
   PRIMARY KEY (id_pedido),
   FOREIGN KEY (id_cliente) REFERENCES Usuarios(id_usuario),
   FOREIGN KEY (id_repartidor) REFERENCES Usuarios(id_usuario),
@@ -165,6 +176,12 @@ CREATE TABLE Pedidos (
 - `descuento_aplicado`: Descuento aplicado por cupón (si aplica)
 - `metodo_pago`: Método de pago seleccionado (tarjeta, billetera_virtual, efectivo)
 - `total_pedido`: Total del pedido incluyendo personalizaciones y descuentos
+- `pago_efectivo_confirmado_cliente`: Confirmación del cliente para pagos en efectivo
+- `pago_efectivo_confirmado_repartidor`: Confirmación del repartidor para pagos en efectivo
+- `fecha_confirmacion_pago_cliente`: Fecha de confirmación del cliente
+- `fecha_confirmacion_pago_repartidor`: Fecha de confirmación del repartidor
+- `monto_pagado_cliente`: Monto con el que el cliente va a pagar (para efectivo)
+- `codigo_cupon`: Código del cupón usado en el pedido (almacenado como texto)
 
 **Estados del Pedido**:
 1. `pendiente` - Pedido creado, esperando confirmación
@@ -418,13 +435,81 @@ CREATE TABLE tokens_recuperacion_contrasena (
 - Referencia a: Usuarios
 - CASCADE DELETE: Se elimina si se elimina el usuario
 
+### 14. Metodos_Pago_Inhabilitados
+**Propósito**: Gestiona la inhabilitación automática de métodos de pago cuando un cliente cancela múltiples pedidos.
+
+```sql
+CREATE TABLE Metodos_Pago_Inhabilitados (
+  id_inhabilitacion INT NOT NULL AUTO_INCREMENT,
+  id_usuario INT NOT NULL,
+  metodo_pago ENUM('tarjeta', 'billetera_virtual', 'efectivo') NOT NULL,
+  fecha_inhabilitacion DATETIME NOT NULL,
+  razon VARCHAR(255),
+  reactivado_por_admin INT,
+  fecha_reactivacion DATETIME,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (id_inhabilitacion),
+  FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+  FOREIGN KEY (reactivado_por_admin) REFERENCES Usuarios(id_usuario) ON DELETE SET NULL,
+  INDEX idx_usuario_metodo (id_usuario, metodo_pago, activo)
+);
+```
+
+**Campos importantes**:
+- `metodo_pago`: Método de pago inhabilitado para el usuario
+- `fecha_inhabilitacion`: Fecha en que se inhabilitó automáticamente
+- `razon`: Razón de la inhabilitación (ej: "Cancelación automática: El cliente ha cancelado 3 o más pedidos")
+- `reactivado_por_admin`: ID del administrador que reactivó el método
+- `fecha_reactivacion`: Fecha de reactivación (NULL si aún está inhabilitado)
+- `activo`: Si la inhabilitación está activa (FALSE si fue reactivada)
+- **Índice**: Optimiza búsquedas por usuario, método de pago y estado activo
+
+**Lógica de Negocio**:
+- Se crea automáticamente cuando un cliente cancela 3 pedidos con el mismo método de pago
+- Al reactivarse, el contador de cancelaciones se reinicia desde la fecha de reactivación
+- Permite rastrear el historial de inhabilitaciones y reactivaciones
+
+**Relaciones**:
+- Referencia a: Usuarios (usuario afectado y admin que reactivó)
+- CASCADE DELETE: Se elimina si se elimina el usuario
+
+### 15. configuracion_sistema
+**Propósito**: Almacena configuraciones dinámicas del sistema que pueden modificarse sin reiniciar el backend.
+
+```sql
+CREATE TABLE configuracion_sistema (
+    id_configuracion INT AUTO_INCREMENT PRIMARY KEY,
+    clave VARCHAR(100) NOT NULL UNIQUE,
+    valor VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    fecha_actualizacion DATETIME
+);
+```
+
+**Campos importantes**:
+- `clave`: Clave única de la configuración (ej: 'reporte.porcentaje.costo')
+- `valor`: Valor de la configuración almacenado como texto
+- `descripcion`: Descripción de para qué sirve la configuración
+- `fecha_actualizacion`: Última fecha de actualización
+
+**Configuraciones disponibles**:
+- `reporte.porcentaje.costo`: Porcentaje de costo estimado para reportes de ganancias (ej: '0.70' = 70%)
+
+**Ventajas**:
+- Permite cambiar configuraciones sin reiniciar el backend
+- Valores almacenados en base de datos en lugar de variables de entorno
+- Historial de cambios mediante fecha_actualizacion
+
+**Relaciones**:
+- No tiene relaciones con otras tablas
+
 ## Script de Creación Completo
 
 ```sql
 CREATE DATABASE BD_SISTEMA_WEB_DAS;
 USE BD_SISTEMA_WEB_DAS;
 
--- TABLA USUARIOS (con campo username añadido)
+-- TABLA USUARIOS
 CREATE TABLE Usuarios (
   id_usuario INT NOT NULL AUTO_INCREMENT,
   nombre VARCHAR(100) NOT NULL,
@@ -437,6 +522,7 @@ CREATE TABLE Usuarios (
   rol ENUM('cliente', 'administrador', 'repartidor', 'vendedor') NOT NULL,
   fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   activo BOOLEAN DEFAULT TRUE,
+  player_id VARCHAR(255) NULL,
   PRIMARY KEY (id_usuario)
 );
 
@@ -512,6 +598,12 @@ CREATE TABLE Pedidos (
   problema_reportado TINYINT(1) DEFAULT 0,
   detalle_problema TEXT,
   fecha_problema DATETIME,
+  pago_efectivo_confirmado_cliente BOOLEAN DEFAULT FALSE,
+  pago_efectivo_confirmado_repartidor BOOLEAN DEFAULT FALSE,
+  fecha_confirmacion_pago_cliente DATETIME NULL,
+  fecha_confirmacion_pago_repartidor DATETIME NULL,
+  monto_pagado_cliente DECIMAL(10, 2) NULL,
+  codigo_cupon VARCHAR(50) NULL,
   PRIMARY KEY (id_pedido),
   FOREIGN KEY (id_cliente) REFERENCES Usuarios(id_usuario),
   FOREIGN KEY (id_repartidor) REFERENCES Usuarios(id_usuario),
@@ -558,6 +650,22 @@ CREATE TABLE Reportes (
   fecha_fin_param DATE,
   PRIMARY KEY (id_reporte),
   FOREIGN KEY (generado_por_admin) REFERENCES Usuarios(id_usuario)
+);
+
+-- TABLA METODOS_PAGO_INHABILITADOS
+CREATE TABLE Metodos_Pago_Inhabilitados (
+  id_inhabilitacion INT NOT NULL AUTO_INCREMENT,
+  id_usuario INT NOT NULL,
+  metodo_pago ENUM('tarjeta', 'billetera_virtual', 'efectivo') NOT NULL,
+  fecha_inhabilitacion DATETIME NOT NULL,
+  razon VARCHAR(255),
+  reactivado_por_admin INT,
+  fecha_reactivacion DATETIME,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (id_inhabilitacion),
+  FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+  FOREIGN KEY (reactivado_por_admin) REFERENCES Usuarios(id_usuario) ON DELETE SET NULL,
+  INDEX idx_usuario_metodo (id_usuario, metodo_pago, activo)
 );
 
 -- TABLA HISTORIAL_ESTADO_PEDIDO
@@ -608,6 +716,15 @@ CREATE TABLE tokens_recuperacion_contrasena (
   FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
   INDEX idx_token (token),
   INDEX idx_expiracion (fecha_expiracion)
+);
+
+-- TABLA CONFIGURACION_SISTEMA
+CREATE TABLE configuracion_sistema (
+    id_configuracion INT AUTO_INCREMENT PRIMARY KEY,
+    clave VARCHAR(100) NOT NULL UNIQUE,
+    valor VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    fecha_actualizacion DATETIME
 );
 ```
 
@@ -742,6 +859,14 @@ VALUES
 ('CLIENTE20', 'porcentaje', 20.00, '2024-01-01', '2024-12-31', 25, 1, 30.00, TRUE, 1);
 ```
 
+### Configuración del Sistema
+
+```sql
+-- INSERTAR CONFIGURACIÓN INICIAL
+INSERT INTO configuracion_sistema (clave, valor, descripcion) 
+VALUES ('reporte.porcentaje.costo', '0.70', 'Porcentaje de costo estimado para reportes de ganancias (0.70 = 70%)');
+```
+
 ### Pedido de Prueba
 
 ```sql
@@ -778,6 +903,24 @@ VALUES
 - Se almacena en formato: `+51999999999`
 - Validación y normalización en backend y frontend
 
+### Sistema de Confirmación de Pagos en Efectivo
+- Permite confirmación dual: cliente y repartidor
+- `pago_efectivo_confirmado_cliente`: Confirmación del cliente al realizar el pedido
+- `pago_efectivo_confirmado_repartidor`: Confirmación del repartidor al entregar
+- `monto_pagado_cliente`: Monto exacto con el que el cliente va a pagar
+- Fechas de confirmación registradas para auditoría
+
+### Configuración Dinámica del Sistema
+- Valores configurables desde el panel de administración
+- Sin necesidad de reiniciar el backend
+- Ejemplo: porcentaje de costo para reportes de ganancias
+- Almacenado en tabla `configuracion_sistema` con clave-valor
+
+### Notificaciones Push (OneSignal)
+- Campo `player_id` en tabla Usuarios para almacenar Player ID de OneSignal
+- Solo se utiliza para usuarios con rol 'repartidor'
+- Permite enviar notificaciones push cuando hay nuevos pedidos disponibles
+
 ## Relaciones entre Tablas
 
 ```
@@ -805,6 +948,12 @@ Pedidos
 Cupones
   ├──→ Pedidos (id_cupon_aplicado)
   └──→ Restricciones_Cupon (id_cupon)
+
+Usuarios
+  └──→ Metodos_Pago_Inhabilitados (id_usuario, reactivado_por_admin)
+
+configuracion_sistema
+  └──→ (Sin relaciones, tabla independiente)
 ```
 
 ## Consideraciones de Seguridad

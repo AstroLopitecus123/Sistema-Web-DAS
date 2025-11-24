@@ -5,10 +5,8 @@ import { ItemCarrito } from '../modelos/producto.model';
   providedIn: 'root'
 })
 export class CarritoService {
-  // Usando signals para el estado reactivo del carrito
   private items = signal<ItemCarrito[]>([]);
 
-  // Computed signals para cálculos automáticos
   totalItems = computed(() => {
     return this.items().reduce((sum, item) => sum + item.cantidad, 0);
   });
@@ -20,22 +18,18 @@ export class CarritoService {
     }, 0);
   });
 
-  // Cargar todos los items del carrito
   getItems() {
     return this.items();
   }
 
-  // Añadir un item al carrito
   agregarItem(nuevoItem: ItemCarrito): void {
     this.items.update(currentItems => {
-      // Verificar si el producto ya existe en el carrito con las mismas opciones
       const itemExistente = currentItems.find(item => 
         item.idProducto === nuevoItem.idProducto && 
         this.tienenMismasOpciones(item.opcionesSeleccionadas, nuevoItem.opcionesSeleccionadas)
       );
       
       if (itemExistente) {
-        // Si existe con las mismas opciones, incrementar la cantidad
         const nuevaCantidad = itemExistente.cantidad + nuevoItem.cantidad;
         const cantidadFinal = Math.min(nuevaCantidad, 99); 
         
@@ -50,14 +44,12 @@ export class CarritoService {
             : item
         );
       } else {
-        // Si no existe o tiene opciones diferentes, añadirlo como nuevo item
         const cantidadFinal = Math.min(nuevoItem.cantidad, 99);
         return [...currentItems, { ...nuevoItem, cantidad: cantidadFinal }];
       }
     });
   }
 
-  // Helper para comparar opciones de personalización
   private tienenMismasOpciones(opciones1?: any[], opciones2?: any[]): boolean {
     if (!opciones1 && !opciones2) return true;
     if (!opciones1 || !opciones2) return false;
@@ -68,14 +60,12 @@ export class CarritoService {
     );
   }
 
-  // Modificar cantidad de un item
   actualizarCantidad(idProducto: number, nuevaCantidad: number): void {
     if (nuevaCantidad <= 0) {
       this.eliminarItem(idProducto);
       return;
     }
 
-    // Validar que no exceda el máximo de 99 unidades
     const cantidadFinal = Math.min(nuevaCantidad, 99);
     
     if (cantidadFinal < nuevaCantidad) {
@@ -91,25 +81,21 @@ export class CarritoService {
     );
   }
 
-  // Eliminar un item del carrito
   eliminarItem(idProducto: number): void {
     this.items.update(currentItems =>
       currentItems.filter(item => item.idProducto !== idProducto)
     );
   }
 
-  // Vaciar todo el carrito
   vaciarCarrito(): void {
     this.items.set([]);
   }
 
-  // Consultar cantidad de un producto específico
   getCantidadProducto(idProducto: number): number {
     const item = this.items().find(item => item.idProducto === idProducto);
     return item ? item.cantidad : 0;
   }
 
-  // Actualizar personalización de un item
   actualizarPersonalizacion(idProducto: number, notasPersonalizacion: string): void {
     this.items.update(currentItems =>
       currentItems.map(item =>

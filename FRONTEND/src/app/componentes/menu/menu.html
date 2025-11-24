@@ -1,5 +1,5 @@
 <div class="menu-container">
-  <!-- Header -->
+  
   <div class="menu-header">
     <div class="header-content">
       <div class="header-title">
@@ -14,7 +14,7 @@
         </div>
       </div>
       
-      <!-- Búsqueda -->
+      
       <div class="search-section">
         <div class="search-wrapper">
           <input type="text" 
@@ -33,7 +33,7 @@
     </div>
   </div>
 
-  <!-- Selección de ubicación -->
+  
   <div class="location-summary" (click)="abrirSelectorUbicacion()">
     <div class="summary-icon">
       <i class="fas fa-map-marker-alt"></i>
@@ -53,7 +53,7 @@
     </div>
   </div>
 
-  <!-- Filtros de Categorías -->
+  
   <div class="categories-filter mb-4">
     <div class="d-flex flex-wrap gap-2 justify-content-center">
       <button 
@@ -101,9 +101,9 @@
     </div>
   </div>
 
-  <!-- Contenido Principal -->
+  
   <div class="menu-content">
-    <!-- Indicador de Carga -->
+    
     @if (loading) {
       <div class="loading-card">
         <div class="loading-spinner">
@@ -113,7 +113,7 @@
       </div>
     }
 
-    <!-- Mensaje de Error -->
+    
     @if (!loading && error) {
       <div class="error-card">
         <div class="error-icon">
@@ -129,7 +129,7 @@
       </div>
     }
 
-    <!-- Lista de Productos -->
+    
     @if (!loading && !error && productosFiltrados.length > 0) {
       <div class="products-grid">
         @for (producto of productosFiltrados; track producto.idProducto) {
@@ -182,7 +182,7 @@
       </div>
     }
 
-    <!-- Estado Vacío -->
+    
     @if (!loading && !error && productosFiltrados.length === 0) {
       <div class="empty-state">
         <div class="empty-icon">
@@ -198,7 +198,7 @@
   </div>
 </div>
 
-<!-- Modal de Detalle de Producto -->
+
 <app-detalle-producto 
     [producto]="productoSeleccionado"
     [mostrar]="mostrarModalDetalle"
@@ -206,7 +206,7 @@
     (agregarAlCarrito)="onAgregarAlCarrito($event)">
 </app-detalle-producto>
 
-<!-- Notificación Toast -->
+
 <app-notificacion 
     [notificacion]="notificacion"
     [mostrar]="mostrarNotificacion"

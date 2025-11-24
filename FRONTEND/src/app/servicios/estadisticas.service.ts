@@ -28,7 +28,6 @@ export class EstadisticasService {
     private configuracionService: ConfiguracionService
   ) {}
 
-  // Obtiene las estadísticas del usuario desde el backend
   obtenerEstadisticasUsuario(idUsuario: number): Observable<EstadisticasUsuario> {
     const url = `${this.configuracionService.getApiV1Url()}/usuarios/estadisticas/${idUsuario}`;
     
@@ -40,7 +39,6 @@ export class EstadisticasService {
       })),
       catchError(error => {
         console.error('Error al obtener estadísticas del usuario:', error);
-        // Retornar valores por defecto en caso de error
         return of({
           pedidosRealizados: 0,
           totalGastado: 0,
@@ -50,7 +48,6 @@ export class EstadisticasService {
     );
   }
 
-  // Calcula las estadísticas del usuario (método legacy - mantenido por compatibilidad)
   calcularEstadisticasUsuario(usuario: Usuario | null): EstadisticasUsuario {
     if (!usuario) {
       return {
@@ -60,7 +57,6 @@ export class EstadisticasService {
       };
     }
 
-    // Valores por defecto mientras se cargan los datos reales
     return {
       pedidosRealizados: 0,
       totalGastado: 0,
@@ -68,7 +64,6 @@ export class EstadisticasService {
     };
   }
 
-  // Calcula las estadísticas de cupones
   calcularEstadisticasCupones(cuponesDisponibles: any[], cuponesUsados: any[]): EstadisticasCupones {
     const cuponesDisponiblesCount = cuponesDisponibles.length;
     const cuponesUsadosCount = cuponesUsados.length;
@@ -84,7 +79,6 @@ export class EstadisticasService {
     };
   }
 
-  // Obtiene estadísticas desde el backend (para implementación futura)
   obtenerEstadisticasDesdeBackend(usuarioId: number): Promise<EstadisticasUsuario> {
     return Promise.resolve({
       pedidosRealizados: 0,

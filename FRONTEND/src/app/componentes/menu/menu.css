@@ -1,4 +1,4 @@
-/* Contenedor Principal */
+
 .menu-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -7,7 +7,6 @@
   min-height: 100vh;
 }
 
-/* Header */
 .menu-header {
   margin-bottom: 40px;
 }
@@ -18,8 +17,6 @@
   justify-content: space-between;
   gap: 30px;
 }
-
-/* Selección de ubicación */
 
 .location-header {
   display: flex;
@@ -166,7 +163,6 @@
   margin: 0;
 }
 
-/* Búsqueda */
 .search-section {
   min-width: 300px;
 }
@@ -232,7 +228,6 @@
   height: 18px;
 }
 
-/* --- Estilos de Filtros de Categorías --- */
 .categories-filter {
   margin-bottom: 2rem;
 }
@@ -270,7 +265,6 @@
   font-size: 0.8rem;
 }
 
-/* Responsive para botones de categorías */
 @media (max-width: 768px) {
   .location-header {
     flex-direction: column;
@@ -294,12 +288,10 @@
   }
 }
 
-/* Contenido Principal */
 .menu-content {
   min-height: 400px;
 }
 
-/* Loading */
 .loading-card {
   background: white;
   border-radius: 16px;
@@ -334,7 +326,6 @@
   margin: 0;
 }
 
-/* Error */
 .error-card {
   background: white;
   border-radius: 16px;
@@ -379,7 +370,6 @@
   color: #999;
 }
 
-/* Grid de Productos */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -522,7 +512,6 @@
   height: 16px;
 }
 
-/* Estado Vacío */
 .empty-state {
   background: white;
   border-radius: 16px;
@@ -572,7 +561,6 @@
   color: #F7931E;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .menu-container {
     padding: 20px 15px;

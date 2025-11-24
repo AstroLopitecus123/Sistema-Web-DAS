@@ -9,6 +9,7 @@ import { ItemCarrito } from '../../modelos/producto.model';
 import { NotificacionService } from '../../servicios/notificacion.service';
 import { CheckoutService } from '../../servicios/checkout.service';
 import { CampoUbicacion } from '../campo-ubicacion/campo-ubicacion';
+import { CuponesService } from '../../servicios/cupones.service';
 
 export interface MetodoPago {
   id: string;
@@ -20,17 +21,13 @@ export interface MetodoPago {
 
 export interface InformacionPago {
   metodoPago: string;
-  // Para tarjeta
   numeroTarjeta?: string;
   fechaVencimiento?: string;
   cvv?: string;
   nombreTitular?: string;
-  // Para billetera virtual
   numeroTelefono?: string;
   codigoVerificacion?: string;
-  // Para efectivo
   montoRecibido?: number;
-  // Información general
   direccionEntrega: string;
   notasCliente?: string;
 }
@@ -47,12 +44,17 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
   @Output() cerrar = new EventEmitter<void>();
   @Output() pagoExitoso = new EventEmitter<void>();
 
-  // Datos del carrito
   items: ItemCarrito[] = [];
   subtotal: number = 0;
+  subtotalSinDescuento: number = 0;
   totalItems: number = 0;
+  
+  codigoCupon: string = '';
+  cuponAplicado: boolean = false;
+  descuentoAplicado: number = 0;
+  mensajeCupon: string = '';
+  validandoCupon: boolean = false;
 
-  // Opciones de pago
   metodosPago: MetodoPago[] = [
     {
       id: 'tarjeta',
@@ -77,19 +79,16 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     }
   ];
 
-  // Información de pago
   informacionPago: InformacionPago = {
     metodoPago: 'tarjeta',
     direccionEntrega: '',
     notasCliente: ''
   };
 
-  // Estados del proceso
-  pasoActual: number = 1; // 1: Pago, 2: Info, 3: Confirmar
+  pasoActual: number = 1;
   procesandoPago: boolean = false;
   errorPago: string | null = null;
 
-  // Variables para Stripe
   stripeCardElementMontado: boolean = false;
   pedidoIdCreado: number | null = null;
 
@@ -99,7 +98,8 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private notificacionService: NotificacionService,
-    private checkoutService: CheckoutService
+    private checkoutService: CheckoutService,
+    private cuponesService: CuponesService
   ) {}
 
   ngOnInit(): void {
@@ -107,18 +107,97 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Stripe se monta cuando se necesita
   }
 
   ngOnDestroy(): void {
-    // Limpiar Stripe
     this.pagoService.destroyCardElement();
   }
 
   cargarDatosCarrito(): void {
     this.items = this.carritoService.getItems();
-    this.subtotal = this.carritoService.subtotal();
+    this.subtotalSinDescuento = this.carritoService.subtotal();
+    this.subtotal = this.subtotalSinDescuento;
     this.totalItems = this.carritoService.totalItems();
+  }
+  
+  validarCupon(): void {
+    if (!this.codigoCupon || this.codigoCupon.trim() === '') {
+      return;
+    }
+  }
+  
+  aplicarCupon(): void {
+    if (!this.codigoCupon || this.codigoCupon.trim() === '') {
+      this.notificacionService.mostrarError('Código requerido', 'Por favor ingresa un código de cupón');
+      return;
+    }
+    
+    this.validandoCupon = true;
+    this.mensajeCupon = '';
+    
+    const usuario = this.authService.getUsuarioActual();
+    if (!usuario) {
+      this.validandoCupon = false;
+      return;
+    }
+    
+    this.cuponesService.obtenerCuponesDisponibles(usuario.idUsuario).subscribe({
+      next: (cupones) => {
+        const cupon = cupones.find(c => c.codigo.toUpperCase() === this.codigoCupon.trim().toUpperCase());
+        
+        if (!cupon) {
+          this.mensajeCupon = 'Cupón no encontrado o no disponible';
+          this.cuponAplicado = false;
+          this.descuentoAplicado = 0;
+          this.subtotal = this.subtotalSinDescuento;
+          this.validandoCupon = false;
+          return;
+        }
+        
+        if (cupon.montoMinimo > 0 && this.subtotalSinDescuento < cupon.montoMinimo) {
+          this.mensajeCupon = `El cupón requiere un monto mínimo de S/ ${cupon.montoMinimo}`;
+          this.cuponAplicado = false;
+          this.descuentoAplicado = 0;
+          this.subtotal = this.subtotalSinDescuento;
+          this.validandoCupon = false;
+        return;
+      }
+      
+      let descuento = 0;
+        if (cupon.tipoDescuento === 'porcentaje') {
+          descuento = (this.subtotalSinDescuento * cupon.valorDescuento) / 100;
+        } else {
+          descuento = cupon.valorDescuento;
+          if (descuento > this.subtotalSinDescuento) {
+            descuento = this.subtotalSinDescuento;
+          }
+        }
+        
+        this.descuentoAplicado = descuento;
+        this.subtotal = Math.max(0, this.subtotalSinDescuento - descuento);
+        this.cuponAplicado = true;
+        this.mensajeCupon = `Cupón "${cupon.codigo}" aplicado correctamente`;
+        this.validandoCupon = false;
+        
+        this.notificacionService.mostrarExito('Cupón aplicado', `Descuento de S/ ${descuento.toFixed(2)} aplicado`);
+      },
+      error: (err) => {
+        console.error('Error al validar cupón:', err);
+        this.mensajeCupon = 'Error al validar el cupón. Inténtalo de nuevo.';
+        this.cuponAplicado = false;
+        this.descuentoAplicado = 0;
+        this.subtotal = this.subtotalSinDescuento;
+        this.validandoCupon = false;
+      }
+    });
+  }
+  
+  quitarCupon(): void {
+    this.codigoCupon = '';
+    this.cuponAplicado = false;
+    this.descuentoAplicado = 0;
+    this.mensajeCupon = '';
+    this.subtotal = this.subtotalSinDescuento;
   }
 
   seleccionarMetodoPago(metodo: string): void {
@@ -212,7 +291,6 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.informacionPago.metodoPago === 'tarjeta') {
-      // Stripe se encarga de la validación
       if (!this.stripeCardElementMontado) {
         this.notificacionService.mostrarError(
           'Formulario no listo', 
@@ -251,7 +329,6 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     this.errorPago = null;
 
     try {
-      //Crear el pedido en el backend (para todos los métodos de pago)
       const pedidoCreado = await this.crearPedidoEnBackend();
       if (!pedidoCreado) {
         throw new Error('No se pudo crear el pedido');
@@ -301,10 +378,12 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
   private async crearPedidoEnBackend(): Promise<any> {
     const datosPedido = this.checkoutService.crearDatosPedido(
       this.items,
-      this.subtotal,
+      this.subtotalSinDescuento, // Enviar subtotal sin descuento, el backend aplicará el cupón
       this.informacionPago.direccionEntrega,
       this.informacionPago.notasCliente || '',
-      this.informacionPago.metodoPago as 'tarjeta' | 'billetera_virtual' | 'efectivo'
+      this.informacionPago.metodoPago as 'tarjeta' | 'billetera_virtual' | 'efectivo',
+      this.cuponAplicado ? this.codigoCupon.trim().toUpperCase() : undefined,
+      this.informacionPago.metodoPago === 'efectivo' && this.informacionPago.montoRecibido ? this.informacionPago.montoRecibido : undefined
     );
 
     const response = await this.checkoutService.crearPedidoEnBackend(datosPedido);
@@ -312,7 +391,6 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
     return response;
   }
 
-  // Procesa el pago con Stripe
   private async procesarPagoConStripe(idPedido: number): Promise<void> {
     const usuario = this.authService.getUsuarioActual();
     if (!usuario) {
@@ -324,7 +402,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
       const paymentResponse = await new Promise<any>((resolve, reject) => {
         this.pagoService.crearPaymentIntent({
           idPedido: idPedido,
-          monto: this.subtotal,
+          monto: this.subtotal, // Usar el subtotal con descuento aplicado
           email: usuario.email
         }).subscribe({
           next: (response) => resolve(response),
@@ -353,7 +431,6 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error al confirmar en backend:', error);
-            // No rechazamos porque el pago ya se procesó en Stripe
             resolve();
           }
         });
@@ -378,16 +455,16 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
   }
 
   cerrarModal(): void {
-    // Limpiar Stripe Elements solo al cerrar completamente
     if (this.stripeCardElementMontado) {
       this.pagoService.destroyCardElement();
       this.stripeCardElementMontado = false;
     }
     
-    // Restablecer el paso actual
     this.pasoActual = 1;
     this.errorPago = null;
     this.procesandoPago = false;
+    
+    this.quitarCupon();
     
     this.cerrar.emit();
   }
@@ -416,7 +493,7 @@ export class Checkout implements OnInit, AfterViewInit, OnDestroy {
 
   calcularVuelto(): number {
     if (this.informacionPago.metodoPago === 'efectivo' && this.informacionPago.montoRecibido) {
-      return this.informacionPago.montoRecibido - this.subtotal;
+      return this.informacionPago.montoRecibido - this.subtotal; // Usar subtotal con descuento
     }
     return 0;
   }

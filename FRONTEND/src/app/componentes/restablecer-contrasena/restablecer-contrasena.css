@@ -85,7 +85,6 @@
   margin: 0;
 }
 
-/* Alertas */
 .alert {
   padding: 15px;
   border-radius: 8px;
@@ -120,7 +119,6 @@
   font-size: 14px;
 }
 
-/* Formulario */
 .recuperar-form {
   display: flex;
   flex-direction: column;
@@ -154,7 +152,6 @@
   box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
 }
 
-/* Contenedor de contraseña con botón de mostrar/ocultar */
 .password-input-container {
   position: relative;
   display: flex;
@@ -181,7 +178,6 @@
   opacity: 0.7;
 }
 
-/* Requisitos de contraseña */
 .password-requirements {
   background: #FDF2E9;
   padding: 15px;
@@ -253,7 +249,6 @@
   }
 }
 
-/* Botón de envío */
 .btn-submit {
   background: linear-gradient(135deg, #E67E22, #D35400);
   color: white;
@@ -306,7 +301,6 @@
   }
 }
 
-/* Footer */
 .recuperar-footer {
   margin-top: 25px;
   text-align: center;
@@ -326,7 +320,6 @@
   text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 600px) {
   .recuperar-card {
     padding: 30px 20px;

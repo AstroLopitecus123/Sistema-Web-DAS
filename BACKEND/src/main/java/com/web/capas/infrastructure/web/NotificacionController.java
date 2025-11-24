@@ -9,6 +9,7 @@ import com.web.capas.domain.dto.MensajePersonalizadoRequest;
 import com.web.capas.domain.dto.NotificacionCancelacionRequest;
 import com.web.capas.domain.repository.PedidoRepository;
 import com.web.capas.infrastructure.persistence.entities.Pedido;
+import com.web.capas.infrastructure.persistence.entities.MetodoPagoInhabilitado;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin/notificaciones")
 public class NotificacionController {
-    //dependencias
     @Autowired
     private WhatsAppService whatsAppService;
     
@@ -32,13 +32,15 @@ public class NotificacionController {
 
     @Autowired
     private NotificacionOrchestrator notificacionOrchestrator;
-    // Notifica que un pedido está en camino (PUT /api/admin/notificaciones/pedido/{id}/en-camino)
+    
+    @Autowired
+    private com.web.capas.application.service.MetodoPagoInhabilitadoService metodoPagoInhabilitadoService;
+    
     @PutMapping("/pedido/{id}/en-camino")
     public ResponseEntity<?> notificarPedidoEnCamino(@PathVariable Integer id) {
         Pedido pedido = pedidoRepository.findById(id)
             .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
 
-        // Verificar que esté pagado
         if (pedido.getEstadoPago() != Pedido.EstadoPago.pagado) {
             throw new ServiceException("El pedido debe estar pagado para notificar que está en camino");
         }
@@ -52,7 +54,6 @@ public class NotificacionController {
             enviado = whatsAppService.notificarPedidoEnCamino(telefono, id, nombreCliente, direccion);
             
             if (enviado) {
-                // Marcar como en camino
                 pedido.setEstadoPedido(Pedido.EstadoPedido.en_camino);
                 pedidoRepository.save(pedido);
             }
@@ -66,13 +67,11 @@ public class NotificacionController {
         return ResponseEntity.ok(response);
     }
 
-    // Notifica que un pedido ha sido entregado (PUT /api/admin/notificaciones/pedido/{id}/entregado)
     @PutMapping("/pedido/{id}/entregado")
     public ResponseEntity<?> notificarPedidoEntregado(@PathVariable Integer id) {
         Pedido pedido = pedidoRepository.findById(id)
             .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
 
-        // Verificar que esté en camino
         if (pedido.getEstadoPedido() != Pedido.EstadoPedido.en_camino) {
             throw new ServiceException("El pedido debe estar en camino para notificar que fue entregado");
         }
@@ -85,7 +84,6 @@ public class NotificacionController {
             enviado = whatsAppService.notificarPedidoEntregado(telefono, id, nombreCliente);
             
             if (enviado) {
-                // Marcar como entregado
                 pedido.setEstadoPedido(Pedido.EstadoPedido.entregado);
                 pedidoRepository.save(pedido);
             }
@@ -99,7 +97,6 @@ public class NotificacionController {
         return ResponseEntity.ok(response);
     }
 
-    // Notifica que un pedido ha sido cancelado (PUT /api/admin/notificaciones/pedido/{id}/cancelado)
     @PutMapping("/pedido/{id}/cancelado")
     public ResponseEntity<?> notificarPedidoCancelado(
             @PathVariable Integer id, 
@@ -121,9 +118,30 @@ public class NotificacionController {
             enviado = whatsAppService.notificarPedidoCancelado(telefono, id, nombreCliente, motivo);
             
             if (enviado) {
-                // Marcar como cancelado
                 pedido.setEstadoPedido(Pedido.EstadoPedido.cancelado);
                 pedidoRepository.save(pedido);
+                
+                long cancelaciones = pedidoRepository.countByCliente_IdUsuarioAndMetodoPagoAndEstadoPedido(
+                    pedido.getCliente().getIdUsuario(),
+                    pedido.getMetodoPago(),
+                    Pedido.EstadoPedido.cancelado
+                );
+                
+                if (cancelaciones >= 3) {
+                    try {
+                        MetodoPagoInhabilitado.MetodoPago metodoPagoEnum = MetodoPagoInhabilitado.MetodoPago.valueOf(
+                            pedido.getMetodoPago().toString()
+                        );
+                        String razon = "Cancelación automática: El cliente ha cancelado 3 o más pedidos con este método de pago";
+                        metodoPagoInhabilitadoService.inhabilitarMetodoPago(
+                            pedido.getCliente(),
+                            metodoPagoEnum,
+                            razon
+                        );
+                    } catch (Exception e) {
+                        System.err.println("Error al inhabilitar método de pago: " + e.getMessage());
+                    }
+                }
             }
         }
 
@@ -135,7 +153,6 @@ public class NotificacionController {
         return ResponseEntity.ok(response);
     }
 
-    // Envía mensaje personalizado por WhatsApp (POST /api/admin/notificaciones/mensaje-personalizado)
     @PostMapping("/mensaje-personalizado")
     public ResponseEntity<?> enviarMensajePersonalizado(@RequestBody MensajePersonalizadoRequest request) {
         String telefono = request.getTelefono();
@@ -159,14 +176,12 @@ public class NotificacionController {
         return ResponseEntity.ok(response);
     }
 
-    //ESTO ES NUEVO xdd
     @PostMapping("/enviar-flexible")
     public ResponseEntity<?> enviarNotificacionFlexible(@RequestBody Map<String, String> request) {
         String tipo = request.get("tipo");
         String destinatario = request.get("destinatario");
         String mensaje = request.get("mensaje");
 
-        //validaciones
         if (tipo == null || destinatario == null || mensaje == null) {
             throw new ServiceException("tipo, destinatario y mensaje son obligatorios");
         }

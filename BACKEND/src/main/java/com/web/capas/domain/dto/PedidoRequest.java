@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.util.List;
 
-// DTO unificado para operaciones de pedidos (crear, actualizar, productos)
 public class PedidoRequest {
 
-    // ==================== CAMPOS PARA CREAR PEDIDO ====================
     @JsonProperty("idCliente")
     private Integer idCliente;
 
@@ -26,7 +24,12 @@ public class PedidoRequest {
     @JsonProperty("productos")
     private List<ProductoPedidoRequest> productos;
 
-    // ==================== CAMPOS PARA PRODUCTOS DEL PEDIDO ====================
+    @JsonProperty("codigoCupon")
+    private String codigoCupon;
+
+    @JsonProperty("montoPagadoCliente")
+    private BigDecimal montoPagadoCliente;
+
     @JsonProperty("idProducto")
     private Integer idProducto;
 
@@ -45,7 +48,6 @@ public class PedidoRequest {
     @JsonProperty("notasPersonalizacion")
     private String notasPersonalizacion;
 
-    // ==================== CAMPOS PARA ACTUALIZACIÓN DE PEDIDO ====================
     @JsonProperty("idPedido")
     private Integer idPedido;
 
@@ -54,8 +56,6 @@ public class PedidoRequest {
 
     @JsonProperty("notasRepartidor")
     private String notasRepartidor;
-
-    // ==================== CONSTRUCTORES ====================
 
     public PedidoRequest() {}
 
@@ -85,9 +85,6 @@ public class PedidoRequest {
         this.notasRepartidor = notasRepartidor;
     }
 
-    // ==================== GETTERS Y SETTERS ====================
-
-    // Campos del pedido
     public Integer getIdCliente() {
         return idCliente;
     }
@@ -136,7 +133,22 @@ public class PedidoRequest {
         this.productos = productos;
     }
 
-    // Campos del producto
+    public String getCodigoCupon() {
+        return codigoCupon;
+    }
+
+    public void setCodigoCupon(String codigoCupon) {
+        this.codigoCupon = codigoCupon;
+    }
+
+    public BigDecimal getMontoPagadoCliente() {
+        return montoPagadoCliente;
+    }
+
+    public void setMontoPagadoCliente(BigDecimal montoPagadoCliente) {
+        this.montoPagadoCliente = montoPagadoCliente;
+    }
+
     public Integer getIdProducto() {
         return idProducto;
     }
@@ -185,7 +197,6 @@ public class PedidoRequest {
         this.notasPersonalizacion = notasPersonalizacion;
     }
 
-    // Campos de actualización
     public Integer getIdPedido() {
         return idPedido;
     }
@@ -210,19 +221,14 @@ public class PedidoRequest {
         this.notasRepartidor = notasRepartidor;
     }
 
-    // ==================== MÉTODOS DE UTILIDAD ====================
-
-    // Verifica si el request es para crear un pedido
     public boolean esCrearPedido() {
         return idCliente != null && totalPedido != null && productos != null;
     }
 
-    // Verifica si el request es para actualizar un pedido
     public boolean esActualizarPedido() {
         return idPedido != null && estado != null;
     }
 
-    // Verifica si el request es para un producto del pedido
     public boolean esProductoPedido() {
         return idProducto != null && cantidad != null && precioUnitario != null;
     }

@@ -1,6 +1,4 @@
-/* ===========================================
-   DISEÑO DE RECUPERAR CONTRASEÑA CON DOS COLUMNAS
-   =========================================== */
+
 
 .recover-page-container {
     height: 100vh;
@@ -12,7 +10,6 @@
     left: 0;
 }
 
-/* COLUMNA IZQUIERDA - Sección Promocional */
 .recover-promo-section {
     background: #F4CEA1;
     display: flex;
@@ -113,7 +110,6 @@
     font-weight: 500;
 }
 
-/* COLUMNA DERECHA - Formulario de Recuperación */
 .recover-form-section {
     background: white;
     display: flex;
@@ -147,7 +143,6 @@
     line-height: 1.5;
 }
 
-/* Estilos de formulario */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -189,7 +184,6 @@
     outline: none;
 }
 
-/* Botón de recuperación */
 .btn-recover {
     background: linear-gradient(135deg, #E67E22, #D35400);
     border: none;
@@ -213,7 +207,6 @@
     transform: none;
 }
 
-/* Caja de información */
 .info-box {
     background: #FDF2E9;
     border-left: 4px solid #F4CEA1;
@@ -239,7 +232,6 @@
     line-height: 1.4;
 }
 
-/* Enlace de volver al login */
 .back-to-login {
     color: #E67E22;
     text-decoration: none;
@@ -254,7 +246,6 @@
     text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 992px) {
     .recover-promo-section {
         display: none;

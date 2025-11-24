@@ -15,11 +15,13 @@ import com.web.capas.infrastructure.persistence.entities.Usuario;
 import com.web.capas.infrastructure.persistence.entities.Producto;
 import com.web.capas.infrastructure.persistence.entities.DetallePedido;
 import com.web.capas.infrastructure.persistence.entities.Pago;
+import com.web.capas.infrastructure.persistence.entities.MetodoPagoInhabilitado;
 import com.web.capas.domain.repository.PedidoRepository;
 import com.web.capas.domain.repository.UsuarioRepository;
 import com.web.capas.domain.repository.ProductoRepository;
 import com.web.capas.domain.repository.DetallePedidoRepository;
 import com.web.capas.domain.repository.PagoRepository;
+import com.web.capas.domain.repository.CuponRepository;
 import com.web.capas.application.service.WhatsAppService; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +34,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
@@ -56,16 +59,29 @@ public class PedidoServiceImpl implements PedidoService {
     
     @Autowired
     private WhatsAppService whatsAppService;
+    
+    @Autowired
+    private MetodoPagoInhabilitadoService metodoPagoInhabilitadoService;
+    
+    @Autowired
+    private com.web.capas.domain.repository.MetodoPagoInhabilitadoRepository metodoPagoInhabilitadoRepository;
+    
+    @Autowired
+    private CuponService cuponService;
+    
+    @Autowired
+    private CuponRepository cuponRepository;
+    
+    @Autowired
+    private OneSignalSender oneSignalSender;
 
     @Override
     @Transactional
     public PedidoResponse crearPedido(PedidoRequest request) {
         try {
-            // Validar que el cliente existe
             Usuario cliente = usuarioRepository.findById(request.getIdCliente())
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Cliente no encontrado"));
             
-            // Validar datos obligatorios
             if (request.getDireccionEntrega() == null || request.getDireccionEntrega().trim().isEmpty()) {
                 throw new ServiceException("La dirección de entrega es obligatoria");
             }
@@ -74,36 +90,94 @@ public class PedidoServiceImpl implements PedidoService {
                 throw new ServiceException("El pedido debe tener al menos un producto");
             }
             
-            // Nuevo pedido
+            try {
+                Pedido.MetodoPago metodoPagoEnum = Pedido.MetodoPago.valueOf(request.getMetodoPago());
+                if (metodoPagoInhabilitadoService.estaInhabilitado(cliente, 
+                    MetodoPagoInhabilitado.MetodoPago.valueOf(request.getMetodoPago()))) {
+                    String nombreMetodoPago = obtenerNombreMetodoPago(
+                        MetodoPagoInhabilitado.MetodoPago.valueOf(request.getMetodoPago())
+                    );
+                    throw new ServiceException(
+                        String.format(
+                            "El método de pago %s está bloqueado. Ha sido inhabilitado debido a múltiples cancelaciones. Por favor, contacta al administrador o utiliza otro método de pago.",
+                            nombreMetodoPago
+                        )
+                    );
+                }
+            } catch (IllegalArgumentException e) {
+                throw new ServiceException("Método de pago no válido: " + request.getMetodoPago());
+            }
+            
+            BigDecimal subtotalSinDescuento = request.getTotalPedido();
+            BigDecimal descuentoAplicado = BigDecimal.ZERO;
+            
+            if (request.getCodigoCupon() != null && !request.getCodigoCupon().trim().isEmpty()) {
+                String codigoCupon = request.getCodigoCupon().trim().toUpperCase();
+                
+                if (!cuponService.validarCupon(codigoCupon, cliente.getIdUsuario(), subtotalSinDescuento)) {
+                    throw new ServiceException("El cupón no es válido o no cumple con los requisitos");
+                }
+                
+                com.web.capas.domain.dto.CuponResponse cupon = cuponService.obtenerCuponPorCodigo(codigoCupon);
+                
+                if ("porcentaje".equals(cupon.getTipoDescuento())) {
+                    descuentoAplicado = subtotalSinDescuento.multiply(cupon.getValorDescuento())
+                        .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+                } else if ("monto_fijo".equals(cupon.getTipoDescuento())) {
+                    descuentoAplicado = cupon.getValorDescuento();
+                    if (descuentoAplicado.compareTo(subtotalSinDescuento) > 0) {
+                        descuentoAplicado = subtotalSinDescuento;
+                    }
+                }
+                
+                if (cupon.getCantidadDisponible() != null && cupon.getCantidadDisponible() > 0) {
+                    com.web.capas.infrastructure.persistence.entities.Cupon cuponEntity = 
+                        cuponRepository.findById(cupon.getIdCupon())
+                            .orElse(null);
+                    if (cuponEntity != null) {
+                        cuponEntity.setCantidadDisponible(cupon.getCantidadDisponible() - 1);
+                        cuponRepository.save(cuponEntity);
+                    }
+                }
+            }
+            
+            BigDecimal totalConDescuento = subtotalSinDescuento.subtract(descuentoAplicado);
+            if (totalConDescuento.compareTo(BigDecimal.ZERO) < 0) {
+                totalConDescuento = BigDecimal.ZERO;
+            }
+            
             Pedido pedido = new Pedido();
             pedido.setCliente(cliente);
             pedido.setFechaPedido(LocalDateTime.now());
             pedido.setEstadoPedido(Pedido.EstadoPedido.pendiente);
-            pedido.setTotalPedido(request.getTotalPedido());
+            pedido.setTotalPedido(totalConDescuento);
+            pedido.setDescuentoAplicado(descuentoAplicado);
+            
+            if (request.getCodigoCupon() != null && !request.getCodigoCupon().trim().isEmpty()) {
+                pedido.setCodigoCupon(request.getCodigoCupon().trim().toUpperCase());
+            }
+            
+            if ("efectivo".equals(request.getMetodoPago()) && request.getMontoPagadoCliente() != null) {
+                pedido.setMontoPagadoCliente(request.getMontoPagadoCliente());
+            }
             pedido.setDireccionEntrega(request.getDireccionEntrega());
             pedido.setNotasCliente(request.getNotasCliente());
             
-            
-            // Parsear método de pago
             try {
                 pedido.setMetodoPago(Pedido.MetodoPago.valueOf(request.getMetodoPago()));
             } catch (IllegalArgumentException e) {
                 throw new ServiceException("Método de pago no válido: " + request.getMetodoPago());
             }
             
-            // Estado inicial según método
             if (request.getMetodoPago().equals("tarjeta")) {
-                pedido.setEstadoPago(Pedido.EstadoPago.pendiente); // Se actualizará cuando Stripe confirme
+                pedido.setEstadoPago(Pedido.EstadoPago.pendiente);
             } else {
-                pedido.setEstadoPago(Pedido.EstadoPago.pendiente); // Pendiente hasta que se confirme manualmente
+                pedido.setEstadoPago(Pedido.EstadoPago.pendiente);
             }
             
-            // Persistir pedido
             Pedido pedidoGuardado = pedidoRepository.save(pedido);
             
-            // Detalles del pedido
             for (ProductoPedidoRequest productoRequest : request.getProductos()) {
-                // Validar que el producto existe
                 Producto producto = productoRepository.findById(productoRequest.getIdProducto())
                     .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Producto no encontrado: " + productoRequest.getIdProducto()));
 
@@ -117,7 +191,6 @@ public class PedidoServiceImpl implements PedidoService {
                 producto.setStock(stockDisponible - cantidadSolicitada);
                 productoRepository.save(producto);
                 
-                // Nuevo detalle
                 DetallePedido detalle = new DetallePedido();
                 detalle.setPedido(pedidoGuardado);
                 detalle.setProducto(producto);
@@ -129,14 +202,12 @@ public class PedidoServiceImpl implements PedidoService {
                 detallePedidoRepository.save(detalle);
             }
             
-            // Pago para métodos manuales
             if (!request.getMetodoPago().equals("tarjeta")) {
                 try {
                     Pago pago = new Pago();
                     pago.setPedido(pedidoGuardado);
-                    pago.setMonto(request.getTotalPedido());
+                    pago.setMonto(totalConDescuento);
                     
-                    // Convertir string a enum de forma segura
                     Pago.MetodoPago metodoPago;
                     if ("billetera_virtual".equals(request.getMetodoPago())) {
                         metodoPago = Pago.MetodoPago.billetera_virtual;
@@ -153,14 +224,12 @@ public class PedidoServiceImpl implements PedidoService {
                     
                     Pago pagoGuardado = pagoRepository.save(pago);
                     
-                    // Marcar como pagado inmediatamente
                     pagoGuardado.setEstadoTransaccion(Pago.EstadoTransaccion.exitoso);
                     pagoRepository.save(pagoGuardado);
                     
                     pedidoGuardado.setEstadoPago(Pedido.EstadoPago.pagado);
                     pedidoRepository.save(pedidoGuardado);
                     
-                    // Enviar notificación WhatsApp inmediatamente
                     try {
                         String telefono = pedidoGuardado.getCliente().getTelefono();
                         String nombreCliente = pedidoGuardado.getCliente().getNombre();
@@ -178,7 +247,34 @@ public class PedidoServiceImpl implements PedidoService {
                 }
             }
             
-            // Respuesta
+            try {
+                List<Usuario> repartidores = usuarioRepository.findByRolAndActivoTrueAndPlayerIdIsNotNull(Usuario.Rol.repartidor);
+                
+                if (!repartidores.isEmpty()) {
+                    List<String> playerIds = repartidores.stream()
+                        .map(Usuario::getPlayerId)
+                        .filter(playerId -> playerId != null && !playerId.trim().isEmpty())
+                        .collect(Collectors.toList());
+                    
+                    if (!playerIds.isEmpty()) {
+                        String titulo = "Nuevo Pedido";
+                        String mensaje = String.format(
+                            "Tienes un nuevo pedido #%d. Dirección: %s",
+                            pedidoGuardado.getIdPedido(),
+                            pedidoGuardado.getDireccionEntrega()
+                        );
+                        
+                        Map<String, Object> datos = new HashMap<>();
+                        datos.put("pedidoId", pedidoGuardado.getIdPedido());
+                        datos.put("tipo", "nuevo_pedido");
+                        
+                        oneSignalSender.enviarNotificacion(playerIds, titulo, mensaje, datos);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error al enviar notificación push: " + e.getMessage());
+            }
+            
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             PedidoResponse response = new PedidoResponse();
             response.setIdPedido(pedidoGuardado.getIdPedido());
@@ -228,12 +324,11 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public List<Pedido> obtenerPedidosDelUsuario(Integer idUsuario) {
         try {
-            // Filtrar pedidos por el ID del usuario (cliente)
-            List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuario(idUsuario);
+            // Filtrar pedidos por el ID del usuario 
+            List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuarioOrderByFechaPedidoDesc(idUsuario);
             return pedidos;
         } catch (Exception e) {
             System.err.println("Error al obtener pedidos del usuario " + idUsuario + ": " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al obtener pedidos del usuario", e);
         }
     }
@@ -241,23 +336,20 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public List<PedidoListaResponse> obtenerPedidosDelUsuarioComoDTO(Integer idUsuario) {
         try {
-            List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuario(idUsuario);
+            List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuarioOrderByFechaPedidoDesc(idUsuario);
             
             return pedidos.stream()
                 .map(this::convertirAPedidoListaResponse)
                 .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("Error al obtener pedidos del usuario " + idUsuario + ": " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al obtener pedidos del usuario", e);
         }
     }
 
-    // Convierte un Pedido a PedidoListaResponse
     private PedidoListaResponse convertirAPedidoListaResponse(Pedido pedido) {
         PedidoListaResponse response = new PedidoListaResponse();
         
-        // Datos básicos del pedido
         response.setIdPedido(pedido.getIdPedido());
         response.setFechaPedido(pedido.getFechaPedido().toString());
         response.setEstadoPedido(pedido.getEstadoPedido().toString());
@@ -271,7 +363,15 @@ public class PedidoServiceImpl implements PedidoService {
         response.setDetalleProblema(pedido.getDetalleProblema());
         response.setFechaProblema(pedido.getFechaProblema() != null ? pedido.getFechaProblema().toString() : null);
         
-        // Cliente
+        response.setPagoEfectivoConfirmadoPorCliente(pedido.getPagoEfectivoConfirmadoPorCliente());
+        response.setPagoEfectivoConfirmadoPorRepartidor(pedido.getPagoEfectivoConfirmadoPorRepartidor());
+        response.setFechaConfirmacionPagoCliente(pedido.getFechaConfirmacionPagoCliente() != null ? pedido.getFechaConfirmacionPagoCliente().toString() : null);
+        response.setFechaConfirmacionPagoRepartidor(pedido.getFechaConfirmacionPagoRepartidor() != null ? pedido.getFechaConfirmacionPagoRepartidor().toString() : null);
+        
+        response.setMontoPagadoCliente(pedido.getMontoPagadoCliente());
+        
+        response.setCodigoCupon(pedido.getCodigoCupon());
+        
         if (pedido.getCliente() != null) {
             ClienteResponse cliente = new ClienteResponse(
                 pedido.getCliente().getIdUsuario(),
@@ -282,7 +382,6 @@ public class PedidoServiceImpl implements PedidoService {
             response.setCliente(cliente);
         }
         
-        // Repartidor
         if (pedido.getRepartidor() != null) {
             RepartidorResponse repartidor = new RepartidorResponse(
                 pedido.getRepartidor().getIdUsuario(),
@@ -293,7 +392,6 @@ public class PedidoServiceImpl implements PedidoService {
             response.setRepartidor(repartidor);
         }
         
-        // Productos
         if (pedido.getProductos() != null && !pedido.getProductos().isEmpty()) {
             List<ProductoDetalleResponse> productos = pedido.getProductos().stream()
                 .map(detalle -> {
@@ -305,14 +403,12 @@ public class PedidoServiceImpl implements PedidoService {
                     producto.setSubtotal(detalle.getSubtotal());
                     producto.setNotasPersonalizacion(detalle.getNotasPersonalizacion());
                     
-                    // Información del producto si está disponible
                     if (detalle.getProducto() != null) {
                         producto.setNombre(detalle.getProducto().getNombre());
                         producto.setDescripcion(detalle.getProducto().getDescripcion());
                         producto.setImagenUrl(detalle.getProducto().getImagenUrl());
                         producto.setCategoria(detalle.getProducto().getCategoria().getNombre());
                     } else {
-                        // Valores por defecto si no hay información del producto
                         producto.setNombre("Producto");
                         producto.setDescripcion("Sin descripción");
                         producto.setCategoria("General");
@@ -330,8 +426,6 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public List<PedidoListaResponse> obtenerPedidosDisponibles() {
         try {
-            // Pedidos que están disponibles para ser aceptados por repartidores
-            // Estados: pendiente (recién creado), aceptado (restaurante aceptó) o en_preparacion (está listo para recoger)
             List<Pedido.EstadoPedido> estados = java.util.Arrays.asList(
                 Pedido.EstadoPedido.pendiente,
                 Pedido.EstadoPedido.aceptado,
@@ -345,7 +439,6 @@ public class PedidoServiceImpl implements PedidoService {
                 .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("Error al obtener pedidos disponibles: " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al obtener pedidos disponibles", e);
         }
     }
@@ -354,45 +447,35 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public PedidoResponse aceptarPedido(Integer idPedido, Integer idRepartidor) {
         try {
-            // Validar que el pedido existe
             Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
             
-            // Validar que el pedido no tiene repartidor asignado
             if (pedido.getRepartidor() != null) {
                 throw new ServiceException("Este pedido ya tiene un repartidor asignado");
             }
             
-            // Validar que el pedido está en un estado que permite asignación
             if (pedido.getEstadoPedido() != Pedido.EstadoPedido.pendiente &&
                 pedido.getEstadoPedido() != Pedido.EstadoPedido.aceptado && 
                 pedido.getEstadoPedido() != Pedido.EstadoPedido.en_preparacion) {
                 throw new ServiceException("Este pedido no está disponible para ser aceptado en este momento");
             }
             
-            // Validar que el repartidor existe
             Usuario repartidor = usuarioRepository.findById(idRepartidor)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Repartidor no encontrado"));
             
-            // Validar que el usuario es un repartidor
             if (repartidor.getRol() != Usuario.Rol.repartidor) {
                 throw new ServiceException("El usuario no es un repartidor");
             }
             
-            // Asignar repartidor y cambiar estado a en_camino
             pedido.setRepartidor(repartidor);
             pedido.setEstadoPedido(Pedido.EstadoPedido.en_camino);
             
-            // Guardar cambios
             Pedido pedidoActualizado = pedidoRepository.save(pedido);
-            
-            // Convertir a DTO
             return convertirAPedidoResponse(pedidoActualizado);
         } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
             throw e;
         } catch (Exception e) {
             System.err.println("Error al aceptar pedido: " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al aceptar el pedido", e);
         }
     }
@@ -407,7 +490,6 @@ public class PedidoServiceImpl implements PedidoService {
                 .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("Error al obtener pedidos del repartidor: " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al obtener pedidos del repartidor", e);
         }
     }
@@ -416,26 +498,20 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public void marcarPedidoComoEntregado(Integer idPedido) {
         try {
-            // Obtener el pedido
             Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
             
-            // Validar que el pedido está en estado en_camino
             if (pedido.getEstadoPedido() != Pedido.EstadoPedido.en_camino) {
                 throw new ServiceException("El pedido debe estar en curso para ser marcado como entregado");
             }
             
-            // Actualizar estado a entregado y establecer fecha de entrega
             pedido.setEstadoPedido(Pedido.EstadoPedido.entregado);
             pedido.setFechaEntrega(LocalDateTime.now());
-            
-            // Guardar cambios
             pedidoRepository.save(pedido);
         } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
             throw e;
         } catch (Exception e) {
             System.err.println("Error al marcar pedido como entregado: " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al marcar el pedido como entregado", e);
         }
     }
@@ -443,7 +519,6 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public List<PedidoListaResponse> obtenerHistorialEntregas(Integer idRepartidor) {
         try {
-            // Obtener solo pedidos entregados del repartidor, ordenados por fecha de entrega descendente
             List<Pedido> pedidosEntregados = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoOrderByFechaEntregaDesc(
                 idRepartidor, 
                 Pedido.EstadoPedido.entregado
@@ -454,7 +529,6 @@ public class PedidoServiceImpl implements PedidoService {
                 .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("Error al obtener historial de entregas: " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al obtener historial de entregas", e);
         }
     }
@@ -462,7 +536,6 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public Map<String, Object> obtenerEstadisticasRepartidor(Integer idRepartidor) {
         try {
-            // Validar que el repartidor existe
             usuarioRepository.findById(idRepartidor)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Repartidor no encontrado"));
             
@@ -470,16 +543,13 @@ public class PedidoServiceImpl implements PedidoService {
             LocalDateTime inicioHoy = ahora.toLocalDate().atStartOfDay();
             LocalDateTime finHoy = ahora.toLocalDate().atTime(23, 59, 59);
             
-            // Inicio de la semana (lunes)
             LocalDate fechaHoy = ahora.toLocalDate();
             LocalDate inicioSemana = fechaHoy.minusDays(fechaHoy.getDayOfWeek().getValue() - 1);
             LocalDateTime inicioSemanaDateTime = inicioSemana.atStartOfDay();
             
-            // Inicio del mes
             LocalDate inicioMes = fechaHoy.withDayOfMonth(1);
             LocalDateTime inicioMesDateTime = inicioMes.atStartOfDay();
             
-            // Pedidos entregados HOY
             List<Pedido> entregasHoy = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoAndFechaEntregaBetween(
                 idRepartidor, 
                 Pedido.EstadoPedido.entregado, 
@@ -487,7 +557,6 @@ public class PedidoServiceImpl implements PedidoService {
                 finHoy
             );
             
-            // Pedidos entregados ESTA SEMANA
             List<Pedido> entregasSemana = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoAndFechaEntregaBetween(
                 idRepartidor, 
                 Pedido.EstadoPedido.entregado, 
@@ -495,7 +564,6 @@ public class PedidoServiceImpl implements PedidoService {
                 finHoy
             );
             
-            // Pedidos entregados ESTE MES
             List<Pedido> entregasMes = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoAndFechaEntregaBetween(
                 idRepartidor, 
                 Pedido.EstadoPedido.entregado, 
@@ -503,18 +571,26 @@ public class PedidoServiceImpl implements PedidoService {
                 finHoy
             );
             
-            // Calcular ganado HOY
             BigDecimal ganadoHoy = entregasHoy.stream()
                 .map(Pedido::getTotalPedido)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            // Calcular ganado ESTA SEMANA
             BigDecimal ganadoSemana = entregasSemana.stream()
                 .map(Pedido::getTotalPedido)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            // Calcular ganado ESTE MES
             BigDecimal ganadoMes = entregasMes.stream()
+                .map(Pedido::getTotalPedido)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            List<Pedido> todasLasEntregas = pedidoRepository.findByRepartidor_IdUsuarioAndEstadoPedidoOrderByFechaEntregaDesc(
+                idRepartidor, 
+                Pedido.EstadoPedido.entregado
+            );
+            
+            int totalEntregas = todasLasEntregas.size();
+            
+            BigDecimal gananciaTotal = todasLasEntregas.stream()
                 .map(Pedido::getTotalPedido)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             
@@ -525,13 +601,14 @@ public class PedidoServiceImpl implements PedidoService {
             estadisticas.put("ganadoHoy", ganadoHoy.doubleValue());
             estadisticas.put("ganadoSemana", ganadoSemana.doubleValue());
             estadisticas.put("ganadoMes", ganadoMes.doubleValue());
+            estadisticas.put("totalEntregas", totalEntregas);
+            estadisticas.put("gananciaTotal", gananciaTotal.doubleValue());
             
             return estadisticas;
         } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
             throw e;
         } catch (Exception e) {
             System.err.println("Error al obtener estadísticas del repartidor: " + e.getMessage());
-            e.printStackTrace();
             throw new ServiceException("Error al obtener estadísticas del repartidor", e);
         }
     }
@@ -578,6 +655,124 @@ public class PedidoServiceImpl implements PedidoService {
             throw e;
         } catch (Exception e) {
             System.err.println("Error al cancelar pedido del repartidor: " + e.getMessage());
+            throw new ServiceException("Error al cancelar el pedido", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponse cancelarPedidoCliente(Integer idPedido, Integer idCliente) {
+        try {
+            Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+
+            // Validar que el pedido pertenece al cliente
+            if (pedido.getCliente() == null || !pedido.getCliente().getIdUsuario().equals(idCliente)) {
+                throw new ServiceException("El pedido no pertenece a este cliente");
+            }
+
+            if (pedido.getEstadoPedido() != Pedido.EstadoPedido.pendiente &&
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.aceptado &&
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.en_preparacion) {
+                throw new ServiceException("No se puede cancelar el pedido en su estado actual");
+            }
+
+            pedido.setEstadoPedido(Pedido.EstadoPedido.cancelado);
+            pedidoRepository.save(pedido);
+
+            if (pedido.getCodigoCupon() != null && !pedido.getCodigoCupon().trim().isEmpty()) {
+                try {
+                    String codigoCupon = pedido.getCodigoCupon().trim().toUpperCase();
+                    Optional<com.web.capas.infrastructure.persistence.entities.Cupon> cuponEntity = 
+                        cuponRepository.findByCodigo(codigoCupon);
+                    if (cuponEntity.isPresent()) {
+                        com.web.capas.infrastructure.persistence.entities.Cupon cupon = cuponEntity.get();
+                        if (cupon.getCantidadDisponible() != null) {
+                            cupon.setCantidadDisponible(cupon.getCantidadDisponible() + 1);
+                            cuponRepository.save(cupon);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error al devolver cupón al cancelar pedido: " + e.getMessage());
+                }
+            }
+
+            // Obtener la fecha de reactivación más reciente
+            LocalDateTime fechaDesde = null;
+            try {
+                MetodoPagoInhabilitado.MetodoPago metodoPagoEnum = MetodoPagoInhabilitado.MetodoPago.valueOf(
+                    pedido.getMetodoPago().toString()
+                );
+                Optional<MetodoPagoInhabilitado> ultimaReactivacion = metodoPagoInhabilitadoRepository
+                    .findFirstByUsuarioAndMetodoPagoAndFechaReactivacionIsNotNullOrderByFechaReactivacionDesc(
+                        pedido.getCliente(),
+                        metodoPagoEnum
+                    );
+                if (ultimaReactivacion.isPresent() && ultimaReactivacion.get().getFechaReactivacion() != null) {
+                    fechaDesde = ultimaReactivacion.get().getFechaReactivacion();
+                }
+            } catch (Exception e) {
+
+            }
+            
+            long cancelaciones;
+            if (fechaDesde != null) {
+                cancelaciones = pedidoRepository.countByCliente_IdUsuarioAndMetodoPagoAndEstadoPedidoAndFechaPedidoAfter(
+                    pedido.getCliente().getIdUsuario(),
+                    pedido.getMetodoPago(),
+                    Pedido.EstadoPedido.cancelado,
+                    fechaDesde
+                );
+            } else {
+                cancelaciones = pedidoRepository.countByCliente_IdUsuarioAndMetodoPagoAndEstadoPedido(
+                    pedido.getCliente().getIdUsuario(),
+                    pedido.getMetodoPago(),
+                    Pedido.EstadoPedido.cancelado
+                );
+            }
+
+            if (cancelaciones >= 3) {
+                try {
+                    MetodoPagoInhabilitado.MetodoPago metodoPagoEnum = MetodoPagoInhabilitado.MetodoPago.valueOf(
+                        pedido.getMetodoPago().toString()
+                    );
+                    String razon = "Cancelación automática: El cliente ha cancelado 3 o más pedidos con este método de pago";
+                    metodoPagoInhabilitadoService.inhabilitarMetodoPago(
+                        pedido.getCliente(),
+                        metodoPagoEnum,
+                        razon
+                    );
+                    
+                    String nombreMetodoPago = obtenerNombreMetodoPago(metodoPagoEnum);
+                    
+                    if (pedido.getCliente().getPlayerId() != null && !pedido.getCliente().getPlayerId().trim().isEmpty()) {
+                        String titulo = "Método de Pago Inhabilitado";
+                        String mensaje = String.format(
+                            "Tu método de pago %s ha sido inhabilitado temporalmente debido a múltiples cancelaciones. Por favor, contacta al administrador para más información.",
+                            nombreMetodoPago
+                        );
+                        
+                        Map<String, Object> datos = new HashMap<>();
+                        datos.put("tipo", "metodo_pago_inhabilitado");
+                        datos.put("metodoPago", metodoPagoEnum.toString());
+                        
+                        oneSignalSender.enviarNotificacion(
+                            List.of(pedido.getCliente().getPlayerId()),
+                            titulo,
+                            mensaje,
+                            datos
+                        );
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error al inhabilitar método de pago: " + e.getMessage());
+                }
+            }
+
+            return convertirAPedidoResponse(pedido);
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al cancelar pedido del cliente: " + e.getMessage());
             throw new ServiceException("Error al cancelar el pedido", e);
         }
     }
@@ -635,6 +830,137 @@ public class PedidoServiceImpl implements PedidoService {
             }).collect(Collectors.toList());
         } catch (Exception e) {
             throw new ServiceException("Error al obtener los reportes de problemas", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponse confirmarPagoEfectivoCliente(Integer idPedido, Integer idCliente) {
+        try {
+            Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+
+            // Validar que el pedido pertenece al cliente
+            if (pedido.getCliente() == null || !pedido.getCliente().getIdUsuario().equals(idCliente)) {
+                throw new ServiceException("El pedido no pertenece a este cliente");
+            }
+
+            // Validar que el método de pago es efectivo
+            if (pedido.getMetodoPago() != Pedido.MetodoPago.efectivo) {
+                throw new ServiceException("Este pedido no fue pagado con efectivo");
+            }
+
+            // Validar que el pedido está entregado o en camino
+            if (pedido.getEstadoPedido() != Pedido.EstadoPedido.entregado &&
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.en_camino) {
+                throw new ServiceException("Solo se puede confirmar el pago cuando el pedido está entregado o en camino");
+            }
+
+            // Confirmar pago
+            pedido.setPagoEfectivoConfirmadoPorCliente(Boolean.TRUE);
+            pedido.setFechaConfirmacionPagoCliente(LocalDateTime.now());
+            pedidoRepository.save(pedido);
+
+            return convertirAPedidoResponse(pedido);
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al confirmar pago del cliente: " + e.getMessage());
+            throw new ServiceException("Error al confirmar el pago", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponse confirmarPagoEfectivoRepartidor(Integer idPedido, Integer idRepartidor) {
+        try {
+            Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Pedido no encontrado"));
+
+            if (pedido.getRepartidor() == null || !pedido.getRepartidor().getIdUsuario().equals(idRepartidor)) {
+                throw new ServiceException("El pedido no está asignado a este repartidor");
+            }
+
+            if (pedido.getMetodoPago() != Pedido.MetodoPago.efectivo) {
+                throw new ServiceException("Este pedido no fue pagado con efectivo");
+            }
+
+            // Validar que el pedido está entregado o en camino
+            if (pedido.getEstadoPedido() != Pedido.EstadoPedido.entregado &&
+                pedido.getEstadoPedido() != Pedido.EstadoPedido.en_camino) {
+                throw new ServiceException("Solo se puede confirmar el pago cuando el pedido está entregado o en camino");
+            }
+
+            pedido.setPagoEfectivoConfirmadoPorRepartidor(Boolean.TRUE);
+            pedido.setFechaConfirmacionPagoRepartidor(LocalDateTime.now());
+            pedidoRepository.save(pedido);
+
+            return convertirAPedidoResponse(pedido);
+        } catch (RecursoNoEncontradoExcepcion | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al confirmar pago del repartidor: " + e.getMessage());
+            throw new ServiceException("Error al confirmar el pago", e);
+        }
+    }
+
+    @Override
+    public long contarCancelacionesPorMetodoPago(Integer idCliente, String metodoPago) {
+        try {
+            Pedido.MetodoPago metodoPagoEnum = Pedido.MetodoPago.valueOf(metodoPago);
+            
+            // Obtener el usuario
+            Usuario usuario = usuarioRepository.findById(idCliente)
+                .orElse(null);
+            if (usuario == null) {
+                return 0;
+            }
+            
+            // Obtener la fecha de reactivación más reciente
+            LocalDateTime fechaDesde = null;
+            try {
+                MetodoPagoInhabilitado.MetodoPago metodoPagoInhabilitadoEnum = MetodoPagoInhabilitado.MetodoPago.valueOf(metodoPago);
+                Optional<MetodoPagoInhabilitado> ultimaReactivacion = metodoPagoInhabilitadoRepository
+                    .findFirstByUsuarioAndMetodoPagoAndFechaReactivacionIsNotNullOrderByFechaReactivacionDesc(
+                        usuario,
+                        metodoPagoInhabilitadoEnum
+                    );
+                if (ultimaReactivacion.isPresent() && ultimaReactivacion.get().getFechaReactivacion() != null) {
+                    fechaDesde = ultimaReactivacion.get().getFechaReactivacion();
+                }
+            } catch (Exception e) {
+
+            }
+            
+            if (fechaDesde != null) {
+                return pedidoRepository.countByCliente_IdUsuarioAndMetodoPagoAndEstadoPedidoAndFechaPedidoAfter(
+                    idCliente,
+                    metodoPagoEnum,
+                    Pedido.EstadoPedido.cancelado,
+                    fechaDesde
+                );
+            } else {
+                return pedidoRepository.countByCliente_IdUsuarioAndMetodoPagoAndEstadoPedido(
+                    idCliente,
+                    metodoPagoEnum,
+                    Pedido.EstadoPedido.cancelado
+                );
+            }
+        } catch (IllegalArgumentException e) {
+            return 0;
+        }
+    }
+
+    private String obtenerNombreMetodoPago(MetodoPagoInhabilitado.MetodoPago metodoPago) {
+        switch (metodoPago) {
+            case tarjeta:
+                return "Tarjeta de Crédito/Débito";
+            case billetera_virtual:
+                return "Billetera Virtual";
+            case efectivo:
+                return "Efectivo";
+            default:
+                return metodoPago.toString();
         }
     }
 }

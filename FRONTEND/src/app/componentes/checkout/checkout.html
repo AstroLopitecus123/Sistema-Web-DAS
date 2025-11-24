@@ -1,8 +1,8 @@
-<!-- Modal Backdrop -->
+
 <div *ngIf="mostrar" class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container" (click)="$event.stopPropagation()">
     
-    <!-- Modal Header -->
+    
     <div class="modal-header">
       <h3 class="modal-title">
         <i class="fas fa-credit-card me-2"></i>
@@ -13,10 +13,10 @@
       </button>
     </div>
 
-    <!-- Modal Body -->
+    
     <div class="modal-body">
       
-      <!-- Indicador de Pasos -->
+      
       <div class="pasos-indicator">
         <div class="paso" [ngClass]="{'activo': pasoActual >= 1, 'completado': pasoActual > 1}">
           <span class="paso-numero">1</span>
@@ -33,7 +33,7 @@
       </div>
 
 
-      <!-- Paso 1: Selección de Método de Pago -->
+      
       <div *ngIf="pasoActual === 1" class="paso-contenido">
         <h4>Selecciona tu método de pago</h4>
         <div class="metodos-pago">
@@ -58,11 +58,69 @@
         </div>
       </div>
 
-      <!-- Paso 2: Información de Pago -->
+      
       <div *ngIf="pasoActual === 2" class="paso-contenido">
         <h4>Información de Pago</h4>
         
-        <!-- Dirección de Entrega -->
+        
+        <div class="form-group">
+          <label for="codigoCupon">Código de Cupón (Opcional)</label>
+          <div class="cupon-input-group">
+            <input type="text"
+                   id="codigoCupon"
+                   class="cupon-input"
+                   [(ngModel)]="codigoCupon"
+                   placeholder="Ingresa el código del cupón"
+                   (blur)="validarCupon()">
+            <button type="button" 
+                    class="btn-aplicar-cupon"
+                    (click)="aplicarCupon()"
+                    [disabled]="!codigoCupon || codigoCupon.trim() === '' || validandoCupon">
+              <span *ngIf="!validandoCupon">Aplicar</span>
+              <span *ngIf="validandoCupon">
+                <i class="fas fa-spinner fa-spin"></i> Validando...
+              </span>
+            </button>
+          </div>
+          <div *ngIf="mensajeCupon" 
+               class="mt-2"
+               [ngClass]="{'text-success': cuponAplicado, 'text-danger': !cuponAplicado}">
+            <small>{{ mensajeCupon }}</small>
+          </div>
+          <div *ngIf="cuponAplicado && descuentoAplicado > 0" class="cupon-aplicado-info">
+            <div class="cupon-aplicado-mensaje">
+              <i class="fas fa-check-circle"></i> 
+              <span>Descuento aplicado: S/ {{ descuentoAplicado | number: '1.2-2' }}</span>
+            </div>
+            <button type="button" 
+                    class="btn-quitar-cupon"
+                    (click)="quitarCupon()"
+                    title="Quitar cupón">
+              <i class="fas fa-times"></i>
+              <span>Quitar</span>
+            </button>
+          </div>
+        </div>
+        
+        
+        <div *ngIf="cuponAplicado && descuentoAplicado > 0" class="resumen-precio-cupon mt-3 mb-3">
+          <div class="resumen-precio-card">
+            <div class="resumen-precio-item">
+              <span class="resumen-label">Subtotal:</span>
+              <span class="resumen-valor">S/ {{ subtotalSinDescuento | number: '1.2-2' }}</span>
+            </div>
+            <div class="resumen-precio-item text-success">
+              <span class="resumen-label">Descuento ({{ codigoCupon }}):</span>
+              <span class="resumen-valor">- S/ {{ descuentoAplicado | number: '1.2-2' }}</span>
+            </div>
+            <div class="resumen-precio-item resumen-total">
+              <span class="resumen-label-total"><strong>Total a pagar:</strong></span>
+              <span class="resumen-valor-total"><strong>S/ {{ subtotal | number: '1.2-2' }}</strong></span>
+            </div>
+          </div>
+        </div>
+        
+        
         <div class="form-group">
           <app-campo-ubicacion
             etiqueta="Dirección de Entrega *"
@@ -75,7 +133,7 @@
           </app-campo-ubicacion>
         </div>
 
-        <!-- Notas del Cliente -->
+        
         <div class="form-group">
           <label for="notas">Notas Adicionales (Opcional)</label>
           <textarea id="notas"
@@ -85,12 +143,12 @@
                     rows="2"></textarea>
         </div>
 
-        <!-- Información específica según el método de pago -->
+        
         <div *ngIf="informacionPago.metodoPago === 'tarjeta'" class="metodo-especifico">
           <h5>Datos de la Tarjeta</h5>
           <div class="form-group">
             <label>Información de la Tarjeta *</label>
-            <!-- El campo real de Stripe está más abajo como contenedor permanente -->
+            
             <small class="form-text text-muted mt-2 d-block">
               <i class="fas fa-lock me-1"></i>
               Pago seguro procesado por Stripe
@@ -139,7 +197,7 @@
         </div>
       </div>
 
-      <!-- Contenedor permanente de Stripe (siempre en DOM mientras el modal esté abierto) -->
+      
       <div
         id="stripe-card-element"
         [style.display]="pasoActual === 2 && informacionPago.metodoPago === 'tarjeta' ? 'block' : 'none'"
@@ -158,11 +216,11 @@
         "
       ></div>
 
-      <!-- Paso 3: Confirmación -->
+      
       <div *ngIf="pasoActual === 3" class="paso-contenido">
         <h4>Confirma tu Pedido</h4>
         
-        <!-- Resumen del Pedido -->
+        
         <div class="resumen-pedido">
           <h5>Productos</h5>
           <div *ngFor="let item of items" class="item-resumen">
@@ -173,13 +231,21 @@
             <span class="item-precio">S/. {{ (item.precio * item.cantidad) | number:'1.2-2' }}</span>
           </div>
           
+          <div *ngIf="cuponAplicado && descuentoAplicado > 0" class="descuento-resumen">
+            <span>Subtotal:</span>
+            <span>S/. {{ subtotalSinDescuento | number:'1.2-2' }}</span>
+          </div>
+          <div *ngIf="cuponAplicado && descuentoAplicado > 0" class="descuento-resumen text-success">
+            <span>Descuento ({{ codigoCupon }}):</span>
+            <span>- S/. {{ descuentoAplicado | number:'1.2-2' }}</span>
+          </div>
           <div class="total-resumen">
             <span><strong>Total:</strong></span>
             <span class="precio-total"><strong>S/. {{ subtotal | number:'1.2-2' }}</strong></span>
           </div>
         </div>
 
-        <!-- Información de Entrega -->
+        
         <div class="info-entrega">
           <h5>Información de Entrega</h5>
           <p><strong>Dirección:</strong> {{ informacionPago.direccionEntrega }}</p>
@@ -188,7 +254,7 @@
         </div>
       </div>
 
-      <!-- Mensaje de Error -->
+      
       <div *ngIf="errorPago" class="alert alert-danger">
         <i class="fas fa-exclamation-circle me-2"></i>
         {{ errorPago }}
@@ -196,7 +262,7 @@
 
     </div>
 
-    <!-- Modal Footer -->
+    
     <div class="modal-footer">
       <button type="button" 
               class="btn btn-secondary" 

@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-// Observador que deja un log cuando sale una notificación.
 @Component
 public class RegistroAuditoriaNotificacionListener {
 

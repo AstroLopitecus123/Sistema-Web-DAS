@@ -11,16 +11,13 @@ export interface FiltrosPedidos {
 })
 export class FiltrosService {
 
-  // Aplica filtros a la lista de pedidos
   aplicarFiltrosPedidos(pedidos: Pedido[], filtros: FiltrosPedidos): Pedido[] {
     let pedidosFiltrados = [...pedidos];
 
-    // Aplicar filtro de período
     if (filtros.periodo !== 'todos') {
       pedidosFiltrados = this.filtrarPorPeriodo(pedidosFiltrados, filtros.periodo);
     }
 
-    // Aplicar filtro de estado
     if (filtros.estado !== 'todos') {
       pedidosFiltrados = pedidosFiltrados.filter(pedido => 
         pedido.estadoPedido === filtros.estado
@@ -30,7 +27,6 @@ export class FiltrosService {
     return pedidosFiltrados;
   }
 
-  // Filtra pedidos por período de tiempo
   private filtrarPorPeriodo(pedidos: Pedido[], periodo: string): Pedido[] {
     const ahora = new Date();
     let fechaLimite: Date;
@@ -55,7 +51,6 @@ export class FiltrosService {
     });
   }
 
-  // Obtiene las opciones de filtro disponibles
   obtenerOpcionesFiltro(): {
     periodos: { valor: string; etiqueta: string }[];
     estados: { valor: string; etiqueta: string }[];

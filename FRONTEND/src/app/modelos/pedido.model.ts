@@ -21,6 +21,11 @@ export interface Pedido {
     apellido: string;
     telefono: string;
   };
+  pagoEfectivoConfirmadoPorCliente?: boolean;
+  pagoEfectivoConfirmadoPorRepartidor?: boolean;
+  fechaConfirmacionPagoCliente?: string;
+  fechaConfirmacionPagoRepartidor?: string;
+  montoPagadoCliente?: number; // Monto con el que el cliente va a pagar (para calcular vuelto)
 }
 
 export interface DetallePedido {

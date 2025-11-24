@@ -1,5 +1,5 @@
 <div class="admin-productos-container">
-  <!-- Encabezado -->
+  
   <div class="header">
     <div class="header-left">
       <button class="btn-volver" (click)="volverAlDashboard()">← Volver</button>
@@ -8,7 +8,7 @@
     <button class="btn-nuevo" (click)="nuevoProducto()">+ Nuevo Producto</button>
   </div>
 
-  <!-- Buscador y filtros -->
+  
   <div class="filters-section">
     <div class="search-container">
       <input 
@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <!-- Products Table -->
+  
   <div class="products-section">
     <div class="table-container">
       <table class="products-table">
@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Modal de producto -->
+  
   @if (modoEdicion) {
     <div class="modal-overlay" (click)="cancelarEdicion()">
       <div class="modal-content" (click)="$event.stopPropagation()">

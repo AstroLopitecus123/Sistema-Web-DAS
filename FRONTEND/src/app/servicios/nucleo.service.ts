@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 
-// Servicio principal para interceptores HTTP y manejo de errores
 @Injectable({
   providedIn: 'root'
 })
@@ -10,10 +9,7 @@ export class NucleoService implements HttpInterceptor {
 
   constructor() {}
 
-  // Interceptor para headers y manejo de errores
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    
-    // Añadir headers de caché y token de autenticación
     const token = localStorage.getItem('token');
     
     const headers: { [key: string]: string } = {
@@ -39,17 +35,14 @@ export class NucleoService implements HttpInterceptor {
     return next.handle(modifiedRequest)
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          // Solo manejar errores reales (códigos 4xx y 5xx)
           if (error.status >= 400) {
             return this.handleError(error);
           }
-          // Para códigos 2xx y 3xx, no hacer nada especial
           return throwError(() => error);
         })
       );
   }
 
-  // Manejo centralizado de errores HTTP
   public handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocurrió un error desconocido en el lado del cliente.';
     
@@ -62,7 +55,6 @@ export class NucleoService implements HttpInterceptor {
         `Cuerpo del error: ${JSON.stringify(error.error)}`
       );
 
-      // Manejo especial para errores de login
       if (error.url && error.url.includes('/api/auth/login')) {
         const mensajeServidor = (error.error && (error.error.mensaje || error.error.message)) || '';
         if (mensajeServidor === 'CUENTA_DESACTIVADA') {
@@ -86,7 +78,6 @@ export class NucleoService implements HttpInterceptor {
           }
         }
       } else {
-        // Mensajes genéricos para otros endpoints
         switch (error.status) {
           case 401:
             errorMessage = 'Error de autenticación: Por favor, inicia sesión de nuevo.';
@@ -117,30 +108,23 @@ export class NucleoService implements HttpInterceptor {
     return throwError(() => customError);
   }
 
-  // Utilidades centrales
-
-  // Obtener token del localStorage
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
-  // Establece el token de autenticación en el localStorage
   setToken(token: string): void {
     localStorage.setItem('token', token);
   }
 
-  // Elimina el token de autenticación del localStorage
   removeToken(): void {
     localStorage.removeItem('token');
   }
 
-  // Verifica si el usuario está autenticado
   isAuthenticated(): boolean {
     const token = this.getToken();
     return token !== null && token !== '';
   }
 
-  // Obtiene información del usuario desde el token
   getUserInfo(): any {
     const token = this.getToken();
     if (!token) return null;
@@ -154,7 +138,6 @@ export class NucleoService implements HttpInterceptor {
     }
   }
 
-  // Verifica si el token está expirado
   isTokenExpired(): boolean {
     const userInfo = this.getUserInfo();
     if (!userInfo || !userInfo.exp) return true;
@@ -163,7 +146,6 @@ export class NucleoService implements HttpInterceptor {
     return userInfo.exp < currentTime;
   }
 
-  // Limpia toda la información de sesión
   clearSession(): void {
     this.removeToken();
     localStorage.removeItem('usuario');

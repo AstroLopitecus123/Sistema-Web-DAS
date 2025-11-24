@@ -11,6 +11,8 @@ export interface CrearPedidoRequest {
   direccionEntrega: string;
   notasCliente?: string;
   metodoPago: 'tarjeta' | 'billetera_virtual' | 'efectivo';
+  codigoCupon?: string;
+  montoPagadoCliente?: number; 
   productos: {
     idProducto: number;
     nombre: string;
@@ -47,7 +49,6 @@ export class PagoService {
     this.initializeStripe();
   }
 
-  // Inicializa Stripe con la clave pública
   private async initializeStripe(): Promise<void> {
     try {
       const stripeConfig = this.configuracionService.getStripeConfig();
@@ -69,7 +70,6 @@ export class PagoService {
     }
   }
 
-  // Obtiene la instancia de Stripe
   async getStripe(): Promise<Stripe | null> {
     if (!this.stripe) {
       await this.initializeStripe();
@@ -77,7 +77,6 @@ export class PagoService {
     return this.stripe;
   }
 
-  // Crea un Stripe Elements para el formulario de tarjeta
   async createCardElement(containerId: string): Promise<StripeCardElement | null> {
     try {
       const stripe = await this.getStripe();
@@ -139,7 +138,6 @@ export class PagoService {
     }
   }
 
-  // Destruye el elemento de tarjeta
   destroyCardElement(): void {
     try {
       if (this.cardElement) {
@@ -152,23 +150,19 @@ export class PagoService {
       }
     } catch (error) {
       console.warn('Error al destruir Card Element:', error);
-      // Forzar limpieza incluso si hay error
       this.cardElement = null;
       this.elements = null;
     }
   }
 
-  //Crear un pedido en el backend
   crearPedido(pedidoData: CrearPedidoRequest): Observable<PedidoResponse> {
     return this.http.post<PedidoResponse>(`${this.apiUrl}/pedidos`, pedidoData);
   }
 
-  //Crear un PaymentIntent en Stripe 
   crearPaymentIntent(request: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/pagos/crear-intent`, request);
   }
 
-  //Confirmar el pago con Stripe Elements
   async confirmarPagoConTarjeta(
     clientSecret: string,
     email: string,
@@ -208,22 +202,18 @@ export class PagoService {
     }
   }
 
-  //Confirmar el pago en el backend (actualizar estado)
   confirmarPagoEnBackend(paymentIntentId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/pagos/confirmar/${paymentIntentId}`, {});
   }
 
-  // Consultar estado de un pago
   consultarEstadoPago(referenciaTransaccion: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/pagos/estado/${referenciaTransaccion}`);
   }
 
-  // Confirmar pago manual (billetera virtual y efectivo)
   confirmarPagoManual(idPedido: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/pagos/confirmar-manual/${idPedido}`, {});
   }
 
-  // Verifica si el elemento de tarjeta está listo
   async verificarElementoListo(): Promise<boolean> {
     if (!this.cardElement) {
       console.log('No hay elemento de tarjeta');
@@ -231,14 +221,12 @@ export class PagoService {
     }
 
     try {
-      // Verificar que el elemento existe y está montado
       const container = document.getElementById('stripe-card-element');
       if (!container) {
         console.log('Contenedor no encontrado');
         return false;
       }
 
-      // Verificar que hay elementos dentro del contenedor
       const inputs = container.querySelectorAll('input');
       const iframes = container.querySelectorAll('iframe');
       

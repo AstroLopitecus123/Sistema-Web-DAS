@@ -81,6 +81,24 @@ public class Pedido {
     @Column(name = "fecha_problema")
     private LocalDateTime fechaProblema;
 
+    @Column(name = "pago_efectivo_confirmado_cliente")
+    private Boolean pagoEfectivoConfirmadoPorCliente = Boolean.FALSE;
+
+    @Column(name = "pago_efectivo_confirmado_repartidor")
+    private Boolean pagoEfectivoConfirmadoPorRepartidor = Boolean.FALSE;
+
+    @Column(name = "fecha_confirmacion_pago_cliente")
+    private LocalDateTime fechaConfirmacionPagoCliente;
+
+    @Column(name = "fecha_confirmacion_pago_repartidor")
+    private LocalDateTime fechaConfirmacionPagoRepartidor;
+
+    @Column(name = "monto_pagado_cliente", precision = 10, scale = 2)
+    private BigDecimal montoPagadoCliente;
+
+    @Column(name = "codigo_cupon", length = 50)
+    private String codigoCupon;
+
     public Integer getIdPedido() {
         return idPedido;
     }
@@ -209,5 +227,53 @@ public class Pedido {
 
     public void setFechaProblema(LocalDateTime fechaProblema) {
         this.fechaProblema = fechaProblema;
+    }
+
+    public Boolean getPagoEfectivoConfirmadoPorCliente() {
+        return pagoEfectivoConfirmadoPorCliente;
+    }
+
+    public void setPagoEfectivoConfirmadoPorCliente(Boolean pagoEfectivoConfirmadoPorCliente) {
+        this.pagoEfectivoConfirmadoPorCliente = pagoEfectivoConfirmadoPorCliente;
+    }
+
+    public Boolean getPagoEfectivoConfirmadoPorRepartidor() {
+        return pagoEfectivoConfirmadoPorRepartidor;
+    }
+
+    public void setPagoEfectivoConfirmadoPorRepartidor(Boolean pagoEfectivoConfirmadoPorRepartidor) {
+        this.pagoEfectivoConfirmadoPorRepartidor = pagoEfectivoConfirmadoPorRepartidor;
+    }
+
+    public LocalDateTime getFechaConfirmacionPagoCliente() {
+        return fechaConfirmacionPagoCliente;
+    }
+
+    public void setFechaConfirmacionPagoCliente(LocalDateTime fechaConfirmacionPagoCliente) {
+        this.fechaConfirmacionPagoCliente = fechaConfirmacionPagoCliente;
+    }
+
+    public LocalDateTime getFechaConfirmacionPagoRepartidor() {
+        return fechaConfirmacionPagoRepartidor;
+    }
+
+    public void setFechaConfirmacionPagoRepartidor(LocalDateTime fechaConfirmacionPagoRepartidor) {
+        this.fechaConfirmacionPagoRepartidor = fechaConfirmacionPagoRepartidor;
+    }
+
+    public BigDecimal getMontoPagadoCliente() {
+        return montoPagadoCliente;
+    }
+
+    public void setMontoPagadoCliente(BigDecimal montoPagadoCliente) {
+        this.montoPagadoCliente = montoPagadoCliente;
+    }
+
+    public String getCodigoCupon() {
+        return codigoCupon;
+    }
+
+    public void setCodigoCupon(String codigoCupon) {
+        this.codigoCupon = codigoCupon;
     }
 }

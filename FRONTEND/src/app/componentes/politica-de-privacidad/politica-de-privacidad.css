@@ -13,7 +13,6 @@
   padding: 50px;
 }
 
-/* Encabezado */
 .privacy-header {
   text-align: center;
   padding-bottom: 30px;
@@ -41,7 +40,6 @@
   font-style: italic;
 }
 
-/* Cuerpo del contenido */
 .privacy-body {
   line-height: 1.8;
   color: #34495e;
@@ -81,7 +79,7 @@
 }
 
 .privacy-section ul li::before {
-  content: '\f023'; /* Font Awesome lock icon */
+  content: '\f023'; 
   font-family: 'Font Awesome 5 Free';
   font-weight: 900;
   position: absolute;
@@ -96,7 +94,6 @@
   font-weight: 600;
 }
 
-/* Footer con botón */
 .privacy-footer {
   text-align: center;
   padding-top: 30px;
@@ -123,7 +120,6 @@
   color: white;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .privacy-content {
     padding: 30px 20px;

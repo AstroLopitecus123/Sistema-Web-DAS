@@ -2,7 +2,6 @@ package com.web.capas.application.decorator;
 
 import com.web.capas.application.service.notificacion.NotificacionService;
 
-//Se usa la clase abstracta para este decorator
 public abstract class NotificacionDecorator implements NotificacionService {
     
     protected NotificacionService notificacionDecorada;

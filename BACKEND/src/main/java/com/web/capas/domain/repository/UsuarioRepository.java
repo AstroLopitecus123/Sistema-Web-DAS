@@ -15,4 +15,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     boolean existsByUsername(String username);
     long countByActivoTrue();
     long countByRol(Usuario.Rol rol);
+    
+    java.util.List<Usuario> findByRolAndActivoTrueAndPlayerIdIsNotNull(Usuario.Rol rol);
 }

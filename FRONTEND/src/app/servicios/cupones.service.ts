@@ -1,4 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Cupon {
   id: number;
@@ -14,12 +17,76 @@ export interface Cupon {
   fechaUso?: string;
 }
 
+interface CuponResponse {
+  idCupon: number;
+  codigo: string;
+  tipoDescuento: string;
+  valorDescuento: number;
+  fechaInicio: string;
+  fechaFin: string;
+  cantidadDisponible?: number;
+  usosMaximosPorUsuario: number;
+  montoMinimoCompra: number;
+  activo: boolean;
+  fechaCreacion: string;
+  creadoPorAdmin: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class CuponesService {
+  private apiUrl = 'http://localhost:8089/api/v1/cupones';
 
-  // Categoriza los cupones en disponibles, usados y expirados
+  constructor(private http: HttpClient) {}
+
+  obtenerCuponesDisponibles(idUsuario: number): Observable<Cupon[]> {
+    return this.http.get<CuponResponse[]>(`${this.apiUrl}/disponibles/${idUsuario}`)
+      .pipe(
+        map(cupones => cupones.map(c => this.convertirACupon(c)))
+      );
+  }
+
+  obtenerCuponesUsados(idUsuario: number): Observable<Cupon[]> {
+    return this.http.get<CuponResponse[]>(`${this.apiUrl}/usados/${idUsuario}`)
+      .pipe(
+        map(cupones => cupones.map(c => this.convertirACupon(c, true)))
+      );
+  }
+
+  obtenerCuponesExpirados(idUsuario: number): Observable<Cupon[]> {
+    return this.http.get<CuponResponse[]>(`${this.apiUrl}/expirados/${idUsuario}`)
+      .pipe(
+        map(cupones => cupones.map(c => this.convertirACupon(c, false)))
+      );
+  }
+
+  private convertirACupon(response: CuponResponse, usado: boolean = false): Cupon {
+    let descripcion = '';
+    if (response.tipoDescuento === 'porcentaje') {
+      descripcion = `${response.valorDescuento}% de descuento`;
+    } else {
+      descripcion = `S/ ${response.valorDescuento} de descuento`;
+    }
+    
+    if (response.montoMinimoCompra && response.montoMinimoCompra > 0) {
+      descripcion += ` en compras mayores a S/ ${response.montoMinimoCompra}`;
+    }
+
+    return {
+      id: response.idCupon,
+      codigo: response.codigo,
+      descripcion: descripcion,
+      tipoDescuento: response.tipoDescuento as 'porcentaje' | 'monto_fijo',
+      valorDescuento: response.valorDescuento,
+      fechaInicio: response.fechaInicio,
+      fechaFin: response.fechaFin,
+      montoMinimo: response.montoMinimoCompra || 0,
+      activo: response.activo,
+      usado: usado
+    };
+  }
+
   categorizarCupones(cupones: Cupon[]): {
     cuponesDisponibles: Cupon[];
     cuponesUsados: Cupon[];
@@ -44,7 +111,6 @@ export class CuponesService {
     };
   }
 
-  // Calcula las estadísticas de cupones
   calcularEstadisticas(cuponesDisponibles: Cupon[], cuponesUsados: Cupon[]): {
     cuponesDisponibles: number;
     cuponesUsados: number;
@@ -64,7 +130,6 @@ export class CuponesService {
     };
   }
 
-  // Valida si un cupón es válido
   validarCupon(cupon: Cupon): { valido: boolean; mensaje?: string } {
     const ahora = new Date();
     const fechaFin = new Date(cupon.fechaFin);
@@ -84,7 +149,6 @@ export class CuponesService {
     return { valido: true };
   }
 
-  // Aplica un cupón a un total
   aplicarCupon(total: number, cupon: Cupon): number {
     if (cupon.tipoDescuento === 'porcentaje') {
       return total * (1 - cupon.valorDescuento / 100);

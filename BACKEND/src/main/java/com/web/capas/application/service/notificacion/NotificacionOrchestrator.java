@@ -7,7 +7,6 @@ import com.web.capas.application.observer.NotificacionEventPublisher;
 import com.web.capas.application.strategy.NotificacionStrategyContext;
 import org.springframework.stereotype.Service;
 
-// Orquestador que formatea, envía y publica el evento de notificación.
 @Service
 public class NotificacionOrchestrator {
 

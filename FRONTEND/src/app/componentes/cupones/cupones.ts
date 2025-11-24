@@ -49,98 +49,66 @@ export class Cupones implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Obtener datos del usuario actual
     this.usuario = this.authService.getUsuarioActual();
     
-    // Si no hay usuario logueado, redirigir al login
     if (!this.usuario) {
       this.router.navigate(['/login']);
       return;
     }
 
-    // Cargar cupones del usuario
     this.cargarCupones();
   }
 
   cargarCupones() {
-    this.cupones = [
-      {
-        id: 1,
-        codigo: 'BIENVENIDA20',
-        descripcion: '20% de descuento en tu primer pedido',
-        tipoDescuento: 'porcentaje',
-        valorDescuento: 20,
-        fechaInicio: '2024-01-01',
-        fechaFin: '2024-12-31',
-        montoMinimo: 30,
-        activo: true,
-        usado: false
+    if (!this.usuario?.idUsuario) {
+      return;
+    }
+
+    this.cuponesService.obtenerCuponesDisponibles(this.usuario.idUsuario).subscribe({
+      next: (cupones) => {
+        this.cuponesDisponibles = cupones;
+        this.actualizarEstadisticas();
       },
-      {
-        id: 2,
-        codigo: 'DESCUENTO10',
-        descripcion: 'S/ 10 de descuento en compras mayores a S/ 50',
-        tipoDescuento: 'monto_fijo',
-        valorDescuento: 10,
-        fechaInicio: '2024-01-01',
-        fechaFin: '2024-12-31',
-        montoMinimo: 50,
-        activo: true,
-        usado: false
-      },
-      {
-        id: 3,
-        codigo: 'PROMO15',
-        descripcion: '15% de descuento en hamburguesas',
-        tipoDescuento: 'porcentaje',
-        valorDescuento: 15,
-        fechaInicio: '2024-01-01',
-        fechaFin: '2024-06-30',
-        montoMinimo: 25,
-        activo: true,
-        usado: true,
-        fechaUso: '2024-03-15'
-      },
-      {
-        id: 4,
-        codigo: 'VERANO25',
-        descripcion: '25% de descuento en bebidas',
-        tipoDescuento: 'porcentaje',
-        valorDescuento: 25,
-        fechaInicio: '2024-01-01',
-        fechaFin: '2024-02-29',
-        montoMinimo: 20,
-        activo: false,
-        usado: false
-      },
-      {
-        id: 5,
-        codigo: 'FREESHIP',
-        descripcion: 'Envío gratis en compras mayores a S/ 40',
-        tipoDescuento: 'monto_fijo',
-        valorDescuento: 8,
-        fechaInicio: '2024-01-01',
-        fechaFin: '2024-12-31',
-        montoMinimo: 40,
-        activo: true,
-        usado: false
+      error: (err) => {
+        console.error('Error al cargar cupones disponibles:', err);
+        this.cuponesDisponibles = [];
       }
-    ];
+    });
 
-    this.categorizarCupones();
-    this.calcularEstadisticas();
+    this.cuponesService.obtenerCuponesUsados(this.usuario.idUsuario).subscribe({
+      next: (cupones) => {
+        this.cuponesUsados = cupones;
+        this.actualizarEstadisticas();
+      },
+      error: (err) => {
+        console.error('Error al cargar cupones usados:', err);
+        this.cuponesUsados = [];
+      }
+    });
+
+    this.cuponesService.obtenerCuponesExpirados(this.usuario.idUsuario).subscribe({
+      next: (cupones) => {
+        this.cuponesExpirados = cupones;
+        this.actualizarEstadisticas();
+      },
+      error: (err) => {
+        console.error('Error al cargar cupones expirados:', err);
+        this.cuponesExpirados = [];
+      }
+    });
   }
 
-  categorizarCupones() {
-    const categorizacion = this.cuponesService.categorizarCupones(this.cupones);
-    this.cuponesDisponibles = categorizacion.cuponesDisponibles;
-    this.cuponesUsados = categorizacion.cuponesUsados;
-    this.cuponesExpirados = categorizacion.cuponesExpirados;
+  actualizarEstadisticas() {
+    this.estadisticas.cuponesDisponibles = this.cuponesDisponibles.length;
+    this.estadisticas.cuponesUsados = this.cuponesUsados.length;
+    
+    this.estadisticas.ahorradoEsteMes = this.cuponesUsados.reduce((total, cupon) => {
+      // Aproximación: usar el valor del descuento como ahorro
+      return total + (cupon.tipoDescuento === 'porcentaje' ? 
+        (cupon.valorDescuento * 0.15) : cupon.valorDescuento);
+    }, 0);
   }
 
-  calcularEstadisticas() {
-    this.estadisticas = this.cuponesService.calcularEstadisticas(this.cuponesDisponibles, this.cuponesUsados);
-  }
 
   cambiarTab(tab: 'disponibles' | 'usados' | 'expirados') {
     this.tabActivo = tab;

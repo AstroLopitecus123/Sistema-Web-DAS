@@ -39,7 +39,6 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
-    // Obtiene solo los productos activos disponibles en el menú
     @Override
     public List<ProductoResponse> obtenerMenuDisponible() {
         try {
@@ -96,7 +95,6 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
-    // Busca productos activos por palabra clave en el nombre
     @Override
     public List<ProductoResponse> buscarProductos(String keyword) {
         try {

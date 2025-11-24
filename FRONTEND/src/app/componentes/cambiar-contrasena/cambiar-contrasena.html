@@ -1,5 +1,5 @@
 <div class="change-password-container">
-  <!-- Header -->
+  
   <div class="change-header">
     <div class="header-content">
       <button class="btn-back" (click)="cancelar()">
@@ -13,10 +13,10 @@
     </div>
   </div>
 
-  <!-- Formulario -->
+  
   <div class="change-form-container">
     <form (ngSubmit)="onSubmit()" class="change-form">
-      <!-- Mensajes de Error y Éxito -->
+      
       @if (errorMessage) {
         <div class="alert alert-error">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -38,7 +38,7 @@
         </div>
       }
 
-      <!-- Información de Seguridad -->
+      
       <div class="security-info">
         <div class="security-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -53,7 +53,7 @@
         </div>
       </div>
 
-      <!-- Formulario de Contraseñas -->
+      
       <div class="form-section">
         <h2>Cambiar Contraseña</h2>
         
@@ -169,7 +169,7 @@
         </div>
       </div>
 
-      <!-- Botones de Acción -->
+      
       <div class="form-actions">
         <button type="button" class="btn-cancel" (click)="cancelar()">
           Cancelar

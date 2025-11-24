@@ -1,6 +1,4 @@
-/* ===========================================
-   DISEÑO DE LOGIN CON DOS COLUMNAS
-   =========================================== */
+
 
 .login-page-container {
     height: 100vh;
@@ -12,7 +10,6 @@
     left: 0;
 }
 
-/* Lado izquierdo */
 .login-promo-section {
     background: #F4CEA1;
     display: flex;
@@ -113,7 +110,6 @@
     font-weight: 500;
 }
 
-/* Lado derecho - formulario */
 .login-form-section {
     background: white;
     display: flex;
@@ -146,7 +142,6 @@
     margin: 0;
 }
 
-/* Campos del form */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -207,7 +202,6 @@
     outline: none;
 }
 
-/* Checkbox */
 .form-check-input {
     width: 18px;
     height: 18px;
@@ -226,7 +220,6 @@
     margin-left: 0.5rem;
 }
 
-/* Botón */
 .btn-login {
     background: linear-gradient(135deg, #E67E22, #D35400);
     border: none;
@@ -250,8 +243,6 @@
     transform: none;
 }
 
-
-/* Enlaces */
 .forgot-password-link {
     color: #E67E22;
     text-decoration: none;
@@ -277,7 +268,6 @@
     text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 992px) {
     .login-promo-section {
         display: none;

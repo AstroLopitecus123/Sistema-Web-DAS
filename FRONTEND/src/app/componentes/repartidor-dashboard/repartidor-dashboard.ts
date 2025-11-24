@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { AuthService } from '../../servicios/auth.service';
 import { RepartidorService } from '../../servicios/repartidor.service';
 import { UsuarioService } from '../../servicios/usuario.service';
 import { NotificacionService } from '../../servicios/notificacion.service';
+import { OneSignalService } from '../../servicios/onesignal.service';
 import { Usuario } from '../../modelos/usuario.model';
 
 @Component({
@@ -15,24 +16,15 @@ import { Usuario } from '../../modelos/usuario.model';
   templateUrl: './repartidor-dashboard.html',
   styleUrls: ['./repartidor-dashboard.css']
 })
-export class RepartidorDashboard implements OnInit {
-  // Sección activa
+export class RepartidorDashboard implements OnInit, OnDestroy {
   seccionActiva: string = 'dashboard';
-
-  // Información del repartidor (se carga dinámicamente)
   usuario: Usuario | null = null;
-
-  // Estadísticas del día (se cargan dinámicamente desde el backend)
   entregasHoy = 0;
   ganadoHoy = 0;
   entregasMes = 0;
-
-  // Contadores de pedidos (se calculan dinámicamente)
   pedidosPendientes = 0;
   pedidosEnCurso = 0;
   pedidosCompletados = 0;
-  
-  // Modal de confirmación
   mostrarModalSalir = false;
   mostrarModalAceptarPedido = false;
   mostrarModalEntregarPedido = false;
@@ -51,65 +43,48 @@ export class RepartidorDashboard implements OnInit {
   mensajeHistorialCliente: string | null = null;
   descripcionProblema: string = '';
   enviandoReporte = false;
-  
-  // Modo de edición
-  modoEdicion = false;
+  mostrarModalEditarPerfil = false;
   guardando = false;
-  mensajeError: string | null = null;
-  mensajeExito: string | null = null;
-  
-  // Datos para edición
   datosEdicion = {
     nombre: '',
     apellido: '',
     telefono: '',
     direccion: ''
   };
-  
-  // Modo de cambiar contraseña
-  modoCambiarContrasena = false;
+  mostrarModalCambiarContrasena = false;
   guardandoContrasena = false;
-  mensajeErrorContrasena: string | null = null;
-  mensajeExitoContrasena: string | null = null;
-  
-  // Mostrar contraseñas
   mostrarContrasenaActual = false;
   mostrarNuevaContrasena = false;
   mostrarConfirmarContrasena = false;
-  
-  // Datos para cambiar contraseña
   datosContrasena = {
     contrasenaActual: '',
     nuevaContrasena: '',
     confirmarContrasena: ''
   };
-
-  // Lista de pedidos 
   pedidos: any[] = [];
-
-  // Historial de entregas
   historialEntregas: any[] = [];
 
-  // Perfil del repartidor
   perfilRepartidor = {
-    nombre: 'Carlos',
-    apellido: 'Rodríguez',
-    email: 'carlos.repartidor@tienda.com',
-    telefono: '987 654 321',
-    direccion: 'Av. Principal 123, Lima',
-    fechaRegistro: '2024-01-01',
-    totalEntregas: 156,
-    gananciaTotal: 2340.50
+    nombre: '',
+    apellido: '',
+    email: '',
+    telefono: '',
+    direccion: '',
+    fechaRegistro: '',
+    totalEntregas: 0,
+    gananciaTotal: 0
   };
 
   tabActivo = 'pendientes';
+  private intervaloActualizacion: any = null;
 
   constructor(
     private router: Router,
     private authService: AuthService,
     private repartidorService: RepartidorService,
     private usuarioService: UsuarioService,
-    private notificacionService: NotificacionService
+    private notificacionService: NotificacionService,
+    private oneSignalService: OneSignalService
   ) {}
 
   ngOnInit() {
@@ -117,64 +92,201 @@ export class RepartidorDashboard implements OnInit {
     this.cargarPedidos();
     this.cargarHistorialEntregas();
     this.cargarEstadisticas();
+    
+    this.intervaloActualizacion = setInterval(() => {
+      this.cargarPedidos();
+      this.cargarEstadisticas();
+    }, 10000);
+    
+    setTimeout(() => {
+      if (this.usuario?.idUsuario && this.usuario?.rol === 'repartidor') {
+        this.oneSignalService.inicializarOneSignal(this.usuario.idUsuario).then(playerId => {
+          if (playerId) {
+            this.configurarListenerNotificaciones();
+          }
+        }).catch(error => {
+          console.error('Error al inicializar OneSignal:', error);
+        });
+      }
+    }, 1000);
   }
+
+  ngOnDestroy() {
+    if (this.intervaloActualizacion) {
+      clearInterval(this.intervaloActualizacion);
+    }
+  }
+
+  configurarListenerNotificaciones() {
+    if (typeof window === 'undefined' || !(window as any).OneSignal) {
+      return;
+    }
+
+    const OneSignal = (window as any).OneSignal;
+    
+    if (OneSignal.Notifications?.addEventListener) {
+      OneSignal.Notifications.addEventListener('click', (event: any) => {
+        const pedidoId = event?.notification?.data?.pedidoId || 
+                        event?.notification?.additionalData?.pedidoId ||
+                        event?.data?.pedidoId;
+        
+        if (!pedidoId) return;
+        
+        this.seccionActiva = 'dashboard';
+        this.tabActivo = 'pendientes';
+        
+        const rutaActual = this.router.url.split('?')[0];
+        if (rutaActual !== '/repartidor/dashboard' && rutaActual !== '/repartidor-dashboard') {
+          this.router.navigate(['/repartidor/dashboard']).then(() => {
+            this.cargarPedidoYAbirModal(Number(pedidoId));
+          });
+        } else {
+          this.cargarPedidoYAbirModal(Number(pedidoId));
+        }
+      });
+      
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', () => {
+        this.cargarPedidos();
+        this.cargarEstadisticas();
+      });
+    }
+  }
+
+  cargarPedidoYAbirModal(pedidoId: number) {
+    const pedidoExistente = this.pedidos.find(p => p.id === pedidoId);
+    
+    if (pedidoExistente) {
+      if (pedidoExistente.estado === 'pendiente') {
+        this.pedidoSeleccionado = pedidoExistente;
+        this.mostrarModalAceptarPedido = true;
+      } else {
+        this.tabActivo = 'en_curso';
+        this.notificacionService.mostrarInfo('Pedido encontrado', `El pedido #${pedidoId} ya está en curso`);
+      }
+      return;
+    }
+    
+    this.repartidorService.obtenerPedidosDisponibles().subscribe({
+      next: (pedidos: any[]) => {
+        const pedidosMapeados = pedidos.map(p => this.mapearPedido(p));
+        const pedidoEncontrado = pedidosMapeados.find(p => p.id === pedidoId);
+        
+        if (pedidoEncontrado) {
+          const existeEnLista = this.pedidos.find(p => p.id === pedidoId);
+          if (!existeEnLista) {
+            this.pedidos.push(pedidoEncontrado);
+            this.actualizarContadores();
+          }
+          
+          this.pedidoSeleccionado = pedidoEncontrado;
+          this.mostrarModalAceptarPedido = true;
+        } else {
+          this.notificacionService.mostrarError('Pedido no encontrado', `No se pudo encontrar el pedido #${pedidoId}`);
+        }
+      },
+      error: () => {
+        this.notificacionService.mostrarError('Error', 'No se pudo cargar el pedido');
+      }
+    });
+  }
+
+
 
   cargarDatosRepartidor() {
     this.usuario = this.authService.getUsuarioActual();
+    if (this.usuario) {
+      this.perfilRepartidor.nombre = this.usuario.nombre || '';
+      this.perfilRepartidor.apellido = this.usuario.apellido || '';
+      this.perfilRepartidor.email = this.usuario.email || '';
+      this.perfilRepartidor.telefono = this.usuario.telefono || '';
+      this.perfilRepartidor.direccion = this.usuario.direccion || '';
+      
+      if (this.usuario.idUsuario) {
+        this.usuarioService.obtenerPerfil(this.usuario.idUsuario).subscribe({
+          next: (response: any) => {
+            if (response) {
+              if (response.fechaRegistro) {
+                this.perfilRepartidor.fechaRegistro = response.fechaRegistro;
+              }
+            }
+          },
+          error: (err: any) => {
+            if (this.usuario?.fechaRegistro) {
+              this.perfilRepartidor.fechaRegistro = this.usuario.fechaRegistro;
+            }
+          }
+        });
+      } else if (this.usuario.fechaRegistro) {
+        this.perfilRepartidor.fechaRegistro = this.usuario.fechaRegistro;
+      }
+    }
   }
 
   cargarPedidos() {
     if (!this.usuario || !this.usuario.idUsuario) {
       return;
     }
+    
+    let pedidosDisponibles: any[] = [];
+    let pedidosAsignados: any[] = [];
+    let completados = 0;
+    
+    const actualizarLista = () => {
+      completados++;
+      if (completados === 2) {
+        const todosPedidos: any[] = [];
+        const pedidosMap = new Map<number, any>();
+        
+        pedidosDisponibles.forEach(p => {
+          pedidosMap.set(p.id, p);
+        });
+        
+        pedidosAsignados.forEach(p => {
+          pedidosMap.set(p.id, p);
+        });
+        
+        todosPedidos.push(...Array.from(pedidosMap.values()));
+        this.pedidos = todosPedidos;
+        this.actualizarContadores();
+      }
+    };
+    
     this.repartidorService.obtenerPedidosDisponibles().subscribe({
       next: (pedidos: any[]) => {
-        this.pedidos = pedidos.map(p => this.mapearPedido(p));
-        this.actualizarContadores();
+        pedidosDisponibles = pedidos.map(p => this.mapearPedido(p));
+        actualizarLista();
       },
       error: (err) => {
         console.error('Error al cargar pedidos:', err);
+        actualizarLista();
       }
     });
     
     this.repartidorService.obtenerMisPedidos(this.usuario.idUsuario).subscribe({
       next: (pedidos: any[]) => {
-        const pedidosAsignados = pedidos.map(p => this.mapearPedido(p));
-        const todosPedidos = [...this.pedidos];
-        pedidosAsignados.forEach(p => {
-          const index = todosPedidos.findIndex(ep => ep.id === p.id);
-          if (index >= 0) {
-            todosPedidos[index] = p;
-          } else {
-            todosPedidos.push(p);
-          }
-        });
-        this.pedidos = todosPedidos;
-        this.actualizarContadores();
+        pedidosAsignados = pedidos.map(p => this.mapearPedido(p));
+        actualizarLista();
       },
       error: (err) => {
         console.error('Error al cargar mis pedidos:', err);
+        actualizarLista();
       }
     });
   }
 
   mapearPedido(pedidoBackend: any): any {
-    // Mapear estado del backend al formato del frontend
     let estadoFrontend = 'pendiente';
     const estadoBackend = pedidoBackend.estadoPedido || '';
+    const estadoNormalizado = estadoBackend.toLowerCase().trim().replace(/\s+/g, '_');
     
-    // Normalizar el estado del backend (en caso de que venga con diferentes formatos)
-    const estadoNormalizado = estadoBackend.toLowerCase().trim();
-    
-    if (estadoNormalizado === 'en_camino' || estadoNormalizado === 'en camino') {
+    if (estadoNormalizado === 'en_camino' || estadoNormalizado === 'en_camino') {
       estadoFrontend = 'en_curso';
     } else if (estadoNormalizado === 'entregado') {
       estadoFrontend = 'entregado';
-    } else if (estadoNormalizado === 'aceptado' || estadoNormalizado === 'en_preparacion' || estadoNormalizado === 'en preparacion' || estadoNormalizado === 'pendiente') {
+    } else if (estadoNormalizado === 'aceptado' || estadoNormalizado === 'en_preparacion' || estadoNormalizado === 'en_preparacion' || estadoNormalizado === 'pendiente') {
       estadoFrontend = 'pendiente';
     }
     
-    // Extraer hora del pedido
     let horaPedido = '';
     if (pedidoBackend.fechaPedido) {
       try {
@@ -208,7 +320,12 @@ export class RepartidorDashboard implements OnInit {
       fechaPedido: pedidoBackend.fechaPedido || '',
       problemaReportado: pedidoBackend.problemaReportado || false,
       detalleProblema: pedidoBackend.detalleProblema || null,
-      fechaProblema: pedidoBackend.fechaProblema || null
+      fechaProblema: pedidoBackend.fechaProblema || null,
+      montoPagadoCliente: pedidoBackend.montoPagadoCliente ? parseFloat(pedidoBackend.montoPagadoCliente.toString()) : undefined,
+      pagoEfectivoConfirmadoPorCliente: pedidoBackend.pagoEfectivoConfirmadoPorCliente || false,
+      pagoEfectivoConfirmadoPorRepartidor: pedidoBackend.pagoEfectivoConfirmadoPorRepartidor || false,
+      fechaConfirmacionPagoCliente: pedidoBackend.fechaConfirmacionPagoCliente || undefined,
+      fechaConfirmacionPagoRepartidor: pedidoBackend.fechaConfirmacionPagoRepartidor || undefined
     };
   }
 
@@ -220,10 +337,6 @@ export class RepartidorDashboard implements OnInit {
 
   cambiarTab(tab: string) {
     this.tabActivo = tab;
-    this.filtrarPedidos();
-  }
-
-  filtrarPedidos() {
   }
 
   aceptarPedido(pedidoId: number) {
@@ -232,7 +345,6 @@ export class RepartidorDashboard implements OnInit {
       return;
     }
 
-    // Buscar el pedido completo en la lista
     const pedidoCompleto = this.pedidos.find(p => p.id === pedidoId);
     if (!pedidoCompleto) {
       this.notificacionService.mostrarError('Error', 'No se pudo encontrar el pedido');
@@ -261,18 +373,20 @@ export class RepartidorDashboard implements OnInit {
           this.notificacionService.mostrarExito('Pedido aceptado', 'El pedido ha sido aceptado correctamente');
           this.cerrarModalAceptarPedido();
           
-          // Cambiar automáticamente a la pestaña "En Curso" 
-          this.tabActivo = 'en_curso';
-          
-          // Actualizar el pedido en la lista 
-          const pedidoIndex = this.pedidos.findIndex(p => p.id === this.pedidoSeleccionado?.id);
-          if (pedidoIndex >= 0) {
-            this.pedidos[pedidoIndex].estado = 'en_curso';
-            this.actualizarContadores();
+          const pedidoId = this.pedidoSeleccionado?.id;
+          if (pedidoId) {
+            const pedidoIndex = this.pedidos.findIndex(p => p.id === pedidoId);
+            if (pedidoIndex >= 0) {
+              this.pedidos[pedidoIndex].estado = 'en_curso';
+            }
           }
           
-          // Recargar pedidos del servidor para obtener datos actualizados
           this.cargarPedidos();
+          
+          setTimeout(() => {
+            this.tabActivo = 'en_curso';
+            this.actualizarContadores();
+          }, 300);
         } else {
           this.notificacionService.mostrarError('Error', 'Error al aceptar el pedido');
           this.cerrarModalAceptarPedido();
@@ -293,7 +407,6 @@ export class RepartidorDashboard implements OnInit {
   }
 
   completarEntrega(pedidoId: number) {
-    // Buscar el pedido completo en la lista
     const pedidoCompleto = this.pedidos.find(p => p.id === pedidoId);
     if (!pedidoCompleto) {
       this.notificacionService.mostrarError('Error', 'No se pudo encontrar el pedido');
@@ -423,20 +536,13 @@ export class RepartidorDashboard implements OnInit {
         if (response.success) {
           this.notificacionService.mostrarExito('Pedido entregado', 'El pedido ha sido marcado como entregado correctamente');
           this.cerrarModalEntregarPedido();
-          
-          // Cambiar automáticamente a la pestaña "Completadas" 
           this.tabActivo = 'completadas';
-          
-          // Actualizar el pedido en la lista
           const pedidoIndex = this.pedidos.findIndex(p => p.id === this.pedidoParaEntregar?.id);
           if (pedidoIndex >= 0) {
             this.pedidos[pedidoIndex].estado = 'entregado';
             this.actualizarContadores();
           }
-          
-          // Recargar pedidos del servidor para obtener datos actualizados
           this.cargarPedidos();
-          // Actualizar estadísticas después de marcar como entregado
           this.cargarEstadisticas();
         } else {
           this.notificacionService.mostrarError('Error', 'Error al marcar el pedido como entregado');
@@ -453,6 +559,57 @@ export class RepartidorDashboard implements OnInit {
 
   salir() {
     this.router.navigate(['/login']);
+  }
+
+  mostrarConfirmacionPagoRepartidor(pedido: any): boolean {
+    const metodoPago = (pedido.metodoPago || '').toLowerCase();
+    const estado = (pedido.estado || '').toLowerCase();
+    return metodoPago === 'efectivo' && 
+           (estado === 'en_curso' || estado === 'en_camino' || estado === 'en camino') &&
+           pedido.pagoEfectivoConfirmadoPorCliente === true;
+  }
+
+  puedeMarcarComoEntregado(pedido: any): boolean {
+    const metodoPago = (pedido.metodoPago || '').toLowerCase();
+    
+    if (metodoPago !== 'efectivo') {
+      return true;
+    }
+    
+    return pedido.pagoEfectivoConfirmadoPorCliente === true && 
+           pedido.pagoEfectivoConfirmadoPorRepartidor === true;
+  }
+
+  calcularVuelto(pedido: any): number {
+    if (pedido.metodoPago?.toLowerCase() === 'efectivo' && pedido.montoPagadoCliente && pedido.total) {
+      return pedido.montoPagadoCliente - pedido.total;
+    }
+    return 0;
+  }
+
+  confirmarPagoEfectivoRepartidor(idPedido: number, event: Event): void {
+    event.stopPropagation();
+    
+    if (!this.usuario || !this.usuario.idUsuario) {
+      console.error('No hay usuario autenticado');
+      return;
+    }
+
+    this.repartidorService.confirmarPagoEfectivo(idPedido, this.usuario.idUsuario).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.notificacionService.mostrarExito('Pago confirmado', 'Has confirmado la recepción del pago en efectivo. Ahora puedes marcar el pedido como entregado.');
+          this.cargarPedidos();
+        } else {
+          this.notificacionService.mostrarError('Error', 'Error al confirmar el pago');
+        }
+      },
+      error: (error) => {
+        console.error('Error al confirmar pago:', error);
+        const mensaje = error.error?.mensaje || error.error?.message || 'Error al confirmar el pago';
+        this.notificacionService.mostrarError('Error', mensaje);
+      }
+    });
   }
 
   cargarHistorialEntregas() {
@@ -527,6 +684,8 @@ export class RepartidorDashboard implements OnInit {
         this.entregasHoy = estadisticas.entregasHoy || 0;
         this.ganadoHoy = estadisticas.ganadoHoy || 0;
         this.entregasMes = estadisticas.entregasMes || 0;
+        this.perfilRepartidor.totalEntregas = estadisticas.totalEntregas || 0;
+        this.perfilRepartidor.gananciaTotal = estadisticas.gananciaTotal || 0;
       },
       error: (err) => {
         console.error('Error al cargar estadísticas:', err);
@@ -552,7 +711,7 @@ export class RepartidorDashboard implements OnInit {
   }
 
   obtenerPedidosPorEstado(estado: string) {
-    return this.pedidos.filter(pedido => {
+    const pedidosFiltrados = this.pedidos.filter(pedido => {
       switch(estado) {
         case 'pendientes':
           return pedido.estado === 'pendiente';
@@ -564,6 +723,18 @@ export class RepartidorDashboard implements OnInit {
           return false;
       }
     });
+    
+    return pedidosFiltrados.sort((a, b) => {
+      if (b.id && a.id) {
+        return b.id - a.id;
+      }
+      if (b.fechaPedido && a.fechaPedido) {
+        const fechaB = new Date(b.fechaPedido).getTime();
+        const fechaA = new Date(a.fechaPedido).getTime();
+        return fechaB - fechaA;
+      }
+      return 0;
+    });
   }
 
   navegarA(seccion: string, event?: Event) {
@@ -571,12 +742,10 @@ export class RepartidorDashboard implements OnInit {
       event.preventDefault();
     }
     
-    // Solo permitir navegación a secciones válidas
     const seccionesValidas = ['dashboard', 'historial', 'perfil'];
     if (seccionesValidas.includes(seccion)) {
       this.seccionActiva = seccion;
       
-      // Cargar historial cuando se navega a esa sección
       if (seccion === 'historial') {
         this.cargarHistorialEntregas();
       }
@@ -599,13 +768,8 @@ export class RepartidorDashboard implements OnInit {
     this.salir();
   }
 
-  toggleEditarPerfil() {
-    this.modoEdicion = !this.modoEdicion;
-    this.mensajeError = null;
-    this.mensajeExito = null;
-    
-    if (this.modoEdicion && this.usuario) {
-      // Cargar datos actuales para edición
+  abrirModalEditarPerfil() {
+    if (this.usuario) {
       this.datosEdicion = {
         nombre: this.usuario.nombre || '',
         apellido: this.usuario.apellido || '',
@@ -613,32 +777,33 @@ export class RepartidorDashboard implements OnInit {
         direccion: this.usuario.direccion || ''
       };
     }
+    this.mostrarModalEditarPerfil = true;
+  }
+
+  cerrarModalEditarPerfil() {
+    this.mostrarModalEditarPerfil = false;
   }
 
   guardarCambiosPerfil() {
     if (!this.usuario || !this.usuario.idUsuario) {
-      this.mensajeError = 'No se pudo identificar el usuario';
+      this.notificacionService.mostrarError('Error', 'No se pudo identificar el usuario');
       return;
     }
 
-    // Validar campos
     if (!this.datosEdicion.nombre || !this.datosEdicion.apellido) {
-      this.mensajeError = 'El nombre y apellido son obligatorios';
+      this.notificacionService.mostrarError('Error', 'El nombre y apellido son obligatorios');
       return;
     }
 
     this.guardando = true;
-    this.mensajeError = null;
-    this.mensajeExito = null;
 
     this.usuarioService.actualizarPerfil(this.usuario.idUsuario, this.datosEdicion).subscribe({
       next: (response: any) => {
         this.guardando = false;
         
         if (response.success) {
-          this.mensajeExito = 'Información actualizada correctamente';
+          this.notificacionService.mostrarExito('Éxito', 'Información actualizada correctamente');
           
-          // Actualizar datos del usuario en memoria y AuthService
           if (this.usuario && response.usuario) {
             const usuarioActualizado: Usuario = {
               idUsuario: response.usuario.idUsuario,
@@ -655,13 +820,9 @@ export class RepartidorDashboard implements OnInit {
             this.authService.actualizarUsuarioActual(usuarioActualizado);
           }
           
-          // Cerrar formulario después de 2 segundos
-          setTimeout(() => {
-            this.modoEdicion = false;
-            this.mensajeExito = null;
-          }, 2000);
+          this.mostrarModalEditarPerfil = false;
         } else {
-          this.mensajeError = response.mensaje || 'Error al actualizar el perfil';
+          this.notificacionService.mostrarError('Error', response.mensaje || 'Error al actualizar el perfil');
         }
       },
       error: (err: any) => {
@@ -669,33 +830,30 @@ export class RepartidorDashboard implements OnInit {
         console.error('Error al actualizar perfil:', err);
         
         if (err.status === 400 && err.error?.mensaje) {
-          this.mensajeError = err.error.mensaje;
+          this.notificacionService.mostrarError('Error', err.error.mensaje);
         } else if (err.status === 404) {
-          this.mensajeError = 'Usuario no encontrado';
+          this.notificacionService.mostrarError('Error', 'Usuario no encontrado');
         } else {
-          this.mensajeError = 'Error al actualizar la información. Por favor, intenta nuevamente.';
+          this.notificacionService.mostrarError('Error', 'Error al actualizar la información. Por favor, intenta nuevamente.');
         }
       }
     });
   }
 
-  toggleCambiarContrasena() {
-    this.modoCambiarContrasena = !this.modoCambiarContrasena;
-    this.mensajeErrorContrasena = null;
-    this.mensajeExitoContrasena = null;
-    
-    if (this.modoCambiarContrasena) {
-      // Limpiar datos del formulario
-      this.datosContrasena = {
-        contrasenaActual: '',
-        nuevaContrasena: '',
-        confirmarContrasena: ''
-      };
-      // Restablecer visibilidad de contraseñas
-      this.mostrarContrasenaActual = false;
-      this.mostrarNuevaContrasena = false;
-      this.mostrarConfirmarContrasena = false;
-    }
+  abrirModalCambiarContrasena() {
+    this.datosContrasena = {
+      contrasenaActual: '',
+      nuevaContrasena: '',
+      confirmarContrasena: ''
+    };
+    this.mostrarContrasenaActual = false;
+    this.mostrarNuevaContrasena = false;
+    this.mostrarConfirmarContrasena = false;
+    this.mostrarModalCambiarContrasena = true;
+  }
+
+  cerrarModalCambiarContrasena() {
+    this.mostrarModalCambiarContrasena = false;
   }
 
   toggleMostrarContrasenaActual() {
@@ -712,29 +870,26 @@ export class RepartidorDashboard implements OnInit {
 
   guardarNuevaContrasena() {
     if (!this.usuario || !this.usuario.idUsuario) {
-      this.mensajeErrorContrasena = 'No se pudo identificar el usuario';
+      this.notificacionService.mostrarError('Error', 'No se pudo identificar el usuario');
       return;
     }
 
-    // Validar campos
     if (!this.datosContrasena.contrasenaActual) {
-      this.mensajeErrorContrasena = 'La contraseña actual es obligatoria';
+      this.notificacionService.mostrarError('Error', 'La contraseña actual es obligatoria');
       return;
     }
 
     if (!this.datosContrasena.nuevaContrasena || this.datosContrasena.nuevaContrasena.length < 6) {
-      this.mensajeErrorContrasena = 'La nueva contraseña debe tener al menos 6 caracteres';
+      this.notificacionService.mostrarError('Error', 'La nueva contraseña debe tener al menos 6 caracteres');
       return;
     }
 
     if (this.datosContrasena.nuevaContrasena !== this.datosContrasena.confirmarContrasena) {
-      this.mensajeErrorContrasena = 'Las contraseñas no coinciden';
+      this.notificacionService.mostrarError('Error', 'Las contraseñas no coinciden');
       return;
     }
 
     this.guardandoContrasena = true;
-    this.mensajeErrorContrasena = null;
-    this.mensajeExitoContrasena = null;
 
     this.authService.cambiarContrasena(
       this.usuario.idUsuario,
@@ -745,7 +900,7 @@ export class RepartidorDashboard implements OnInit {
         this.guardandoContrasena = false;
         
         if (response.success) {
-          this.mensajeExitoContrasena = 'Contraseña actualizada correctamente';
+          this.notificacionService.mostrarExito('Éxito', 'Contraseña actualizada correctamente');
           
           // Limpiar formulario
           this.datosContrasena = {
@@ -754,13 +909,9 @@ export class RepartidorDashboard implements OnInit {
             confirmarContrasena: ''
           };
           
-          // Cerrar formulario después de 2 segundos
-          setTimeout(() => {
-            this.modoCambiarContrasena = false;
-            this.mensajeExitoContrasena = null;
-          }, 2000);
+          this.mostrarModalCambiarContrasena = false;
         } else {
-          this.mensajeErrorContrasena = response.mensaje || 'Error al cambiar la contraseña';
+          this.notificacionService.mostrarError('Error', response.mensaje || 'Error al cambiar la contraseña');
         }
       },
       error: (err: any) => {
@@ -768,11 +919,11 @@ export class RepartidorDashboard implements OnInit {
         console.error('Error al cambiar contraseña:', err);
         
         if (err.status === 401 && err.error?.mensaje) {
-          this.mensajeErrorContrasena = err.error.mensaje;
+          this.notificacionService.mostrarError('Error', err.error.mensaje);
         } else if (err.status === 400 && err.error?.mensaje) {
-          this.mensajeErrorContrasena = err.error.mensaje;
+          this.notificacionService.mostrarError('Error', err.error.mensaje);
         } else {
-          this.mensajeErrorContrasena = 'Error al cambiar la contraseña. Por favor, intenta nuevamente.';
+          this.notificacionService.mostrarError('Error', 'Error al cambiar la contraseña. Por favor, intenta nuevamente.');
         }
       }
     });

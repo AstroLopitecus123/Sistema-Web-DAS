@@ -1,4 +1,4 @@
-/* Notificación Toast */
+
 .notificacion-toast {
   position: fixed;
   top: 20px;
@@ -59,7 +59,6 @@
   color: #495057;
 }
 
-/* Barra de progreso */
 .notificacion-progreso {
   height: 3px;
   background: rgba(0, 0, 0, 0.1);
@@ -75,7 +74,6 @@
   }
 }
 
-/* Tipos de notificación */
 .notificacion-exito {
   border-left: 4px solid #28a745;
 }
@@ -124,7 +122,6 @@
   background: linear-gradient(90deg, #17a2b8, #3498db);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .notificacion-toast {
     top: 10px;
@@ -134,5 +131,4 @@
     max-width: none;
   }
 }
-
 

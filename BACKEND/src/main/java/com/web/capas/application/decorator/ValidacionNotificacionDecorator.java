@@ -3,10 +3,6 @@ package com.web.capas.application.decorator;
 import com.web.capas.application.service.notificacion.NotificacionService;
 import com.web.capas.domain.ServiceException;
 
-
-//valida los datos antes de enviar la notificación, asegura que el destinatario y mensaje cumplan con los requisitos.
-
-
 public class ValidacionNotificacionDecorator extends NotificacionDecorator {
 
     public ValidacionNotificacionDecorator(NotificacionService notificacionDecorada) {

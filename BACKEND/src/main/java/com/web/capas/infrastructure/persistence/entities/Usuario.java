@@ -46,6 +46,9 @@ public class Usuario {
     private LocalDateTime fechaRegistro;
     
     private Boolean activo;
+    
+    @Column(name = "player_id", length = 255)
+    private String playerId;
 
     public Integer getIdUsuario() {
         return idUsuario;
@@ -133,5 +136,13 @@ public class Usuario {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
     }
 }

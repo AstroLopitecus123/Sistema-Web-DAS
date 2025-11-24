@@ -1,4 +1,4 @@
-/* Contenedor Principal */
+
 .edit-profile-container {
   max-width: 800px;
   margin: 0 auto;
@@ -7,7 +7,6 @@
   min-height: 100vh;
 }
 
-/* Header */
 .edit-header {
   background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   border-radius: 20px;
@@ -76,7 +75,6 @@
   margin: 0;
 }
 
-/* Contenedor del Formulario */
 .edit-form-container {
   background: white;
   border-radius: 16px;
@@ -97,13 +95,11 @@
   background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
 }
 
-/* Formulario */
 .edit-form {
   position: relative;
   z-index: 1;
 }
 
-/* Secciones del Formulario */
 .form-section {
   margin-bottom: 40px;
 }
@@ -117,14 +113,12 @@
   border-bottom: 2px solid #f8f9fa;
 }
 
-/* Filas del Formulario */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
-/* Grupos de Formulario */
 .form-group {
   margin-bottom: 25px;
 }
@@ -170,7 +164,6 @@
   min-height: 100px;
 }
 
-/* Campo de solo lectura */
 .readonly-input {
   background: #e9ecef !important;
   color: #6c757d !important;
@@ -213,7 +206,6 @@
   flex-shrink: 0;
 }
 
-/* Alertas */
 .alert {
   display: flex;
   align-items: center;
@@ -244,7 +236,6 @@
   flex-shrink: 0;
 }
 
-/* Botones de Acción */
 .form-actions {
   display: flex;
   gap: 15px;
@@ -305,7 +296,6 @@
   stroke-width: 2;
 }
 
-/* Spinner */
 .spinner {
   animation: spin 1s linear infinite;
 }
@@ -319,7 +309,6 @@
   }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .edit-profile-container {
     padding: 20px 15px;

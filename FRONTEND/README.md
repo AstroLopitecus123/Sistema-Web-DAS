@@ -40,6 +40,7 @@ Frontend desarrollado con **Angular 20** implementando arquitectura de component
 | **Routing** | Angular Router | 20.2.0 | `Routes`, `CanActivate` |
 | **Forms** | Angular Forms | 20.2.0 | `FormsModule`, `ngModel` |
 | **Pagos** | Stripe.js | 8.0.0 | `loadStripe`, `StripeElements` |
+| **Notificaciones Push** | OneSignal SDK | 16.x | `OneSignal.init`, `OneSignal.User` |
 
 ## Prerrequisitos
 
@@ -90,6 +91,7 @@ src/
 │   │   ├── pedidos/          # Historial de pedidos
 │   │   ├── perfil-usuario/   # Perfil del usuario
 │   │   ├── registro/         # Registro de usuarios
+│   │   ├── repartidor-dashboard/ # Dashboard de repartidor
 │   │   └── ...
 │   │
 │   ├── guards/               # Guards de autenticación
@@ -111,6 +113,9 @@ src/
 │   │   ├── pago.service.ts   # Integración Stripe
 │   │   ├── personalizacion.service.ts # Opciones de personalización
 │   │   ├── usuario.service.ts # Gestión de usuarios
+│   │   ├── onesignal.service.ts # Notificaciones push OneSignal
+│   │   ├── configuracion.service.ts # Configuración dinámica
+│   │   ├── repartidor.service.ts # Servicios de repartidor
 │   │   └── ...
 │   │
 │   ├── app.routes.ts         # Configuración de rutas
@@ -331,6 +336,17 @@ canActivate(): boolean {
 ### RepartidorGuard
 Protege rutas exclusivas de repartidores.
 
+```typescript
+canActivate(): boolean {
+  const usuario = this.authService.getUsuarioActual();
+  if (usuario && usuario.rol === 'repartidor') {
+    return true;
+  }
+  this.router.navigate(['/menu']);
+  return false;
+}
+```
+
 ## Modelos TypeScript
 
 ### Usuario
@@ -414,7 +430,7 @@ export interface ItemCarrito {
 - `/admin/pedidos` - Gestión de pedidos (AdminGuard)
 
 ### Rutas de Repartidor
-- `/repartidor/dashboard` - Dashboard de repartidor (RepartidorGuard)
+- `/repartidor/dashboard` - Dashboard de repartidor con notificaciones push (RepartidorGuard)
 
 ## Funcionalidades Principales
 
@@ -464,6 +480,17 @@ export interface ItemCarrito {
 - Gestión de pedidos con cambio de estados
 - Gestión de usuarios (CRUD, roles, estado)
 - Sistema de cupones y promociones
+- Configuración dinámica del sistema (porcentaje de costo)
+- Gestión de métodos de pago inhabilitados (reactivación)
+- Reportes de ventas con configuración dinámica
+
+### Repartidor
+- Dashboard con actualización en tiempo real
+- Notificaciones push cuando hay nuevos pedidos disponibles
+- Visualización de pedidos disponibles y asignados
+- Aceptación y gestión de pedidos
+- Confirmación de pagos en efectivo
+- Gestión de perfil personal (edición de datos, cambio de contraseña)
 
 ## Características Especiales
 
@@ -482,6 +509,20 @@ export interface ItemCarrito {
 - Prefijo +51 automático para Perú
 - Validación de formato
 - Normalización en registro y edición
+
+### Notificaciones Push (OneSignal)
+- Integración con OneSignal SDK v16
+- Inicialización solo para usuarios con rol 'repartidor'
+- Registro automático de Player ID en backend
+- Notificaciones en tiempo real cuando hay nuevos pedidos
+- Click en notificación abre directamente el detalle del pedido
+- Service Worker configurado para notificaciones
+
+### Configuración Dinámica
+- Servicio para obtener y actualizar configuraciones
+- Ejemplo: porcentaje de costo para reportes de ganancias
+- Actualización sin reiniciar el backend
+- Interfaz en panel de administración
 
 ## Estado de la Aplicación
 
@@ -537,6 +578,19 @@ const stripeKey = 'pk_test_tu_clave_publica';
 El frontend se conecta al backend en `http://localhost:8089` por defecto.
 Para producción, actualizar en los servicios correspondientes.
 
+### OneSignal
+Configurar en `index.html`:
+```html
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+```
+
+Y en `onesignal.service.ts`:
+```typescript
+private readonly APP_ID = 'tu_app_id_onesignal';
+```
+
+**Importante**: Solo se inicializa para usuarios con rol 'repartidor'.
+
 ## Responsive Design
 
 - **Mobile First**: Diseño pensado primero para móviles
@@ -558,6 +612,12 @@ Para producción, actualizar en los servicios correspondientes.
 - Stripe Elements para formularios seguros
 - Manejo de estados de pago
 - Confirmación de transacciones
+
+### OneSignal SDK
+- Inicialización condicional por rol de usuario
+- Registro de Player ID automático
+- Manejo de eventos de notificación
+- Navegación automática al hacer click en notificación
 
 ### Bootstrap 5
 - Sistema de componentes

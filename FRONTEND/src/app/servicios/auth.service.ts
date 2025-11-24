@@ -132,7 +132,6 @@ export class AuthService {
     return user?.rol === 'repartidor';
   }
 
-  // Métodos adicionales para compatibilidad
   cambiarContrasena(idUsuario: number, contrasenaActual: string, nuevaContrasena: string): Observable<any> {
     return this.http.post(`${this.configuracionService.getApiUrl()}/auth/cambiar-contrasena`, {
       idUsuario,
@@ -192,7 +191,6 @@ export class AuthService {
     }
   }
 
-  // Métodos para recuperación de contraseña
   solicitarRecuperacion(email: string): Observable<any> {
     return this.http.post(`${this.configuracionService.getApiUrl()}/auth/recuperar-contrasena`, { email })
       .pipe(

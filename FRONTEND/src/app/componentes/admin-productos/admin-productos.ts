@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Producto, Categoria } from '../../modelos/producto.model';
+import { MenuService } from '../../servicios/menu.service';
 
 @Component({
   selector: 'app-admin-productos',
@@ -13,64 +14,80 @@ import { Producto, Categoria } from '../../modelos/producto.model';
 })
 export class AdminProductos implements OnInit {
   productos: Producto[] = [];
+  productosOriginales: Producto[] = []; // Copia de todos los productos para búsqueda
   categorias: Categoria[] = [];
   terminoBusqueda = '';
   productoSeleccionado: Producto | null = null;
   modoEdicion = false;
+  cargandoProductos = false;
+  errorProductos: string | null = null;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private menuService: MenuService
+  ) {}
 
   ngOnInit() {
     this.cargarProductos();
-    this.cargarCategorias();
   }
 
   cargarProductos() {
-    this.productos = [
-      {
-        idProducto: 1,
-        nombre: 'Hamburguesa Clásica',
-        descripcion: 'Doble carne, queso cheddar y salsa especial.',
-        precio: 15.00,
-        stock: 45,
-        categoria: { idCategoria: 1, nombreCategoria: 'Hamburguesas', descripcion: 'Platos principales' },
-        imagenUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop&crop=center',
-        estado: 'activo',
-        fechaCreacion: '2024-01-15T10:30:00Z',
-        ultimaActualizacion: '2024-01-15T10:30:00Z'
+    this.cargandoProductos = true;
+    this.errorProductos = null;
+    
+    this.menuService.obtenerProductosAdmin().subscribe({
+      next: (productos) => {
+        this.productosOriginales = productos || [];
+        this.productos = [...this.productosOriginales];
+        this.cargarCategorias();
+        this.cargandoProductos = false;
       },
-      {
-        idProducto: 2,
-        nombre: 'Papas Fritas',
-        descripcion: 'Porción grande de papas crujientes y doradas.',
-        precio: 5.50,
-        stock: 30,
-        categoria: { idCategoria: 2, nombreCategoria: 'Acompañamientos', descripcion: 'Complementos' },
-        imagenUrl: 'https://aperitivo.cl/wp-content/uploads/2024/08/PAPA-PREFRITA-12mm-2.5-kg.jpg',
-        estado: 'activo',
-        fechaCreacion: '2024-01-15T10:30:00Z',
-        ultimaActualizacion: '2024-01-15T10:30:00Z'
+      error: (error) => {
+        console.error('Error al cargar productos:', error);
+        this.errorProductos = 'No se pudieron cargar los productos';
+        this.productos = [];
+        this.productosOriginales = [];
+        this.cargandoProductos = false;
       }
-    ];
+    });
   }
 
   cargarCategorias() {
-    this.categorias = [
-      { idCategoria: 1, nombreCategoria: 'Hamburguesas', descripcion: 'Platos principales' },
-      { idCategoria: 2, nombreCategoria: 'Acompañamientos', descripcion: 'Complementos' },
-      { idCategoria: 3, nombreCategoria: 'Bebidas', descripcion: 'Bebidas frías o calientes' },
-      { idCategoria: 4, nombreCategoria: 'Postres', descripcion: 'Dulces y postres' }
-    ];
+    const categoriasMap = new Map<number, Categoria>();
+    
+    this.productos.forEach(producto => {
+      if (producto.categoria) {
+        let categoria: Categoria;
+        
+        if (typeof producto.categoria === 'string') {
+          const idCategoria = (producto as any).categoriaId || 0;
+          categoria = {
+            idCategoria: idCategoria,
+            nombreCategoria: producto.categoria,
+            descripcion: ''
+          };
+        } else {
+          categoria = producto.categoria;
+        }
+        
+        if (!categoriasMap.has(categoria.idCategoria)) {
+          categoriasMap.set(categoria.idCategoria, categoria);
+        }
+      }
+    });
+    
+    this.categorias = Array.from(categoriasMap.values());
   }
 
   buscarProductos() {
     if (this.terminoBusqueda.trim()) {
-      this.productos = this.productos.filter(p => 
-        p.nombre.toLowerCase().includes(this.terminoBusqueda.toLowerCase()) ||
-        (typeof p.categoria === 'string' ? p.categoria : p.categoria.nombreCategoria).toLowerCase().includes(this.terminoBusqueda.toLowerCase())
+      const termino = this.terminoBusqueda.toLowerCase();
+      this.productos = this.productosOriginales.filter(p => 
+        p.nombre.toLowerCase().includes(termino) ||
+        (typeof p.categoria === 'string' ? p.categoria : p.categoria.nombreCategoria).toLowerCase().includes(termino)
       );
     } else {
-      this.cargarProductos();
+      this.productos = [...this.productosOriginales];
     }
   }
 
@@ -81,7 +98,7 @@ export class AdminProductos implements OnInit {
       descripcion: '',
       precio: 0,
       stock: 0,
-      categoria: this.categorias[0],
+      categoria: this.categorias.length > 0 ? this.categorias[0] : { idCategoria: 0, nombreCategoria: '', descripcion: '' },
       imagenUrl: '',
       estado: 'activo',
       fechaCreacion: '',
@@ -96,20 +113,35 @@ export class AdminProductos implements OnInit {
   }
 
   guardarProducto() {
-    if (this.productoSeleccionado) {
-      if (this.productoSeleccionado.idProducto === 0) {
-        // Nuevo producto
-        this.productoSeleccionado.idProducto = this.productos.length + 1;
-        this.productos.push(this.productoSeleccionado);
-      } else {
-        // Editar producto existente
-        const index = this.productos.findIndex(p => p.idProducto === this.productoSeleccionado!.idProducto);
-        if (index !== -1) {
-          this.productos[index] = { ...this.productoSeleccionado };
-        }
-      }
-      this.cancelarEdicion();
+    if (!this.productoSeleccionado) {
+      return;
     }
+
+    const categoriaId = typeof this.productoSeleccionado.categoria === 'object' && this.productoSeleccionado.categoria
+      ? this.productoSeleccionado.categoria.idCategoria
+      : (this.productoSeleccionado as any).categoriaId || 0;
+
+    const request = {
+      idProducto: this.productoSeleccionado.idProducto === 0 ? undefined : this.productoSeleccionado.idProducto,
+      nombre: this.productoSeleccionado.nombre,
+      descripcion: this.productoSeleccionado.descripcion || '',
+      precio: this.productoSeleccionado.precio,
+      idCategoria: categoriaId,
+      imagenUrl: this.productoSeleccionado.imagenUrl || '',
+      estado: this.productoSeleccionado.estado || 'activo',
+      stock: this.productoSeleccionado.stock || 0
+    };
+
+    this.menuService.guardarProducto(request).subscribe({
+      next: (productoGuardado) => {
+        this.cargarProductos();
+        this.cancelarEdicion();
+      },
+      error: (error) => {
+        console.error('Error al guardar producto:', error);
+        alert('Error al guardar el producto. Por favor, intenta nuevamente.');
+      }
+    });
   }
 
   cancelarEdicion() {
@@ -119,12 +151,45 @@ export class AdminProductos implements OnInit {
 
   eliminarProducto(id: number) {
     if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      this.productos = this.productos.filter(p => p.idProducto !== id);
+      this.menuService.eliminarProducto(id).subscribe({
+        next: (response) => {
+          this.cargarProductos();
+        },
+        error: (error) => {
+          console.error('Error al eliminar producto:', error);
+          alert('Error al eliminar el producto. Por favor, intenta nuevamente.');
+        }
+      });
     }
   }
 
   cambiarEstado(producto: Producto) {
-    producto.estado = producto.estado === 'activo' ? 'inactivo' : 'activo';
+    const nuevoEstado = producto.estado === 'activo' ? 'inactivo' : 'activo';
+    const categoriaId = typeof producto.categoria === 'object' && producto.categoria
+      ? producto.categoria.idCategoria
+      : (producto as any).categoriaId || 0;
+
+    const request = {
+      idProducto: producto.idProducto,
+      nombre: producto.nombre,
+      descripcion: producto.descripcion || '',
+      precio: producto.precio,
+      idCategoria: categoriaId,
+      imagenUrl: producto.imagenUrl || '',
+      estado: nuevoEstado,
+      stock: producto.stock || 0
+    };
+
+    this.menuService.guardarProducto(request).subscribe({
+      next: () => {
+        this.cargarProductos();
+      },
+      error: (error) => {
+        console.error('Error al cambiar estado del producto:', error);
+        alert('Error al cambiar el estado del producto. Por favor, intenta nuevamente.');
+        producto.estado = producto.estado === 'activo' ? 'inactivo' : 'activo';
+      }
+    });
   }
 
   volverAlDashboard() {

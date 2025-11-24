@@ -1,5 +1,5 @@
 <div class="edit-profile-container">
-  <!-- Header -->
+  
   <div class="edit-header">
     <div class="header-content">
       <button class="btn-back" (click)="cancelar()">
@@ -13,10 +13,10 @@
     </div>
   </div>
 
-  <!-- Formulario -->
+  
   <div class="edit-form-container">
     <form (ngSubmit)="onSubmit()" class="edit-form">
-      <!-- Mensajes de Error y Éxito -->
+      
       @if (errorMessage) {
         <div class="alert alert-error">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -38,7 +38,7 @@
         </div>
       }
 
-      <!-- Información Personal -->
+      
       <div class="form-section">
         <h2>Información Personal</h2>
         
@@ -113,7 +113,7 @@
         </div>
       </div>
 
-      <!-- Información de Contacto -->
+      
       <div class="form-section">
         <h2>Información de Contacto</h2>
         
@@ -147,7 +147,7 @@
         </div>
       </div>
 
-      <!-- Botones de Acción -->
+      
       <div class="form-actions">
         <button type="button" class="btn-cancel" (click)="cancelar()">
           Cancelar

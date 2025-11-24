@@ -4,7 +4,6 @@
   padding: 30px;
 }
 
-/* Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -60,7 +59,6 @@
   box-shadow: 0 6px 20px rgba(255,107,53,0.4);
 }
 
-/* Filters Section */
 .filters-section {
   background: white;
   border-radius: 12px;
@@ -87,7 +85,6 @@
   border-color: #FF6B35;
 }
 
-/* Products Section */
 .products-section {
   background: white;
   border-radius: 12px;
@@ -239,7 +236,6 @@
   transform: scale(1.1);
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -296,7 +292,6 @@
   color: #e74c3c;
 }
 
-/* Form */
 .product-form {
   padding: 30px;
 }
@@ -382,7 +377,6 @@
   box-shadow: 0 6px 20px rgba(39,174,96,0.4);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .admin-productos-container {
     padding: 15px;

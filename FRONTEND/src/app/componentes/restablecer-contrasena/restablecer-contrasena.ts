@@ -30,7 +30,6 @@ export class RestablecerContrasena implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Obtener el token de la URL
     this.route.queryParams.subscribe(params => {
       this.token = params['token'] || '';
       

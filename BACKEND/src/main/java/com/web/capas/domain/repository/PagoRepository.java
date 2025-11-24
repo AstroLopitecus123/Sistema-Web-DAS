@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface PagoRepository extends JpaRepository<Pago, Integer> {
     
-    // Buscar pago por referencia de transacción (PaymentIntent ID de Stripe)
+    // Buscar pago por referencia de transacción
     Optional<Pago> findByReferenciaTransaccion(String referenciaTransaccion);
     
     // Buscar pago por ID de pedido

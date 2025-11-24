@@ -2,7 +2,6 @@ package com.web.capas.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-// DTO para respuesta de información del cliente en pedidos
 public class ClienteResponse {
     
     @JsonProperty("idUsuario")

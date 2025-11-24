@@ -1,9 +1,9 @@
-<!-- Modal Backdrop -->
+
 @if (mostrar) {
 <div class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container" (click)="$event.stopPropagation()">
     
-    <!-- Modal Header -->
+    
     <div class="modal-header">
       <div class="header-content">
         <div class="header-title">
@@ -18,11 +18,11 @@
       </div>
     </div>
 
-    <!-- Modal Body -->
+    
     @if (producto) {
     <div class="modal-body">
       
-      <!-- Producto Info -->
+      
       <div class="producto-info">
         <div class="producto-imagen">
           <img [src]="producto.imagenUrl || 'https://placehold.co/300x200/808080/FFFFFF?text=Producto'" 
@@ -44,10 +44,10 @@
         </div>
       </div>
 
-      <!-- Configuración del Producto -->
+      
       <div class="configuracion-producto">
         
-        <!-- Cantidad -->
+        
         <div class="form-group">
           <label for="cantidad" class="form-label">
             <i class="fas fa-sort-numeric-up me-2"></i>
@@ -74,7 +74,7 @@
           </div>
         </div>
 
-        <!-- Personalización -->
+        
         <div class="form-group">
           <label class="form-label">
             <i class="fas fa-cog me-2"></i>
@@ -123,7 +123,7 @@
           }
         </div>
 
-        <!-- Resumen del Pedido -->
+        
         <div class="resumen-pedido">
           <div class="resumen-header">
             <i class="fas fa-receipt me-2"></i>
@@ -149,7 +149,7 @@
     </div>
     }
 
-    <!-- Modal Footer -->
+    
     <div class="modal-footer">
       <button type="button" 
               class="btn btn-secondary" 

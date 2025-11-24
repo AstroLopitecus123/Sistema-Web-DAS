@@ -4,7 +4,6 @@
   padding: 30px;
 }
 
-/* Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -42,7 +41,6 @@
   font-weight: 700;
 }
 
-/* Filters Section */
 .filters-section {
   background: white;
   border-radius: 12px;
@@ -83,7 +81,6 @@
   border-color: #FF6B35;
 }
 
-/* Orders Section */
 .orders-section {
   background: white;
   border-radius: 12px;

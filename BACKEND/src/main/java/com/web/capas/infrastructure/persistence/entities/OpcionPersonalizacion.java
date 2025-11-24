@@ -49,7 +49,6 @@ public class OpcionPersonalizacion {
         this.activa = true;
     }
 
-    // Getters y Setters
     public Integer getIdOpcion() {
         return idOpcion;
     }
@@ -98,7 +97,6 @@ public class OpcionPersonalizacion {
         this.producto = producto;
     }
 
-    // Getter adicional para el frontend
     public Integer getIdProducto() {
         return producto != null ? producto.getIdProducto() : null;
     }

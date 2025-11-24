@@ -1,6 +1,6 @@
 <div class="carrito-container">
     <div class="carrito-card">
-        <!-- Header del Carrito -->
+        
         <div class="carrito-header">
             <div class="header-content">
                     <div class="header-title">
@@ -25,9 +25,9 @@
             </div>
         </div>
 
-        <!-- Contenido del Carrito -->
+        
         <div class="carrito-content">
-            <!-- MENSAJE DE CARRITO VACÍO -->
+            
             @if (items.length === 0) {
                 <div class="empty-cart">
                     <div class="empty-icon">
@@ -43,19 +43,19 @@
                 </div>
             }
 
-            <!-- LISTA DE PRODUCTOS -->
+            
             @if (items.length > 0) {
                 <div class="products-list">
                     @for (item of items; track item.idProducto) {
                         <div class="product-item">
-                            <!-- Imagen del producto -->
+                            
                             <div class="product-image">
                                 <img [src]="item.imagenUrl || 'https://placehold.co/80x80/d49a44/fdfaf5?text=Prod'"
                                      alt="{{ item.nombre }}"
                                      class="product-img">
                             </div>
 
-                            <!-- Detalles del producto -->
+                            
                             <div class="product-details">
                                 <h4 class="product-name">{{ item.nombre }}</h4>
                                 <p class="product-description">{{ item.descripcion }}</p>
@@ -74,9 +74,9 @@
                                 </div>
                             </div>
 
-                            <!-- Controles del producto -->
+                            
                             <div class="product-controls">
-                                <!-- Contador de cantidad -->
+                                
                                 <div class="quantity-controls">
                                     <button 
                                         class="btn-quantity btn-minus" 
@@ -103,7 +103,7 @@
                                     </button>
                                 </div>
 
-                                <!-- Botón eliminar -->
+                                
                                 <button 
                                     class="btn-remove" 
                                     (click)="removeItem(item.idProducto)" 
@@ -120,9 +120,9 @@
                     }
                 </div>
 
-                <!-- Footer del Carrito -->
+                
                 <div class="carrito-footer">
-                    <!-- Botón Vaciar Carrito -->
+                    
                     <div class="clear-cart-section">
                         <button 
                             class="btn-clear-cart"
@@ -138,7 +138,7 @@
                         </button>
                     </div>
 
-                    <!-- Resumen y Botón de Pago -->
+                    
                     <div class="checkout-section">
                         <div class="subtotal-info">
                             <span class="subtotal-label">Subtotal:</span>
@@ -162,7 +162,7 @@
     </div>
 </div>
 
-<!-- Modal de Checkout -->
+
 <app-checkout 
     [mostrar]="mostrarCheckout"
     (cerrar)="cerrarCheckout()"

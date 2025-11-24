@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
-// Selecciona la estrategia correcta para cada tipo.
 @Component
 public class NotificacionStrategyContext {
 

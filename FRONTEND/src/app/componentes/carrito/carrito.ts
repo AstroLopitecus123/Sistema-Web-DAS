@@ -64,9 +64,7 @@ export class Carrito implements OnInit {
   ngOnInit(): void {
   }
 
-  // Se ejecuta cada vez que el usuario cambia la cantidad o usa los botones +/-
   actualizarCantidad(item: ItemCarrito): void {
-    // Validar que no exceda el máximo de 99 unidades
     if (item.cantidad > 99) {
       item.cantidad = 99;
       this.notificacionService.mostrarAdvertencia(
@@ -75,7 +73,6 @@ export class Carrito implements OnInit {
       );
     }
     
-    // Validar que no sea menor a 0
     if (item.cantidad < 0) {
       item.cantidad = 0;
     }
@@ -83,11 +80,9 @@ export class Carrito implements OnInit {
     this.carritoService.actualizarCantidad(item.idProducto, item.cantidad);
   }
 
-  // Cambia la cantidad del producto y actualiza el subtotal (delta: +1 incrementar, -1 decrementar)
   cambiarCantidad(item: ItemCarrito, delta: number): void {
     const nuevaCantidad = item.cantidad + delta;
     
-    // Validar que no exceda el máximo de 99 unidades
     if (nuevaCantidad > 99) {
       this.notificacionService.mostrarAdvertencia(
         'Límite alcanzado', 
@@ -96,7 +91,6 @@ export class Carrito implements OnInit {
       return;
     }
     
-    // Validar que no sea menor a 0
     if (nuevaCantidad < 0) {
       return;
     }
@@ -104,7 +98,6 @@ export class Carrito implements OnInit {
     this.carritoService.actualizarCantidad(item.idProducto, nuevaCantidad);
   }
 
-  // Elimina un ítem del carrito
   removeItem(idProducto: number): void {
     this.carritoService.eliminarItem(idProducto);
     this.notificacionService.mostrarInfo(
@@ -113,7 +106,6 @@ export class Carrito implements OnInit {
     );
   }
 
-  // Vacía todo el carrito
   vaciarCarrito(): void {
     this.carritoService.vaciarCarrito();
     this.notificacionService.mostrarInfo(
@@ -122,7 +114,6 @@ export class Carrito implements OnInit {
     );
   }
 
-  // Abre el modal de checkout para procesar el pago
   finalizarCompra(): void {
     if (this.subtotal > 0) {
       this.mostrarCheckout = true;
@@ -134,17 +125,12 @@ export class Carrito implements OnInit {
     }
   }
 
-  // Cierra el modal de checkout
   cerrarCheckout(): void {
     this.mostrarCheckout = false;
   }
 
-  // Maneja el pago exitoso
   onPagoExitoso(): void {
     this.mostrarCheckout = false;
-    // La notificación de éxito se maneja en el componente checkout
-    // Opcional: redirigir a una página de confirmación
-    // this.router.navigate(['/confirmacion-pedido']);
   }
 
   simularNavegacion(ruta: string): void {
@@ -152,6 +138,6 @@ export class Carrito implements OnInit {
   }
 
 cerrarCarrito(): void {
-  this.router.navigate(['/menu']);   // Navega directamente a la ruta /menu
+  this.router.navigate(['/menu']);
 }
 }

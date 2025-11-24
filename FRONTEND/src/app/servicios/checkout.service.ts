@@ -9,6 +9,8 @@ export interface DatosPedido {
   direccionEntrega: string;
   notasCliente: string;
   metodoPago: 'tarjeta' | 'billetera_virtual' | 'efectivo';
+  codigoCupon?: string;
+  montoPagadoCliente?: number; // Monto con el que el cliente va a pagar (solo para efectivo)
   productos: ProductoPedido[];
 }
 
@@ -33,13 +35,14 @@ export class CheckoutService {
     private pagoService: PagoService
   ) {}
 
-  // Crea la estructura de datos del pedido para enviar al backend
   crearDatosPedido(
     items: ItemCarrito[], 
     subtotal: number, 
     direccionEntrega: string, 
     notasCliente: string, 
-    metodoPago: 'tarjeta' | 'billetera_virtual' | 'efectivo'
+    metodoPago: 'tarjeta' | 'billetera_virtual' | 'efectivo',
+    codigoCupon?: string,
+    montoPagadoCliente?: number
   ): DatosPedido {
     const usuario = this.authService.getUsuarioActual();
     if (!usuario) {
@@ -52,11 +55,12 @@ export class CheckoutService {
       direccionEntrega,
       notasCliente: notasCliente || '',
       metodoPago,
+      codigoCupon: codigoCupon || undefined,
+      montoPagadoCliente: metodoPago === 'efectivo' && montoPagadoCliente ? montoPagadoCliente : undefined,
       productos: this.mapearProductos(items)
     };
   }
 
-  // Mapea los items del carrito a la estructura esperada por el backend
   private mapearProductos(items: ItemCarrito[]): ProductoPedido[] {
     return items.map(item => {
       const opcionesSeleccionadas = item.opcionesSeleccionadas 
@@ -79,7 +83,6 @@ export class CheckoutService {
     });
   }
 
-  // Crea el pedido en el backend
   crearPedidoEnBackend(datosPedido: DatosPedido): Promise<any> {
 
     return new Promise((resolve, reject) => {
@@ -89,7 +92,8 @@ export class CheckoutService {
         },
         error: (error) => {
           console.error('Error al crear pedido:', error);
-          reject(new Error('No se pudo crear el pedido en el servidor'));
+          const mensajeError = error?.error?.mensaje || error?.error?.message || error?.message || 'No se pudo crear el pedido en el servidor';
+          reject(new Error(mensajeError));
         }
       });
     });

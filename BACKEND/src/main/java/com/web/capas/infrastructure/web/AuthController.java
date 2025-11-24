@@ -26,7 +26,7 @@ public class AuthController {
 
     @PostMapping("/registro")
     public ResponseEntity<AuthResponse> registrarUsuario(@RequestBody UsuarioRequest request) {
-        // Validaciones básicas
+
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new ServiceException("El email es obligatorio");
         }
@@ -39,24 +39,20 @@ public class AuthController {
             throw new ServiceException("El nombre es obligatorio");
         }
 
-        // Verificar correo duplicado
         if (usuarioService.existeEmail(request.getEmail())) {
             throw new ServiceException("El email ya está registrado");
         }
 
-        // Generar username único a partir del email
         String baseUsername = request.getEmail().split("@")[0].toLowerCase()
             .replaceAll("[^a-z0-9]", "_");
         String username = baseUsername;
         int counter = 1;
         
-        // Asegurar que el username sea único
         while (usuarioService.existeUsername(username)) {
             username = baseUsername + "_" + counter;
             counter++;
         }
 
-        // Crear usuario
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setNombre(request.getNombre());
         nuevoUsuario.setApellido(request.getApellido() != null ? request.getApellido() : "");
@@ -69,11 +65,8 @@ public class AuthController {
         nuevoUsuario.setActivo(true);
 
         Usuario usuarioRegistrado = usuarioService.registrarUsuario(nuevoUsuario);
-
-        // Crear token
         String token = jwtService.generateToken(usuarioRegistrado);
 
-        // Respuesta con datos del usuario
         AuthResponse.AuthData authData = new AuthResponse.AuthData(
             token,
             usuarioRegistrado.getIdUsuario(),
@@ -91,10 +84,8 @@ public class AuthController {
         );
     }
 
-    // Login de usuarios
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody UsuarioRequest request) {
-        // Validar datos
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new ServiceException("El email es obligatorio");
         }
@@ -103,17 +94,14 @@ public class AuthController {
             throw new ServiceException("La contraseña es obligatoria");
         }
 
-        // Verificar credenciales
         Usuario usuario = usuarioService.autenticarUsuario(request.getEmail(), request.getContrasena());
 
         if (usuario == null) {
             throw new CredencialesInvalidasException("Credenciales inválidas");
         }
 
-        // Crear token
         String token = jwtService.generateToken(usuario);
 
-        // Enviar datos del usuario autenticado
         AuthResponse.AuthData authData = new AuthResponse.AuthData(
             token,
             usuario.getIdUsuario(),
@@ -131,14 +119,12 @@ public class AuthController {
         );
     }
 
-    // Verificar si correo existe
     @GetMapping("/verificar-email")
     public ResponseEntity<Boolean> verificarEmail(@RequestParam String email) {
         boolean existe = usuarioService.existeEmail(email);
         return ResponseEntity.ok(existe);
     }
 
-    // Solicitar recuperación de contraseña
     @PostMapping("/recuperar-contrasena")
     public ResponseEntity<Map<String, Object>> solicitarRecuperacionContrasena(@RequestBody UsuarioRequest request) {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
@@ -147,14 +133,12 @@ public class AuthController {
         
         usuarioService.solicitarRecuperacionContrasena(request.getEmail());
         
-        // Por seguridad, siempre devuelve el mismo mensaje sin revelar si el correo existe
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("mensaje", "Si el correo está registrado, recibirás un email con instrucciones para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada.");
         return ResponseEntity.ok(response);
     }
 
-    // Restablecer contraseña con el token del correo
     @PostMapping("/restablecer-contrasena")
     public ResponseEntity<Map<String, Object>> restablecerContrasena(@RequestBody UsuarioRequest request) {
         if (request.getToken() == null || request.getToken().trim().isEmpty()) {
@@ -177,13 +161,11 @@ public class AuthController {
         }
     }
 
-    // Actualizar perfil de usuario
     @PutMapping("/actualizar-perfil/{id}")
     public ResponseEntity<Map<String, Object>> actualizarPerfil(
             @PathVariable Integer id,
             @RequestBody UsuarioRequest request) {
         
-        // Validar datos de entrada
         if (request.getNombre() == null || request.getNombre().trim().isEmpty()) {
             throw new ServiceException("El nombre es obligatorio");
         }
@@ -192,7 +174,6 @@ public class AuthController {
             throw new ServiceException("El apellido es obligatorio");
         }
         
-        // Guardar cambios
         Usuario usuarioActualizado = usuarioService.actualizarPerfil(
             id,
             request.getNombre(),
@@ -205,7 +186,6 @@ public class AuthController {
             throw new ServiceException("Usuario no encontrado");
         }
         
-        // Respuesta exitosa
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("success", true);
         respuesta.put("mensaje", "Perfil actualizado correctamente");
@@ -222,15 +202,12 @@ public class AuthController {
         return ResponseEntity.ok(respuesta);
     }
 
-    // Cambiar contraseña de usuario
     @PostMapping("/cambiar-contrasena")
     public ResponseEntity<Map<String, Object>> cambiarContrasena(@RequestBody Map<String, Object> request) {
-        // Extraer datos del request
         Integer idUsuario = (Integer) request.get("idUsuario");
         String contrasenaActual = (String) request.get("contrasenaActual");
         String nuevaContrasena = (String) request.get("nuevaContrasena");
         
-        // Validar datos de entrada
         if (idUsuario == null) {
             throw new ServiceException("El ID de usuario es obligatorio");
         }
@@ -247,7 +224,6 @@ public class AuthController {
             throw new ServiceException("La nueva contraseña debe tener al menos 6 caracteres");
         }
         
-        // Intentar cambiar la contraseña
         boolean cambiado = usuarioService.cambiarContrasena(
             idUsuario,
             contrasenaActual,
@@ -258,7 +234,6 @@ public class AuthController {
             throw new CredencialesInvalidasException("La contraseña actual es incorrecta");
         }
         
-        // Cambio exitoso
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("success", true);
         respuesta.put("mensaje", "Contraseña actualizada correctamente");

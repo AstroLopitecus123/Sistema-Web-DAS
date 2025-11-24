@@ -19,18 +19,15 @@ export class PersonalizacionService {
 
   constructor(private http: HttpClient) {}
 
-  // Obtiene las opciones de personalización para un producto específico
   obtenerOpcionesPersonalizacion(idProducto: number): Observable<OpcionPersonalizacion[]> {
     const url = `${this.baseUrl}/productos/${idProducto}/opciones`;
     return this.http.get<OpcionPersonalizacion[]>(url);
   }
 
-  // Calcula el precio total de las opciones seleccionadas
   calcularPrecioOpciones(opcionesSeleccionadas: OpcionPersonalizacion[]): number {
     return opcionesSeleccionadas.reduce((total, opcion) => total + opcion.precioAdicional, 0);
   }
 
-  // Formatea las opciones seleccionadas para mostrar al usuario
   formatearOpcionesSeleccionadas(opcionesSeleccionadas: OpcionPersonalizacion[]): string {
     if (!opcionesSeleccionadas || opcionesSeleccionadas.length === 0) {
       return '';

@@ -22,6 +22,11 @@ El backend aplica patrones de diseño (Factory, Decorator, Strategy, Proxy, Obse
                                        │   Twilio    │
                                        │ (WhatsApp)  │
                                        └─────────────┘
+                                               │
+                                       ┌─────────────┐
+                                       │  OneSignal  │
+                                       │   (Push)    │
+                                       └─────────────┘
 ```
 
 ## Stack Tecnológico
@@ -36,6 +41,7 @@ El backend aplica patrones de diseño (Factory, Decorator, Strategy, Proxy, Obse
 | **Autenticación** | JWT | 0.11.5 | Tokens de autenticación |
 | **Pagos** | Stripe | 30.0.0 | Gateway de pagos |
 | **Notificaciones** | Twilio | 10.6.3 | API de WhatsApp |
+| **Notificaciones Push** | OneSignal | 16.x | Notificaciones push para repartidores |
 | **Email** | Gmail SMTP | - | Servicio de correo electrónico |
 
 ## Estructura de Base de Datos
@@ -52,6 +58,8 @@ El sistema utiliza MySQL con las siguientes tablas principales:
 - **Cupones** - Sistema de descuentos y promociones
 - **Carrito** - Carrito de compras por cliente
 - **Tokens de Recuperación** - Tokens para recuperación de contraseña
+- **Metodos_Pago_Inhabilitados** - Control de métodos de pago bloqueados
+- **configuracion_sistema** - Configuración dinámica del sistema
 
 ## Prerrequisitos
 
@@ -113,6 +121,10 @@ USE BD_SISTEMA_WEB_DAS;
    # Gmail SMTP
    GMAIL_USERNAME=tu_email@gmail.com
    GMAIL_PASSWORD=tu_app_password
+
+   # OneSignal (Notificaciones Push)
+   ONESIGNAL_APP_ID=tu_app_id_onesignal
+   ONESIGNAL_REST_API_KEY=tu_rest_api_key_onesignal
    ```
 
 3. **Instalar dependencias y ejecutar:**
@@ -160,6 +172,14 @@ El frontend estará disponible en: `http://localhost:4200`
 3. Obtener `ACCOUNT_SID` y `AUTH_TOKEN` desde el Dashboard
 4. Configurar en `.env`
 
+### OneSignal (Notificaciones Push)
+1. Crear cuenta en [OneSignal](https://onesignal.com)
+2. Crear una nueva aplicación web
+3. Obtener `App ID` y `REST API Key` desde el Dashboard
+4. Configurar en `.env` del backend
+5. Agregar el script de OneSignal en `index.html` del frontend
+6. Solo los usuarios con rol 'repartidor' recibirán notificaciones push
+
 ## Estructura del Proyecto
 
 ```
@@ -197,11 +217,13 @@ El frontend estará disponible en: `http://localhost:4200`
 - ✅ Carrito de compras persistente
 - ✅ Proceso de checkout con múltiples métodos de pago (Tarjeta, Billetera Virtual, Efectivo)
 - ✅ Integración con Stripe para pagos con tarjeta
+- ✅ Confirmación de pagos en efectivo (cliente y repartidor)
 - ✅ Seguimiento de pedidos en tiempo real
 - ✅ Gestión de perfil personal (edición de datos, cambio de contraseña)
-- ✅ Sistema de cupones y descuentos
+- ✅ Sistema de cupones y descuentos (cupones se devuelven al cancelar pedido)
 - ✅ Estadísticas personales (pedidos realizados, total gastado)
 - ✅ Teléfono normalizado automáticamente con código de país +51 (Perú)
+- ✅ Notificaciones cuando se inhabilita un método de pago por múltiples cancelaciones
 
 ### Para Administradores
 - ✅ Dashboard con estadísticas generales
@@ -212,12 +234,17 @@ El frontend estará disponible en: `http://localhost:4200`
 - ✅ Sistema de cupones y promociones
 - ✅ Notificaciones por WhatsApp para clientes
 - ✅ Cambio de contraseña desde panel de administración
+- ✅ Configuración dinámica del sistema (porcentaje de costo para reportes)
+- ✅ Gestión de métodos de pago inhabilitados (reactivación)
+- ✅ Reportes de ventas con configuración dinámica
 
 ### Para Repartidores
-- ✅ Dashboard de repartidor
-- ✅ Visualización de pedidos asignados
+- ✅ Dashboard de repartidor con actualización en tiempo real
+- ✅ Visualización de pedidos disponibles y asignados
+- ✅ Notificaciones push en tiempo real cuando hay nuevos pedidos
 - ✅ Actualización de estados de entrega
-- ✅ Gestión de perfil personal
+- ✅ Gestión de perfil personal (edición de datos, cambio de contraseña)
+- ✅ Confirmación de pagos en efectivo
 
 ## Variables de Entorno Requeridas
 
@@ -232,6 +259,8 @@ El frontend estará disponible en: `http://localhost:4200`
 | `TWILIO_ACCOUNT_SID` | SID de cuenta Twilio | `AC...` |
 | `TWILIO_AUTH_TOKEN` | Token de autenticación Twilio | `token...` |
 | `TWILIO_WHATSAPP_FROM` | Número de WhatsApp Twilio | `whatsapp:+14155238886` |
+| `ONESIGNAL_APP_ID` | App ID de OneSignal | `tu_app_id` |
+| `ONESIGNAL_REST_API_KEY` | REST API Key de OneSignal | `tu_rest_api_key` |
 | `GMAIL_USERNAME` | Email para SMTP | `tu_email@gmail.com` |
 | `GMAIL_PASSWORD` | Contraseña de aplicación Gmail | `app_password` |
 
@@ -301,6 +330,28 @@ ng test
 - Automático para código de país +51 (Perú)
 - Validación y formato consistente
 - Integración en registro y edición de perfil
+
+### Notificaciones Push (OneSignal)
+- Notificaciones en tiempo real para repartidores cuando hay nuevos pedidos
+- Solo usuarios con rol 'repartidor' reciben notificaciones
+- Player ID almacenado en tabla Usuarios
+- Click en notificación abre directamente el detalle del pedido
+
+### Configuración Dinámica del Sistema
+- Valores configurables desde el panel de administración
+- Sin necesidad de reiniciar el backend
+- Ejemplo: porcentaje de costo para reportes de ganancias
+- Almacenado en tabla `configuracion_sistema`
+
+### Sistema de Métodos de Pago Inhabilitados
+- Bloqueo automático después de 3 cancelaciones con el mismo método
+- Notificación en tiempo real al cliente cuando se bloquea
+- Contador se reinicia al reactivar el método por admin
+- Historial completo de inhabilitaciones y reactivaciones
+
+### Gestión de Cupones
+- Los cupones se devuelven automáticamente al cancelar un pedido
+- Filtrado correcto de cupones usados/disponibles excluyendo cancelados
 
 ## Base de Datos
 

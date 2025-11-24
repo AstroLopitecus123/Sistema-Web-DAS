@@ -35,4 +35,23 @@ export class Notificaciones implements OnInit, OnDestroy {
   obtenerClaseNotificacion(notificacion: Notificacion): string {
     return `notification notification-${notificacion.tipo}`;
   }
+
+  obtenerIconoPorTipo(tipo: string): string {
+    switch (tipo) {
+      case 'success':
+        return 'fas fa-check-circle';
+      case 'error':
+        return 'fas fa-exclamation-circle';
+      case 'warning':
+        return 'fas fa-exclamation-triangle';
+      case 'info':
+        return 'fas fa-info-circle';
+      default:
+        return 'fas fa-info-circle';
+    }
+  }
+
+  obtenerDuracionAnimacion(notificacion: Notificacion): number {
+    return notificacion.duracion || 5000;
+  }
 }

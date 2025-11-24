@@ -6,6 +6,7 @@ import { DetallePedido, DetallePedidoData } from '../detalle-pedido/detalle-pedi
 import { PedidosService } from '../../servicios/pedidos.service';
 import { AuthService } from '../../servicios/auth.service';
 import { FiltrosService } from '../../servicios/filtros.service';
+import { NotificacionService } from '../../servicios/notificacion.service';
 import { Pedido, ProductoDetalle } from '../../modelos/pedido.model';
 
 
@@ -18,9 +19,7 @@ import { Pedido, ProductoDetalle } from '../../modelos/pedido.model';
 })
 export class Pedidos implements OnInit, OnDestroy { 
     
-    // Lista de pedidos que se muestran en la tabla
     listaPedidos: Pedido[] = []; 
-    // Almacena la lista completa de pedidos cargados inicialmente
     listaPedidosOriginal: Pedido[] = []; 
     
     isLoading: boolean = true;
@@ -28,17 +27,19 @@ export class Pedidos implements OnInit, OnDestroy {
     filtroPeriodo: string = 'semana'; 
     filtroEstado: string = 'todos'; 
 
-    // Variables para el modal de detalles
     pedidoSeleccionado: DetallePedidoData | null = null;
     mostrarModalDetalle = false;
 
-    // Suscripción para actualizaciones en tiempo real
+    mostrarModalCancelar = false;
+    pedidoACancelar: number | null = null;
+
     private pedidosSubscription?: Subscription;
 
     constructor(
         private pedidosService: PedidosService,
         private authService: AuthService,
-        private filtrosService: FiltrosService
+        private filtrosService: FiltrosService,
+        private notificacionService: NotificacionService
     ) { }
 
     ngOnInit(): void {
@@ -51,11 +52,8 @@ export class Pedidos implements OnInit, OnDestroy {
         }
     }
 
-    // Carga pedidos desde el backend
     cargarPedidos(): void {
         this.isLoading = true;
-        
-        // Cargar el usuario actual
         const usuarioActual = this.authService.getCurrentUser();
         if (!usuarioActual) {
             console.error('No hay usuario autenticado');
@@ -76,14 +74,10 @@ export class Pedidos implements OnInit, OnDestroy {
         });
     }
 
-
-
-    // Aplica los filtros seleccionados (Período y Estado) a la lista de pedidos
     aplicarFiltros(): void {
         let pedidosFiltrados = [...this.listaPedidosOriginal];
 
         if (this.filtroEstado !== 'todos') {
-            // Mapear valores del filtro a valores del backend
             const estadosBackend: { [key: string]: string[] } = {
                 'Entregado': ['entregado'],
                 'Enviado': ['en_camino', 'en camino'],
@@ -98,9 +92,8 @@ export class Pedidos implements OnInit, OnDestroy {
             });
         }
 
-        // Filtrar por PERÍODO usando la fecha actual
-        const hoy = new Date(); // Usar la fecha actual real
-        hoy.setHours(23, 59, 59, 999); // Incluir todo el día de hoy
+        const hoy = new Date();
+        hoy.setHours(23, 59, 59, 999);
         let fechaLimite = new Date();
         
         switch (this.filtroPeriodo) {
@@ -125,8 +118,7 @@ export class Pedidos implements OnInit, OnDestroy {
                 fechaLimite.setHours(0, 0, 0, 0);
                 break;
             default:
-                // Si no hay filtro de período, no filtrar por fecha
-                fechaLimite = new Date(0); // Fecha mínima
+                fechaLimite = new Date(0);
                 break;
         }
 
@@ -137,14 +129,11 @@ export class Pedidos implements OnInit, OnDestroy {
             
             try {
                 const fechaPedido = new Date(p.fechaPedido);
-                
-                // Validar que la fecha sea válida
                 if (isNaN(fechaPedido.getTime())) {
                     console.warn('Fecha inválida en pedido:', p.idPedido, p.fechaPedido);
                     return false;
                 }
                 
-                // Comparar solo las fechas (sin hora)
                 fechaPedido.setHours(0, 0, 0, 0);
                 return fechaPedido >= fechaLimite;
             } catch (error) {
@@ -153,13 +142,10 @@ export class Pedidos implements OnInit, OnDestroy {
             }
         });
 
-        // Refrescar la lista visible
         this.listaPedidos = pedidosFiltrados;
     }
 
-    // Restablece todos los filtros y la lista de pedidos a su estado original
     limpiarFiltros(): void {
-        // Restablecer las variables de filtro 
         this.filtroPeriodo = 'semana'; 
         this.filtroEstado = 'todos'; 
 
@@ -168,16 +154,37 @@ export class Pedidos implements OnInit, OnDestroy {
     }
 
     // Devuelve la clase CSS para la insignia de estado
+    formatearEstado(estado: string): string {
+        if (!estado) return '';
+        return String(estado)
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+            .join(' ');
+    }
+
     getEstadoClase(estado: string): string {
-        switch (estado) {
-            case 'Entregado':
-                return 'bg-success-light text-success';
-            case 'Enviado':
-                return 'bg-warning-light text-warning';
-            case 'Pendiente':
-                return 'bg-info-light text-info';
+        if (!estado) return 'status-default';
+        
+        const estadoLower = estado.toLowerCase().trim();
+        
+        switch (estadoLower) {
+            case 'pendiente':
+                return 'status-pendiente';
+            case 'en_curso':
+            case 'en curso':
+            case 'en_preparacion':
+            case 'en preparacion':
+                return 'status-en-curso';
+            case 'en_camino':
+            case 'en camino':
+                return 'status-en-camino';
+            case 'entregado':
+                return 'status-entregado';
+            case 'cancelado':
+                return 'status-cancelado';
             default:
-                return 'bg-light text-muted';
+                return 'status-default';
         }
     }
 
@@ -192,9 +199,109 @@ export class Pedidos implements OnInit, OnDestroy {
         this.pedidoSeleccionado = null;
     }
 
-    // Crea un detalle de pedido basado en los datos del servicio
+    puedeCancelar(estado: string): boolean {
+        if (!estado) return false;
+        const estadoNormalizado = estado.toLowerCase().trim();
+        // Estados cancelables: pendiente, aceptado, en_preparacion
+        return estadoNormalizado === 'pendiente' || 
+               estadoNormalizado === 'aceptado' || 
+               estadoNormalizado === 'en_preparacion' ||
+               estadoNormalizado === 'en preparacion' ||
+               estadoNormalizado === 'enpreparacion';
+    }
+
+    // Abre el modal de confirmación para cancelar un pedido
+    cancelarPedido(idPedido: number, event: Event): void {
+        event.stopPropagation(); // Evitar que se abra el modal de detalles
+        this.pedidoACancelar = idPedido;
+        this.mostrarModalCancelar = true;
+    }
+
+    // Cierra el modal de confirmación
+    cerrarModalCancelar(): void {
+        this.mostrarModalCancelar = false;
+        this.pedidoACancelar = null;
+    }
+
+    // Confirma la cancelación del pedido
+    confirmarCancelarPedido(): void {
+        if (this.pedidoACancelar === null) {
+            return;
+        }
+
+        const usuarioActual = this.authService.getCurrentUser();
+        if (!usuarioActual) {
+            console.error('No hay usuario autenticado');
+            this.cerrarModalCancelar();
+            return;
+        }
+
+        this.pedidosService.cancelarPedido(this.pedidoACancelar, usuarioActual.idUsuario).subscribe({
+            next: (response) => {
+                if (response.success) {
+                    this.cerrarModalCancelar();
+                    this.cargarPedidos();
+                    
+                    if (response.metodoPagoInhabilitado && response.nombreMetodoPago) {
+                        this.notificacionService.mostrarAdvertencia(
+                            'Método de Pago Inhabilitado',
+                            `Tu método de pago ${response.nombreMetodoPago} ha sido inhabilitado temporalmente debido a múltiples cancelaciones. Por favor, contacta al administrador para más información.`
+                        );
+                    } else {
+                        this.notificacionService.mostrarExito(
+                            'Pedido cancelado',
+                            'El pedido ha sido cancelado correctamente'
+                        );
+                    }
+                } else {
+                    this.notificacionService.mostrarError('Error', 'Error al cancelar el pedido');
+                }
+            },
+            error: (error) => {
+                console.error('Error al cancelar pedido:', error);
+                const mensaje = error.error?.mensaje || error.error?.message || 'Error al cancelar el pedido';
+                this.notificacionService.mostrarError('Error', mensaje);
+                this.cerrarModalCancelar();
+            }
+        });
+    }
+
+    mostrarConfirmacionPago(pedido: Pedido): boolean {
+        const metodoPago = (pedido.metodoPago || '').toLowerCase();
+        const estado = (pedido.estadoPedido || '').toLowerCase();
+        // El cliente puede confirmar cuando el pedido está en curso o en camino (repartidor ya lo aceptó)
+        // Se mantiene visible incluso después de confirmar
+        return metodoPago === 'efectivo' && 
+               (estado === 'en_curso' || estado === 'en_camino' || estado === 'en camino' || 
+                estado === 'en_preparacion' || estado === 'en preparacion');
+    }
+
+    confirmarPagoEfectivo(idPedido: number, event: Event): void {
+        event.stopPropagation();
+        
+        const usuarioActual = this.authService.getCurrentUser();
+        if (!usuarioActual) {
+            console.error('No hay usuario autenticado');
+            return;
+        }
+
+        this.pedidosService.confirmarPagoEfectivo(idPedido, usuarioActual.idUsuario).subscribe({
+            next: (response) => {
+                if (response.success) {
+                    this.cargarPedidos();
+                } else {
+                    alert('Error al confirmar el pago');
+                }
+            },
+            error: (error) => {
+                console.error('Error al confirmar pago:', error);
+                const mensaje = error.error?.mensaje || error.error?.message || 'Error al confirmar el pago';
+                alert(mensaje);
+            }
+        });
+    }
+
     private crearDetallePedidoSimulado(pedido: Pedido): DetallePedidoData {
-        // Mapear repartidor si existe
         const repartidor = pedido.repartidor ? {
             idRepartidor: pedido.repartidor.idRepartidor || 0,
             nombre: pedido.repartidor.nombre,
@@ -202,7 +309,6 @@ export class Pedidos implements OnInit, OnDestroy {
             telefono: pedido.repartidor.telefono || ''
         } : undefined;
 
-        // Mapear productos a ProductoDetalle
         const productos = (pedido.productos || []).map(detalle => ({
             idDetallePedido: detalle.idDetallePedido,
             idProducto: detalle.idProducto,

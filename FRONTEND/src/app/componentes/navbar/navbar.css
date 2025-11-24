@@ -5,12 +5,10 @@
       border-color: #766550 !important;
   }
 
-/* Color barra de navegacion */
 .custom-navbar-yellow {
     background-color: #F4CEA1 !important; 
 }
 
-/* Estilo para el logo */
 .logo-img {
     width: 50px;           
     height: 50px;          
@@ -18,7 +16,6 @@
     border-radius: 8px;    
 }
 
-/* Estilos para los botones de navegación */
 .nav-button {
     background-color: transparent;
     border: none;
@@ -46,9 +43,8 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilos para los iconos de usuario y carrito */
 .nav-icon-link {
-    /* Asegura que los enlaces tengan un ancho uniforme para que los íconos se alineen */
+    
     min-width: 80px;
     padding: 0.5rem !important;
     line-height: 1.2; 
@@ -90,7 +86,6 @@
     text-decoration: none;
 }
 
-/* Ajuste de la insignia */
 .badge-custom {
     top: 5px !important; 
     right: 5px !important; 
@@ -198,7 +193,6 @@
   background-color: #fdf2f2;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .navbar-container {
     padding: 15px 20px;
@@ -217,7 +211,6 @@
   }
 }
 
-/* Ajuste para dispositivos móviles */
 @media (max-width: 576px) {
     .navbar-brand .text-primary {
         color: #007bff !important; 

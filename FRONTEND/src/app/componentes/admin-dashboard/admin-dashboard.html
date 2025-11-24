@@ -1,5 +1,4 @@
 <div class="admin-container">
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="logo">
@@ -45,17 +44,6 @@
         </span>
         <span class="nav-text">Cupones</span>
       </a>
-      <a href="#" class="nav-item" [class.active]="seccionActiva === 'ofertas'" (click)="navegarA('ofertas', $event)">
-        <span class="nav-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-1.12-2.5-2.5-2.5S6 10.62 6 12a2.5 2.5 0 0 0 2.5 2.5z"></path>
-            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"></path>
-            <path d="M12 6v6l4 2"></path>
-            <path d="M16 8l-4-2-4 2"></path>
-          </svg>
-        </span>
-        <span class="nav-text">Ofertas</span>
-      </a>
       <a href="#" class="nav-item" [class.active]="seccionActiva === 'reportes'" (click)="navegarA('reportes', $event)">
         <span class="nav-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -75,6 +63,15 @@
           </svg>
         </span>
         <span class="nav-text">Usuarios</span>
+      </a>
+      <a href="#" class="nav-item" [class.active]="seccionActiva === 'metodos-pago'" (click)="navegarA('metodos-pago', $event)">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+        </span>
+        <span class="nav-text">Métodos de Pago</span>
       </a>
       <a href="#" class="nav-item" [class.active]="seccionActiva === 'configuracion'" (click)="navegarA('configuracion', $event)">
         <span class="nav-icon">
@@ -98,12 +95,9 @@
     </nav>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <!-- Dashboard Section -->
     @if (seccionActiva === 'dashboard') {
     <div class="content-section">
-      <!-- Header -->
       <div class="content-header">
         <div class="welcome-section">
           <h1>¡Bienvenido, Admin!</h1>
@@ -114,7 +108,7 @@
         </button>
       </div>
 
-      <!-- KPI Cards -->
+      
       <div class="kpi-section">
         <div class="kpi-card">
           <div class="kpi-icon pedidos">
@@ -126,10 +120,6 @@
           <div class="kpi-content">
             <div class="kpi-value">{{ pedidosHoy }}</div>
             <div class="kpi-label">Pedidos Hoy</div>
-            <div class="kpi-trend positive">
-              <span class="trend-arrow">↗</span>
-              <span class="trend-value">+{{ tendenciaPedidos }}%</span>
-            </div>
           </div>
         </div>
 
@@ -145,10 +135,6 @@
           <div class="kpi-content">
             <div class="kpi-value">S/. {{ ventasHoy | number:'1.0-0' }}</div>
             <div class="kpi-label">Ventas Hoy</div>
-            <div class="kpi-trend positive">
-              <span class="trend-arrow">↗</span>
-              <span class="trend-value">+{{ tendenciaVentas }}%</span>
-            </div>
           </div>
         </div>
 
@@ -163,10 +149,6 @@
           <div class="kpi-content">
             <div class="kpi-value">{{ productosActivos }}</div>
             <div class="kpi-label">Productos Activos</div>
-            <div class="kpi-trend positive">
-              <span class="trend-arrow">↗</span>
-              <span class="trend-value">+{{ tendenciaProductos }}</span>
-            </div>
           </div>
         </div>
 
@@ -182,15 +164,11 @@
           <div class="kpi-content">
             <div class="kpi-value">{{ clientesActivos | number:'1.0-0' }}</div>
             <div class="kpi-label">Clientes Activos</div>
-            <div class="kpi-trend positive">
-              <span class="trend-arrow">↗</span>
-              <span class="trend-value">+{{ tendenciaClientes }}</span>
-            </div>
           </div>
         </div>
       </div>
 
-      <!-- Product Management Section -->
+      
       <div class="product-management">
         <div class="section-header">
           <h2>Gestión de Productos</h2>
@@ -353,33 +331,34 @@
 
     @if (mostrarModalEliminarProducto && productoAEliminar) {
     <div class="modal-overlay" (click)="cancelarEliminacionProducto()">
-      <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <div class="modal-title">
-            <div class="modal-icon delete-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3,6 5,6 21,6"></polyline>
-                <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-            </div>
-            <div class="modal-title-text">
-              <h3>Eliminar producto</h3>
-              <p>Esta acción no se puede deshacer manualmente.</p>
-            </div>
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3,6 5,6 21,6"></polyline>
+              <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
           </div>
-          <button class="modal-close" (click)="cancelarEliminacionProducto()">
-            <span>&times;</span>
+          <div>
+            <h3>Eliminar producto</h3>
+            <p>Esta acción no se puede deshacer manualmente.</p>
+          </div>
+          <button class="btn-close" (click)="cancelarEliminacionProducto()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
         </div>
         <div class="modal-body">
           <p>¿Seguro que deseas eliminar el producto <strong>{{ productoAEliminar.nombre }}</strong>?</p>
-          <p class="modal-note">Si el producto tiene pedidos relacionados se marcará como inactivo automáticamente.</p>
+          <p style="margin-top: 12px; color: #6c757d; font-size: 14px;">Si el producto tiene pedidos relacionados se marcará como inactivo automáticamente.</p>
         </div>
         <div class="modal-actions">
           <button class="btn-secondary" (click)="cancelarEliminacionProducto()">Cancelar</button>
-          <button class="btn-danger" [disabled]="eliminandoProducto" (click)="confirmarEliminacionProducto()">
+          <button class="btn-primary" [disabled]="eliminandoProducto" (click)="confirmarEliminacionProducto()" style="background: linear-gradient(135deg, #ef4444, #dc2626); margin-left: auto;">
             {{ eliminandoProducto ? 'Procesando...' : 'Eliminar' }}
           </button>
         </div>
@@ -388,7 +367,7 @@
     }
 
 
-    <!-- Problemas Reportados Section -->
+    
     @if (seccionActiva === 'pedidos') {
     <div class="content-section">
       <div class="content-header">
@@ -417,7 +396,15 @@
               <td>#{{ reporte.idPedido }}</td>
               <td>{{ reporte.clienteNombre }}</td>
               <td>{{ reporte.clienteTelefono || 'Sin teléfono' }}</td>
-              <td>{{ reporte.detalleProblema }}</td>
+              <td>
+                <button class="btn-ver-detalle" (click)="verDetalleProblema(reporte)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Ver Detalle
+                </button>
+              </td>
               <td>{{ reporte.repartidorNombre || 'Sin asignar' }}</td>
               <td>
                 <span class="status-badge" [class.en-proceso]="reporte.estadoPedido === 'en_camino' || reporte.estadoPedido === 'pendiente'" 
@@ -434,7 +421,70 @@
     </div>
     }
 
-    <!-- Cupones Section -->
+    @if (mostrarModalDetalleProblema && reporteProblemaSeleccionado) {
+    <div class="modal-overlay" (click)="cerrarModalDetalleProblema()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3>Detalle del Problema</h3>
+            <p>Información completa del reporte</p>
+          </div>
+          <button class="btn-close" (click)="cerrarModalDetalleProblema()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="problema-detalle-info">
+            <div class="info-row">
+              <span class="info-label">ID Pedido:</span>
+              <span class="info-value">#{{ reporteProblemaSeleccionado.idPedido }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Cliente:</span>
+              <span class="info-value">{{ reporteProblemaSeleccionado.clienteNombre }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Teléfono:</span>
+              <span class="info-value">{{ reporteProblemaSeleccionado.clienteTelefono || 'Sin teléfono' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Repartidor:</span>
+              <span class="info-value">{{ reporteProblemaSeleccionado.repartidorNombre || 'Sin asignar' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Estado:</span>
+              <span class="info-value">
+                <span class="status-badge" [class.en-proceso]="reporteProblemaSeleccionado.estadoPedido === 'en_camino' || reporteProblemaSeleccionado.estadoPedido === 'pendiente'" 
+                      [class.entregado]="reporteProblemaSeleccionado.estadoPedido === 'entregado'">
+                  {{ reporteProblemaSeleccionado.estadoPedido | uppercase }}
+                </span>
+              </span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Fecha:</span>
+              <span class="info-value">{{ reporteProblemaSeleccionado.fechaProblema }}</span>
+            </div>
+            <div class="info-row info-row-full">
+              <span class="info-label">Detalle del Problema:</span>
+              <div class="info-detail-text">{{ reporteProblemaSeleccionado.detalleProblema }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cerrarModalDetalleProblema()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+    }
+
     @if (seccionActiva === 'cupones') {
     <div class="content-section">
       <div class="content-header">
@@ -442,62 +492,90 @@
           <h1>Gestión de Cupones</h1>
           <p>Administra los cupones de descuento</p>
         </div>
-        <button class="btn-nuevo-producto">
+        <button class="btn-nuevo-producto" (click)="nuevoCupon()">
           + Nuevo Cupón
         </button>
       </div>
 
-      <div class="coupons-table">
-        <table>
+      @if (cuponesCargando) {
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <p>Cargando cupones...</p>
+        </div>
+      } @else if (cuponesError) {
+        <div class="error-container">
+          <p>{{ cuponesError }}</p>
+          <button class="btn-retry" (click)="cargarCupones()">Reintentar</button>
+        </div>
+      } @else {
+        <div class="coupons-table">
+          <table>
           <thead>
             <tr>
               <th>Código</th>
-              <th>Descripción</th>
               <th>Descuento</th>
               <th>Tipo</th>
+              <th>Fecha Inicio</th>
+              <th>Fecha Fin</th>
+              <th>Usos por Usuario</th>
+              <th>Monto Mínimo</th>
               <th>Estado</th>
-              <th>Vencimiento</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (cupon of cupones; track cupon.id) {
-            <tr>
-              <td><strong>{{ cupon.codigo }}</strong></td>
-              <td>{{ cupon.descripcion }}</td>
-              <td>{{ cupon.descuento }}{{ cupon.tipo === 'Porcentaje' ? '%' : ' S/.' }}</td>
-              <td>{{ cupon.tipo }}</td>
-              <td>
-                <span class="status-badge available">{{ cupon.estado }}</span>
-              </td>
-              <td>{{ cupon.fechaVencimiento }}</td>
-              <td>
-                <div class="actions">
-                  <button class="btn-edit" title="Editar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </button>
-                  <button class="btn-delete" title="Eliminar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3,6 5,6 21,6"></polyline>
-                      <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-                      <line x1="10" y1="11" x2="10" y2="17"></line>
-                      <line x1="14" y1="11" x2="14" y2="17"></line>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            }
+              @for (cupon of cupones; track cupon.idCupon) {
+              <tr>
+                <td><strong>{{ cupon.codigo }}</strong></td>
+                <td>{{ formatearValorDescuento(cupon) }}</td>
+                <td>{{ formatearTipoDescuento(cupon.tipoDescuento) }}</td>
+                <td>{{ cupon.fechaInicio | date:'shortDate' }}</td>
+                <td>{{ cupon.fechaFin | date:'shortDate' }}</td>
+                <td>{{ cupon.usosMaximosPorUsuario || 'Sin límite' }}</td>
+                <td>S/. {{ cupon.montoMinimoCompra | number:'1.2-2' }}</td>
+                <td>
+                  <span class="status-badge" [class.active]="cupon.activo" [class.inactive]="!cupon.activo">
+                    {{ cupon.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions">
+                    <button class="btn-edit" title="Editar" (click)="editarCupon(cupon)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-toggle" [class.activate]="cupon.activo" [class.deactivate]="!cupon.activo" [title]="cupon.activo ? 'Desactivar' : 'Activar'" (click)="cambiarEstadoCupon(cupon)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        @if (cupon.activo) {
+                          <path d="M18 6L6 18M6 6l12 12"></path>
+                        } @else {
+                          <path d="M5 13l4 4L19 7"></path>
+                        }
+                      </svg>
+                    </button>
+                    <button class="btn-delete" title="Eliminar" (click)="eliminarCupon(cupon)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3,6 5,6 21,6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9" class="empty-state">No hay cupones registrados</td>
+                </tr>
+              }
           </tbody>
         </table>
-      </div>
+        </div>
+      }
     </div>
     }
 
-    <!-- Usuarios Section -->
     @if (seccionActiva === 'usuarios') {
     <div class="content-section">
       <div class="content-header">
@@ -507,7 +585,7 @@
         </div>
       </div>
 
-      <!-- Buscador y Filtros -->
+      
       <div class="search-filters-section">
         <div class="search-container">
           <input 
@@ -537,7 +615,7 @@
         </div>
       </div>
 
-      <!-- Estadísticas de Usuarios -->
+      
       @if (estadisticas) {
       <div class="stats-section">
         <div class="stat-card">
@@ -596,7 +674,7 @@
       </div>
       }
 
-      <!-- Tabla de Usuarios -->
+      
       <div class="users-table">
         @if (loadingUsuarios) {
         <div class="loading-container">
@@ -713,17 +791,359 @@
     </div>
     }
 
-    <!-- Sección de Configuración -->
     @if (seccionActiva === 'configuracion') {
     <div class="content-section">
       <div class="content-header">
         <div class="welcome-section">
-          <h1>Configuración</h1>
-          <p>Gestiona la configuración de tu cuenta</p>
+          <h1>Mi Perfil</h1>
+          <p>Gestiona tu información personal y estadísticas</p>
         </div>
       </div>
+
+      <div class="profile-content">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div class="profile-info">
+              <h2>{{ usuario?.nombre }} {{ usuario?.apellido }}</h2>
+              <p>{{ usuario?.email }}</p>
+              <p>{{ usuario?.telefono }}</p>
+            </div>
+          </div>
+          
+          <div class="profile-details">
+            <div class="detail-row">
+              <span class="detail-label">Dirección:</span>
+              <span class="detail-value">{{ usuario?.direccion || 'No especificada' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Fecha de Registro:</span>
+              <span class="detail-value">{{ perfilAdmin.fechaRegistro || 'No disponible' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Rol:</span>
+              <span class="detail-value">{{ usuario?.rol | titlecase }}</span>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <button class="btn-editar-perfil" (click)="abrirModalEditarPerfil()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Editar Información
+            </button>
+            
+            <button class="btn-cambiar-contrasena" (click)="abrirModalCambiarContrasena()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <circle cx="12" cy="16" r="1"></circle>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Cambiar Contraseña
+            </button>
+          </div>
+        </div>
+
+        @if (mostrarModalEditarPerfil) {
+          <div class="modal-overlay" (click)="cerrarModalEditarPerfil()">
+            <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+              <div class="modal-header">
+                <div class="modal-title">
+                  <div class="modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </div>
+                  <div class="modal-title-text">
+                    <h3>Editar Información Personal</h3>
+                    <p>Actualiza tus datos personales y de contacto.</p>
+                  </div>
+                </div>
+                <button class="modal-close" (click)="cerrarModalEditarPerfil()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="modal-body">
+                <form (ngSubmit)="guardarPerfil()">
+                  <div class="form-group">
+                    <label>Nombre</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="datosPerfil.nombre" 
+                      name="nombre"
+                      required
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Apellido</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="datosPerfil.apellido" 
+                      name="apellido"
+                      required
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Teléfono</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="datosPerfil.telefono" 
+                      name="telefono"
+                      placeholder="Opcional"
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Dirección</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="datosPerfil.direccion" 
+                      name="direccion"
+                      required
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="cerrarModalEditarPerfil()">
+                  Cancelar
+                </button>
+                <button type="button" class="btn-primary" (click)="guardarPerfil()" [disabled]="guardandoPerfil">
+                  {{ guardandoPerfil ? 'Guardando...' : 'Guardar Cambios' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (mostrarModalCambiarContrasena) {
+          <div class="modal-overlay" (click)="cerrarModalCambiarContrasena()">
+            <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+              <div class="modal-header">
+                <div class="modal-title">
+                  <div class="modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <circle cx="12" cy="16" r="1"></circle>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </div>
+                  <div class="modal-title-text">
+                    <h3>Cambiar Contraseña</h3>
+                    <p>Actualiza tu contraseña para mantener tu cuenta segura.</p>
+                  </div>
+                </div>
+                <button class="modal-close" (click)="cerrarModalCambiarContrasena()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="modal-body">
+                <form (ngSubmit)="guardarNuevaContrasena()">
+                  <div class="form-group">
+                    <label>Contraseña Actual</label>
+                    <div class="password-input-wrapper">
+                      <input
+                        [type]="mostrarContrasenaActual ? 'text' : 'password'"
+                        [(ngModel)]="datosContrasena.contrasenaActual"
+                        name="contrasenaActual"
+                        placeholder="Ingresa tu contraseña actual"
+                        required
+                      />
+                      <button
+                        type="button"
+                        class="toggle-password-btn"
+                        (click)="toggleMostrarContrasenaActual()"
+                      >
+                        <i class="fas" [ngClass]="{'fa-eye': !mostrarContrasenaActual, 'fa-eye-slash': mostrarContrasenaActual}"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Nueva Contraseña</label>
+                    <div class="password-input-wrapper">
+                      <input
+                        [type]="mostrarNuevaContrasena ? 'text' : 'password'"
+                        [(ngModel)]="datosContrasena.nuevaContrasena"
+                        name="nuevaContrasena"
+                        placeholder="Mínimo 6 caracteres"
+                        required
+                        minlength="6"
+                      />
+                      <button
+                        type="button"
+                        class="toggle-password-btn"
+                        (click)="toggleMostrarNuevaContrasena()"
+                      >
+                        <i class="fas" [ngClass]="{'fa-eye': !mostrarNuevaContrasena, 'fa-eye-slash': mostrarNuevaContrasena}"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Confirmar Nueva Contraseña</label>
+                    <div class="password-input-wrapper">
+                      <input
+                        [type]="mostrarConfirmarContrasena ? 'text' : 'password'"
+                        [(ngModel)]="datosContrasena.confirmarContrasena"
+                        name="confirmarContrasena"
+                        placeholder="Repite la nueva contraseña"
+                        required
+                      />
+                      <button
+                        type="button"
+                        class="toggle-password-btn"
+                        (click)="toggleMostrarConfirmarContrasena()"
+                      >
+                        <i class="fas" [ngClass]="{'fa-eye': !mostrarConfirmarContrasena, 'fa-eye-slash': mostrarConfirmarContrasena}"></i>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="cerrarModalCambiarContrasena()">
+                  Cancelar
+                </button>
+                <button type="button" class="btn-primary" (click)="guardarNuevaContrasena()" [disabled]="guardandoContrasena">
+                  {{ guardandoContrasena ? 'Cambiando...' : 'Cambiar Contraseña' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
       
-      <div class="config-content">
+      <div class="config-content" style="display: none;">
+        
+        <div class="config-card" style="display: none;">
+          <div class="config-header">
+            <div class="config-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <h2>Editar Perfil</h2>
+            <p>Actualiza tu información personal</p>
+          </div>
+
+          <form class="config-form" (ngSubmit)="guardarPerfil()">
+            <div class="form-group">
+              <label for="nombre" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Nombre
+              </label>
+              <input
+                type="text"
+                id="nombre"
+                class="form-control"
+                [(ngModel)]="datosPerfil.nombre"
+                name="nombre"
+                placeholder="Ingresa tu nombre"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="apellido" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Apellido
+              </label>
+              <input
+                type="text"
+                id="apellido"
+                class="form-control"
+                [(ngModel)]="datosPerfil.apellido"
+                name="apellido"
+                placeholder="Ingresa tu apellido"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="telefono" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                Teléfono
+              </label>
+              <input
+                type="text"
+                id="telefono"
+                class="form-control"
+                [(ngModel)]="datosPerfil.telefono"
+                name="telefono"
+                placeholder="Ingresa tu teléfono (opcional)"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="direccion" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                Dirección
+              </label>
+              <input
+                type="text"
+                id="direccion"
+                class="form-control"
+                [(ngModel)]="datosPerfil.direccion"
+                name="direccion"
+                placeholder="Ingresa tu dirección"
+                required
+              />
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="guardandoPerfil">
+                @if (guardandoPerfil) {
+                  <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+                  </svg>
+                  Guardando...
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17,21 17,13 7,13 7,21"></polyline>
+                    <polyline points="7,3 7,8 15,8"></polyline>
+                  </svg>
+                  Guardar Cambios
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+
+        
         <div class="config-card">
           <div class="config-header">
             <div class="config-icon">
@@ -737,29 +1157,6 @@
             <p>Actualiza tu contraseña para mantener tu cuenta segura</p>
           </div>
 
-          <!-- Mensajes de éxito y error -->
-          @if (mensajeExitoContrasena) {
-            <div class="alert alert-success">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22,4 12,14.01 9,11.01"></polyline>
-              </svg>
-              {{ mensajeExitoContrasena }}
-            </div>
-          }
-
-          @if (mensajeErrorContrasena) {
-            <div class="alert alert-error">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-              </svg>
-              {{ mensajeErrorContrasena }}
-            </div>
-          }
-
-          <!-- Formulario de cambio de contraseña -->
           <form class="config-form" (ngSubmit)="guardarNuevaContrasena()">
             <div class="form-group">
               <label for="contrasenaActual" class="form-label">
@@ -895,33 +1292,430 @@
     </div>
     }
 
-    <!-- Otras secciones placeholder -->
-    @if (seccionActiva === 'ofertas' || seccionActiva === 'reportes') {
+    @if (seccionActiva === 'reportes') {
     <div class="content-section">
       <div class="content-header">
         <div class="welcome-section">
-          <h1>{{ seccionActiva.charAt(0).toUpperCase() + seccionActiva.slice(1) }}</h1>
-          <p>Esta sección está en desarrollo</p>
+          <h1>Generar Reportes</h1>
+          <p>Genera reportes de ventas, productos vendidos y ganancias</p>
         </div>
       </div>
-      <div class="placeholder-content">
-        <div class="placeholder-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
+
+      <div class="reporte-card">
+        <div class="reporte-form">
+          <div class="form-group">
+            <label>Tipo de Reporte</label>
+            <select [(ngModel)]="tipoReporteSeleccionado" class="form-select">
+              <option [value]="null">Seleccione un tipo de reporte</option>
+              <option value="ventas">Reporte de Ventas</option>
+              <option value="productos-vendidos">Productos Más Vendidos</option>
+              <option value="ganancias">Reporte de Ganancias</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha Inicio <span style="color: #ef4444;">*</span></label>
+              <input type="date" [(ngModel)]="fechaInicioReporte" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label>Fecha Fin <span style="color: #ef4444;">*</span></label>
+              <input type="date" [(ngModel)]="fechaFinReporte" class="form-input" required>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" (click)="generarReporte()" [disabled]="generandoReporte || !tipoReporteSeleccionado || !fechaInicioReporte || !fechaFinReporte">
+              @if (generandoReporte) {
+                <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+                </svg>
+                Generando...
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14,2 14,8 20,8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10,9 9,9 8,9"></polyline>
+                </svg>
+                Generar Reporte
+              }
+            </button>
+            @if (reporteActual) {
+              <button class="btn-secondary" (click)="limpiarReporte()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"></polyline>
+                  <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                </svg>
+                Limpiar
+              </button>
+            }
+          </div>
         </div>
-        <h3>Próximamente</h3>
-        <p>Esta funcionalidad estará disponible en una próxima actualización.</p>
       </div>
+
+      <div class="reporte-card" style="margin-top: 24px;">
+        <div class="configuracion-header">
+          <div class="configuracion-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+            </svg>
+          </div>
+          <div>
+            <h3>Configuración de Reportes</h3>
+            <p>Gestiona el porcentaje de costo estimado para reportes de ganancias</p>
+          </div>
+        </div>
+        <div class="configuracion-content">
+          @if (!editandoPorcentaje) {
+            <div class="configuracion-display">
+              <div class="configuracion-info">
+                <span class="configuracion-label">Porcentaje de Costo Estimado:</span>
+                <span class="configuracion-value">{{ (porcentajeCosto * 100) | number:'1.2-2' }}%</span>
+              </div>
+              <button class="btn-secondary" (click)="iniciarEdicionPorcentaje()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Editar
+              </button>
+            </div>
+          } @else {
+            <div class="configuracion-edit">
+              <div class="form-group">
+                <label>Porcentaje de Costo (0.00 - 1.00)</label>
+                <input 
+                  type="number" 
+                  [(ngModel)]="porcentajeCostoEditando" 
+                  class="form-input"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  placeholder="0.70">
+                <small class="helper-text">Ejemplo: 0.60 = 60% de costo, 0.40 = 40% de ganancia</small>
+              </div>
+              <div class="form-actions" style="margin-top: 20px; padding-top: 0; border-top: none;">
+                <button class="btn-secondary" (click)="cancelarEdicionPorcentaje()" [disabled]="guardandoPorcentaje">
+                  Cancelar
+                </button>
+                <button class="btn-primary" (click)="guardarPorcentajeCosto()" [disabled]="guardandoPorcentaje">
+                  @if (guardandoPorcentaje) {
+                    <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+                    </svg>
+                    Guardando...
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 6L9 17l-5-5"></path>
+                    </svg>
+                    Guardar
+                  }
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (reporteActual) {
+      <div class="reporte-resultado-card">
+        <div class="reporte-header">
+          <div class="reporte-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </div>
+          <div>
+            <h2>{{ reporteActual.nombreReporte }}</h2>
+            <p>Resultados del reporte generado</p>
+          </div>
+        </div>
+        <div class="reporte-datos">
+          @if (reporteActual.tipoReporte === 'ventas') {
+            <div class="reporte-metricas-grid">
+              <div class="metrica-card">
+                <div class="metrica-icon" style="background: linear-gradient(135deg, #27AE60, #2ECC71);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <div class="metrica-content">
+                  <span class="metrica-label">Total de Ventas</span>
+                  <span class="metrica-value">S/. {{ reporteActual.datos?.totalVentas | number:'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="metrica-card">
+                <div class="metrica-icon" style="background: linear-gradient(135deg, #FF6B35, #F7931E);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                    <path d="M20 8v6M23 11h-6"></path>
+                  </svg>
+                </div>
+                <div class="metrica-content">
+                  <span class="metrica-label">Cantidad de Pedidos</span>
+                  <span class="metrica-value">{{ reporteActual.datos?.cantidadPedidos }}</span>
+                </div>
+              </div>
+              <div class="metrica-card">
+                <div class="metrica-icon" style="background: linear-gradient(135deg, #3498DB, #5DADE2);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                </div>
+                <div class="metrica-content">
+                  <span class="metrica-label">Promedio de Venta</span>
+                  <span class="metrica-value">S/. {{ reporteActual.datos?.promedioVenta | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          } @else if (reporteActual.tipoReporte === 'productos_vendidos' || reporteActual.tipoReporte === 'productos-vendidos') {
+            <div class="productos-lista">
+              @for (producto of reporteActual.datos?.productos; track producto.idProducto) {
+                <div class="producto-item-card">
+                  <div class="producto-info">
+                    <span class="producto-nombre">{{ producto.nombre }}</span>
+                    <div class="producto-details">
+                      <span class="producto-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="8.5" cy="7" r="4"></circle>
+                        </svg>
+                        Cantidad: {{ producto.cantidadVendida }}
+                      </span>
+                      <span class="producto-total">S/. {{ producto.totalVentas | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (reporteActual.tipoReporte === 'ganancias') {
+            <div class="reporte-metricas-grid">
+              <div class="metrica-card">
+                <div class="metrica-icon" style="background: linear-gradient(135deg, #27AE60, #2ECC71);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <div class="metrica-content">
+                  <span class="metrica-label">Total de Ganancias</span>
+                  <span class="metrica-value">S/. {{ reporteActual.datos?.totalGanancias | number:'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="metrica-card">
+                <div class="metrica-icon" style="background: linear-gradient(135deg, #E74C3C, #EC7063);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                </div>
+                <div class="metrica-content">
+                  <span class="metrica-label">Costo Estimado</span>
+                  <span class="metrica-value">S/. {{ reporteActual.datos?.costoEstimado | number:'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="metrica-card">
+                <div class="metrica-icon" style="background: linear-gradient(135deg, #9B59B6, #BB8FCE);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <div class="metrica-content">
+                  <span class="metrica-label">Ganancia Neta</span>
+                  <span class="metrica-value">S/. {{ reporteActual.datos?.gananciaNeta | number:'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="metrica-card">
+                <div class="metrica-icon" style="background: linear-gradient(135deg, #3498DB, #5DADE2);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                  </svg>
+                </div>
+                <div class="metrica-content">
+                  <span class="metrica-label">Margen de Ganancia</span>
+                  <span class="metrica-value">{{ reporteActual.datos?.margenGanancia | number:'1.2-2' }}%</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      }
     </div>
     }
+
+    @if (seccionActiva === 'metodos-pago') {
+    <div class="content-section">
+      <div class="content-header">
+        <div class="welcome-section">
+          <h1>Métodos de Pago Inhabilitados</h1>
+          <p>Gestiona los métodos de pago que han sido inhabilitados automáticamente</p>
+        </div>
+      </div>
+
+      @if (cargandoInhabilitaciones) {
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <p>Cargando...</p>
+        </div>
+      } @else if (metodosPagoInhabilitados.length === 0) {
+        <div class="empty-state-card">
+          <div class="empty-state-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </div>
+          <h3>No hay métodos de pago inhabilitados</h3>
+          <p>Todos los métodos de pago están activos</p>
+        </div>
+      } @else {
+        <div class="inhabilitaciones-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Método de Pago</th>
+                <th>Razón</th>
+                <th>Fecha Inhabilitación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (inhabilitacion of metodosPagoInhabilitados; track inhabilitacion.idInhabilitacion) {
+                <tr>
+                  <td>
+                    <div class="user-info">
+                      <div class="user-name">{{ inhabilitacion.usuario.nombre }}</div>
+                      <div class="user-email">{{ inhabilitacion.usuario.email }}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="metodo-badge">{{ inhabilitacion.metodoPago }}</span>
+                  </td>
+                  <td>{{ inhabilitacion.razon }}</td>
+                  <td>{{ inhabilitacion.fechaInhabilitacion | date:'short' }}</td>
+                  <td>
+                    <button class="btn-reactivar" (click)="reactivarMetodoPago(inhabilitacion)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 4v6h6"></path>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                      </svg>
+                      Reactivar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+    }
+
   </div>
 
-  <!-- Modal de Confirmación de Salir -->
+  @if (mostrarModalCupon) {
+    <div class="modal-overlay" (click)="cerrarModalCupon()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </div>
+          <div>
+            <h3>{{ esNuevoCupon ? 'Nuevo Cupón' : 'Editar Cupón' }}</h3>
+            <p>{{ esNuevoCupon ? 'Crea un nuevo cupón de descuento' : 'Modifica los datos del cupón' }}</p>
+          </div>
+          <button class="btn-close" (click)="cerrarModalCupon()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Código del Cupón *</label>
+              <input type="text" [(ngModel)]="cuponForm.codigo" class="form-input" placeholder="Ej: BIENVENIDA10" [disabled]="!esNuevoCupon">
+            </div>
+            
+            <div class="form-group">
+              <label>Tipo de Descuento *</label>
+              <select [(ngModel)]="cuponForm.tipoDescuento" class="form-select">
+                <option value="porcentaje">Porcentaje</option>
+                <option value="monto_fijo">Monto Fijo</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Valor de Descuento *</label>
+              <input type="number" [(ngModel)]="cuponForm.valorDescuento" class="form-input" 
+                     [placeholder]="cuponForm.tipoDescuento === 'porcentaje' ? 'Ej: 10' : 'Ej: 15.50'" 
+                     step="0.01" min="0.01">
+            </div>
+            
+            <div class="form-group">
+              <label>Fecha Inicio *</label>
+              <input type="date" [(ngModel)]="cuponForm.fechaInicio" class="form-input">
+            </div>
+            
+            <div class="form-group">
+              <label>Fecha Fin *</label>
+              <input type="date" [(ngModel)]="cuponForm.fechaFin" class="form-input">
+            </div>
+            
+            <div class="form-group">
+              <label>Usos Máximos por Usuario</label>
+              <input type="number" [(ngModel)]="cuponForm.usosMaximosPorUsuario" class="form-input" 
+                     placeholder="Ej: 1 (dejar vacío para sin límite)" min="1">
+            </div>
+            
+            <div class="form-group">
+              <label>Cantidad Disponible</label>
+              <input type="number" [(ngModel)]="cuponForm.cantidadDisponible" class="form-input" 
+                     placeholder="Ej: 100 (dejar vacío para sin límite)" min="1">
+            </div>
+            
+            <div class="form-group">
+              <label>Monto Mínimo de Compra</label>
+              <input type="number" [(ngModel)]="cuponForm.montoMinimoCompra" class="form-input" 
+                     placeholder="Ej: 50.00" step="0.01" min="0">
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cerrarModalCupon()">Cancelar</button>
+          <button class="btn-primary" (click)="guardarCupon()" [disabled]="guardandoCupon" style="margin-left: auto;">
+            @if (guardandoCupon) {
+              Guardando...
+            } @else {
+              {{ esNuevoCupon ? 'Crear Cupón' : 'Guardar Cambios' }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   @if (mostrarModalSalir) {
     <div class="modal-overlay" (click)="cerrarModalSalir()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div class="modal-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -930,16 +1724,23 @@
               <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
           </div>
-          <h3>¿Cerrar Sesión?</h3>
+          <div>
+            <h3>¿Cerrar Sesión?</h3>
+            <p>Esta acción cerrará tu sesión actual</p>
+          </div>
+          <button class="btn-close" (click)="cerrarModalSalir()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div class="modal-body">
           <p>¿Estás seguro de que quieres cerrar tu sesión? Se perderán los datos no guardados.</p>
         </div>
         <div class="modal-actions">
-          <button class="btn-cancel" (click)="cerrarModalSalir()">
-            Cancelar
-          </button>
-          <button class="btn-confirm" (click)="confirmarSalir()">
+          <button class="btn-secondary" (click)="cerrarModalSalir()">Cancelar</button>
+          <button class="btn-primary" (click)="confirmarSalir()" style="background: linear-gradient(135deg, #ef4444, #dc2626); margin-left: auto;">
             Cerrar Sesión
           </button>
         </div>
@@ -947,12 +1748,11 @@
     </div>
   }
 
-  <!-- Modal de Confirmación de Eliminación -->
   @if (mostrarModalEliminar && usuarioAEliminar) {
     <div class="modal-overlay" (click)="cerrarModalEliminar()">
-      <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <div class="modal-icon delete-icon">
+          <div class="modal-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3,6 5,6 21,6"></polyline>
               <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
@@ -960,17 +1760,24 @@
               <line x1="14" y1="11" x2="14" y2="17"></line>
             </svg>
           </div>
-          <h3>¿Eliminar Usuario?</h3>
+          <div>
+            <h3>¿Eliminar Usuario?</h3>
+            <p>Esta acción no se puede deshacer</p>
+          </div>
+          <button class="btn-close" (click)="cerrarModalEliminar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div class="modal-body">
           <p>¿Estás seguro de que quieres eliminar al usuario <strong>{{ usuarioAEliminar.nombre }} {{ usuarioAEliminar.apellido }}</strong>?</p>
-          <p class="warning-text">Esta acción no se puede deshacer y se eliminarán todos los datos asociados al usuario.</p>
+          <p class="warning-text" style="color: #ef4444; margin-top: 12px; font-weight: 500;">Esta acción no se puede deshacer y se eliminarán todos los datos asociados al usuario.</p>
         </div>
         <div class="modal-actions">
-          <button class="btn-cancel" (click)="cerrarModalEliminar()">
-            Cancelar
-          </button>
-          <button class="btn-delete-confirm" (click)="eliminarUsuario()">
+          <button class="btn-secondary" (click)="cerrarModalEliminar()">Cancelar</button>
+          <button class="btn-primary" (click)="eliminarUsuario()" style="background: linear-gradient(135deg, #ef4444, #dc2626); margin-left: auto;">
             Eliminar Usuario
           </button>
         </div>
@@ -978,13 +1785,21 @@
     </div>
   }
 
-  <!-- Modal Cambiar Rol -->
   @if (mostrarModalRol) {
   <div class="modal-overlay" (click)="cerrarModalRol()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>Cambiar Rol de Usuario</h2>
-        <button class="modal-close" (click)="cerrarModalRol()">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div>
+          <h3>Cambiar Rol de Usuario</h3>
+          <p>Selecciona el nuevo rol para el usuario</p>
+        </div>
+        <button class="btn-close" (click)="cerrarModalRol()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1026,16 +1841,117 @@
       </div>
       
       <div class="modal-actions">
-        <button class="btn-cancel" (click)="cerrarModalRol()">
-          Cancelar
-        </button>
-        <button class="btn-save" (click)="cambiarRolUsuario()" [disabled]="!nuevoRolSeleccionado || nuevoRolSeleccionado === usuarioSeleccionado.rol">
+        <button class="btn-secondary" (click)="cerrarModalRol()">Cancelar</button>
+        <button class="btn-primary" (click)="cambiarRolUsuario()" [disabled]="!nuevoRolSeleccionado || (usuarioSeleccionado && nuevoRolSeleccionado.toLowerCase() === usuarioSeleccionado.rol.toLowerCase())" style="margin-left: auto;">
           Cambiar Rol
         </button>
       </div>
       }
     </div>
   </div>
+  }
+
+  @if (mostrarModalConfirmarEstado && cuponParaCambiarEstado) {
+    <div class="modal-overlay" (click)="cerrarModalConfirmarEstado()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+          </div>
+          <div>
+            <h3>{{ nuevoEstadoCupon ? 'Activar Cupón' : 'Desactivar Cupón' }}</h3>
+            <p>Confirma la acción para el cupón</p>
+          </div>
+          <button class="btn-close" (click)="cerrarModalConfirmarEstado()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>¿Desea {{ nuevoEstadoCupon ? 'activar' : 'desactivar' }} el cupón <strong>{{ cuponParaCambiarEstado.codigo }}</strong>?</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cerrarModalConfirmarEstado()">Cancelar</button>
+          <button class="btn-primary" (click)="confirmarCambiarEstadoCupon()" style="margin-left: auto;">
+            {{ nuevoEstadoCupon ? 'Activar' : 'Desactivar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (mostrarModalConfirmarEliminar && cuponParaEliminar) {
+    <div class="modal-overlay" (click)="cerrarModalConfirmarEliminar()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3,6 5,6 21,6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </div>
+          <div>
+            <h3>Eliminar Cupón</h3>
+            <p>Esta acción no se puede deshacer</p>
+          </div>
+          <button class="btn-close" (click)="cerrarModalConfirmarEliminar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de eliminar el cupón <strong>{{ cuponParaEliminar.codigo }}</strong>?</p>
+          <p style="color: #ef4444; margin-top: 12px; font-weight: 500;">Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cerrarModalConfirmarEliminar()">Cancelar</button>
+          <button class="btn-primary" (click)="confirmarEliminarCupon()" style="margin-left: auto; background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (mostrarModalConfirmarReactivar && metodoPagoParaReactivar) {
+    <div class="modal-overlay" (click)="cerrarModalConfirmarReactivar()">
+      <div class="modal-content modal-edit" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+          </div>
+          <div>
+            <h3>Reactivar Método de Pago</h3>
+            <p>Confirma la reactivación</p>
+          </div>
+          <button class="btn-close" (click)="cerrarModalConfirmarReactivar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>¿Desea reactivar el método de pago <strong>{{ metodoPagoParaReactivar.metodoPago }}</strong> para el usuario <strong>{{ metodoPagoParaReactivar.usuario.nombre }}</strong>?</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cerrarModalConfirmarReactivar()">Cancelar</button>
+          <button class="btn-primary" (click)="confirmarReactivarMetodoPago()" style="margin-left: auto;">
+            Reactivar
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>
 

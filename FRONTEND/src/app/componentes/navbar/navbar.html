@@ -1,50 +1,50 @@
-<!-- Barra de Navegación Original -->
+
 <nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top custom-navbar-yellow">
   <div class="container-fluid">
-    <!-- Logo y Título -->
+    
     <div class="navbar-brand text-primary fw-bold fs-4">
       <img src="/Logo.ico" alt="Logo de la Tienda" class="d-inline-block align-text-top me-2 logo-img">
       <span class="d-none d-sm-inline">Tienda de Alimentos Online</span>
     </div>
 
-    <!-- Botón de colapso para móvil -->
+    
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     
     <div class="collapse navbar-collapse" id="navbarNav">
-      <!-- Enlace a Menu, Pedidos y Cupones-->
+      
       <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <!-- Menú -->
+          
           <a class="nav-link nav-button" (click)="navegarA('/menu')" [class.active]="router.url === '/menu'">Menú</a>
         </li>
         <li class="nav-item">
-          <!-- Mis Pedidos -->
+          
           <a class="nav-link nav-button" (click)="navegarA('/mis-pedidos')" [class.active]="router.url === '/mis-pedidos'">Mis Pedidos</a>
         </li>
         <li class="nav-item">
-          <!-- Mis Cupones -->
+          
           <a class="nav-link nav-button" (click)="navegarA('/mis-cupones')" [class.active]="router.url === '/mis-cupones'">Mis Cupones</a>
         </li>
       </ul>
       
-      <!-- Carrito y Cuenta -->
+      
       <div class="d-flex align-items-start">
-        <!-- Mi cuenta/Perfil icono -->
+        
         <a class="btn btn-link text-decoration-none text-primary text-center px-3 nav-icon-link" 
            (click)="navegarA(usuario ? '/mi-perfil' : '/login')">
-            <!-- Icono de usuario -->
+            
             <i class="fas fa-user fa-lg mb-1"></i>
             <small class="fw-bold">{{ usuario ? 'Mi Perfil' : 'Mi Cuenta' }}</small>
         </a>
         
-        <!-- CARRITO icono -->
+        
         <a class="btn btn-link text-decoration-none text-primary text-center position-relative px-3 nav-icon-link" (click)="navegarA('/carrito')">
           <i class="fas fa-shopping-cart fa-lg mb-1"></i>
           <small class="fw-bold">Mi Carrito</small>
           
-          <!-- Badge del Carrito -->
+          
           <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger badge-custom">
             {{ carritoService.totalItems() }}
             <span class="visually-hidden">elementos en el carrito</span>

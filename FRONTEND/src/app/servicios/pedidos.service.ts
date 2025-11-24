@@ -11,18 +11,28 @@ export class PedidosService {
 
   constructor(private http: HttpClient) {}
 
-  // Obtiene el historial de pedidos del usuario
   obtenerHistorialPedidos(idUsuario: number): Observable<Pedido[]> {
     const url = `${this.baseUrl}/usuario/${idUsuario}`;
     console.log(`[PedidosService] Obteniendo historial de pedidos para usuario ${idUsuario}: ${url}`);
     return this.http.get<Pedido[]>(url);
   }
 
-  // Obtiene los detalles de un pedido específico
   obtenerDetallePedido(idPedido: number): Observable<Pedido> {
     const url = `${this.baseUrl}/${idPedido}`;
     console.log(`[PedidosService] Obteniendo detalle del pedido ${idPedido}: ${url}`);
     return this.http.get<Pedido>(url);
+  }
+
+  cancelarPedido(idPedido: number, idCliente: number): Observable<any> {
+    const url = `${this.baseUrl}/${idPedido}/cancelar`;
+    console.log(`[PedidosService] Cancelando pedido ${idPedido} para cliente ${idCliente}: ${url}`);
+    return this.http.put<any>(url, { idCliente });
+  }
+
+  confirmarPagoEfectivo(idPedido: number, idCliente: number): Observable<any> {
+    const url = `${this.baseUrl}/${idPedido}/confirmar-pago-cliente`;
+    console.log(`[PedidosService] Confirmando pago efectivo del pedido ${idPedido} para cliente ${idCliente}: ${url}`);
+    return this.http.put<any>(url, { idCliente });
   }
 
 }

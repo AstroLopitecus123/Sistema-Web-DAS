@@ -41,6 +41,7 @@ Backend desarrollado con **Spring Boot 3.5.6** implementando arquitectura por ca
 | **Database Driver** | MySQL Connector | 8.0+ | `@Table`, `@Column` |
 | **Pagos** | Stripe Java | 30.0.0 | `@Service`, `@Value` |
 | **Notificaciones** | Twilio SDK | 10.6.3 | `@Service` |
+| **Notificaciones Push** | OneSignal REST API | - | `@Service`, `@Configuration` |
 | **Email** | JavaMail | 6.x | `@Service`, `@Configuration` |
 | **Config** | dotenv-java | 3.0.0 | `@Value`, `@Configuration` |
 | **Java** | OpenJDK | 21 | - |
@@ -114,6 +115,10 @@ TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
 # Gmail SMTP
 GMAIL_USERNAME=tu_email@gmail.com
 GMAIL_PASSWORD=tu_app_password
+
+# OneSignal (Notificaciones Push)
+ONESIGNAL_APP_ID=tu_app_id_onesignal
+ONESIGNAL_REST_API_KEY=tu_rest_api_key_onesignal
 
 # Servidor
 SERVER_PORT=8089
@@ -194,6 +199,30 @@ La API estará disponible en: `http://localhost:8089`
 | DELETE | `/api/admin/usuarios/{id}/seguro` | Eliminar usuario seguro | Sí | Admin |
 | GET | `/api/admin/usuarios/estadisticas` | Estadísticas generales | Sí | Admin |
 
+### Repartidor (`/api/v1/repartidor`)
+
+| Método | Endpoint | Descripción | Auth | Rol |
+|--------|----------|-------------|------|-----|
+| GET | `/api/v1/repartidor/pedidos/disponibles` | Pedidos disponibles para aceptar | Sí | Repartidor |
+| GET | `/api/v1/repartidor/pedidos/mios` | Pedidos asignados al repartidor | Sí | Repartidor |
+| PUT | `/api/v1/repartidor/pedidos/{id}/aceptar` | Aceptar un pedido | Sí | Repartidor |
+| PUT | `/api/v1/repartidor/pedidos/{id}/estado` | Actualizar estado del pedido | Sí | Repartidor |
+| PUT | `/api/v1/repartidor/pedidos/{id}/confirmar-pago` | Confirmar pago en efectivo | Sí | Repartidor |
+
+### Configuración (`/api/v1/configuracion`)
+
+| Método | Endpoint | Descripción | Auth | Rol |
+|--------|----------|-------------|------|-----|
+| GET | `/api/v1/configuracion/{clave}` | Obtener valor de configuración | Sí | Admin |
+| PUT | `/api/v1/configuracion/{clave}` | Actualizar valor de configuración | Sí | Admin |
+
+### Métodos de Pago Inhabilitados (`/api/v1/metodos-pago`)
+
+| Método | Endpoint | Descripción | Auth | Rol |
+|--------|----------|-------------|------|-----|
+| GET | `/api/v1/metodos-pago/inhabilitados` | Listar métodos inhabilitados | Sí | Admin |
+| PUT | `/api/v1/metodos-pago/{id}/reactivar` | Reactivar método de pago | Sí | Admin |
+
 ## Modelos de Datos Principales
 
 ### Usuario
@@ -264,6 +293,14 @@ public class Pedido {
     private Boolean problemaReportado;
     private String detalleProblema;
     private LocalDateTime fechaProblema;
+    
+    // Campos para confirmación de pago en efectivo
+    private Boolean pagoEfectivoConfirmadoCliente;
+    private Boolean pagoEfectivoConfirmadoRepartidor;
+    private LocalDateTime fechaConfirmacionPagoCliente;
+    private LocalDateTime fechaConfirmacionPagoRepartidor;
+    private BigDecimal montoPagadoCliente;
+    private String codigoCupon;
     // ... otros campos
 }
 ```
@@ -287,6 +324,10 @@ public class Pedido {
 - Gestión de estados de pedidos
 - Cálculo de totales con personalizaciones
 - Integración con sistema de pagos
+- Envío de notificaciones push a repartidores cuando hay nuevos pedidos
+- Gestión de inhabilitación automática de métodos de pago (3 cancelaciones)
+- Devolución automática de cupones al cancelar pedidos
+- Contador de cancelaciones que se reinicia al reactivar método de pago
 
 ### PagoService
 - Integración con Stripe para pagos con tarjeta
@@ -304,6 +345,24 @@ public class Pedido {
 - Envío de emails de recuperación de contraseña
 - Plantillas HTML para correos
 - Configuración SMTP con Gmail
+
+### OneSignalService
+- Envío de notificaciones push a repartidores
+- Registro de Player ID en tabla Usuarios
+- Notificaciones cuando hay nuevos pedidos disponibles
+- Notificaciones cuando se inhabilita método de pago
+
+### ConfiguracionSistemaService
+- Gestión de configuraciones dinámicas del sistema
+- Obtener y actualizar valores de configuración
+- Ejemplo: porcentaje de costo para reportes de ganancias
+- Sin necesidad de reiniciar el backend
+
+### MetodoPagoInhabilitadoService
+- Gestión de métodos de pago inhabilitados
+- Creación automática al alcanzar 3 cancelaciones
+- Reactivación por administrador
+- Conteo de cancelaciones desde última reactivación
 
 ## Seguridad
 
@@ -344,26 +403,37 @@ public class Pedido {
 - Plantillas personalizadas
 - Recuperación de contraseña por email
 
+### OneSignal REST API
+- Envío de notificaciones push a dispositivos web
+- Integración con Player ID almacenado en base de datos
+- Notificaciones solo para usuarios con rol 'repartidor'
+- Payload personalizado con información del pedido
+
 ## Base de Datos
 
 ### Tablas Principales
-- `Usuarios` - Usuarios con username único
+- `Usuarios` - Usuarios con username único y player_id para OneSignal
 - `Productos` - Catálogo de productos
 - `Categorias` - Categorías de productos
 - `opciones_personalizacion` - Opciones personalizables
-- `Pedidos` - Pedidos realizados
+- `Pedidos` - Pedidos realizados (con campos de confirmación de pago efectivo)
 - `Detalle_Pedido` - Items de pedidos con personalizaciones
 - `Pagos` - Transacciones de pago
 - `Cupones` - Sistema de descuentos
 - `Carrito` - Carrito de compras
 - `tokens_recuperacion_contrasena` - Tokens de recuperación
+- `Metodos_Pago_Inhabilitados` - Control de métodos de pago bloqueados
+- `configuracion_sistema` - Configuración dinámica del sistema
 
 ### Características
 - Normalización automática de teléfonos con +51
 - Username único por usuario
+- Player ID de OneSignal almacenado en Usuarios (solo repartidores)
 - Precios con DECIMAL(10,2) para precisión
 - Estados con ENUM para validación
 - Foreign keys para integridad referencial
+- Configuración dinámica sin reiniciar backend
+- Historial completo de inhabilitaciones de métodos de pago
 
 ## Logs y Monitoreo
 
@@ -424,9 +494,26 @@ Configurado para permitir:
 - Validación de método de pago
 - Cálculo automático de totales con personalizaciones
 - Estados válidos según flujo de negocio
+- Confirmación de pagos en efectivo (cliente y repartidor)
+- Devolución automática de cupones al cancelar
+
+### Métodos de Pago Inhabilitados
+- Bloqueo automático después de 3 cancelaciones con el mismo método
+- Contador de cancelaciones desde última reactivación
+- Notificación push al cliente cuando se bloquea
+- Reactivación por administrador reinicia el contador
 
 ### Pagos
 - Validación de métodos de pago
 - Integración con Stripe para tarjetas
 - Confirmación manual para efectivo/billetera virtual
+- Confirmación dual (cliente y repartidor) para pagos en efectivo
 - Notificaciones automáticas
+- Validación de métodos de pago inhabilitados
+
+### Cupones
+- Validación de cupones antes de aplicar (fechas, montos mínimos, usos máximos)
+- Decremento de cantidad_disponible al usar cupón
+- Incremento de cantidad_disponible al cancelar pedido
+- Filtrado de cupones usados excluyendo pedidos cancelados
+- Validación de restricciones por producto o categoría

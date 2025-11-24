@@ -13,7 +13,6 @@
   padding: 50px;
 }
 
-/* Encabezado */
 .terms-header {
   text-align: center;
   padding-bottom: 30px;
@@ -41,7 +40,6 @@
   font-style: italic;
 }
 
-/* Cuerpo del contenido */
 .terms-body {
   line-height: 1.8;
   color: #34495e;
@@ -90,7 +88,6 @@
   font-size: 1.2rem;
 }
 
-/* Footer con botón */
 .terms-footer {
   text-align: center;
   padding-top: 30px;
@@ -117,7 +114,6 @@
   color: white;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .terms-content {
     padding: 30px 20px;

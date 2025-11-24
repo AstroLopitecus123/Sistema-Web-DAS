@@ -1,4 +1,4 @@
-/* Modal Backdrop */
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -13,7 +13,6 @@
   padding: 20px;
 }
 
-/* Modal Container */
 .modal-container {
   background: white;
   border-radius: 12px;
@@ -36,7 +35,6 @@
   }
 }
 
-/* Modal Header */
 .modal-header {
   background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
   color: white;
@@ -97,12 +95,10 @@
   transform: scale(1.1);
 }
 
-/* Modal Body */
 .modal-body {
   padding: 24px;
 }
 
-/* Producto Info */
 .producto-info {
   display: flex;
   gap: 20px;
@@ -190,7 +186,6 @@
   gap: 4px;
 }
 
-/* Configuración del Producto */
 .configuracion-producto {
   margin-top: 20px;
 }
@@ -213,7 +208,6 @@
   font-size: 0.9rem;
 }
 
-/* Controles de Cantidad */
 .cantidad-controls {
   display: flex;
   align-items: center;
@@ -371,7 +365,6 @@
   font-style: italic;
 }
 
-/* Textarea de Personalización (mantener para compatibilidad) */
 .personalizacion-textarea {
   border: 2px solid #e9ecef;
   border-radius: 10px;
@@ -397,7 +390,6 @@
   gap: 4px;
 }
 
-/* Resumen del Pedido */
 .resumen-pedido {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 12px;
@@ -443,7 +435,6 @@
   font-weight: 700;
 }
 
-/* Modal Footer */
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -500,7 +491,6 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .modal-container {
     margin: 10px;

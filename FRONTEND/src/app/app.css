@@ -1,4 +1,4 @@
-/* Variables CSS */
+
 :root {
   --primary-color: #FF6B35;
   --secondary-color: #8B4513;
@@ -15,7 +15,6 @@
   --shadow-hover: 0 6px 25px rgba(0,0,0,0.15);
 }
 
-/* Reset y estilos base */
 * {
   box-sizing: border-box;
 }
@@ -29,13 +28,11 @@ body {
   line-height: 1.6;
 }
 
-/* Contenido principal */
 .main-content {
   min-height: calc(100vh - 80px);
   padding: 0;
 }
 
-/* Estilos para botones */
 .btn {
   display: inline-block;
   padding: 12px 24px;
@@ -86,7 +83,6 @@ body {
   color: white;
 }
 
-/* Estilos para tarjetas */
 .card {
   background: white;
   border-radius: 12px;
@@ -100,7 +96,6 @@ body {
   box-shadow: var(--shadow-hover);
 }
 
-/* Estilos para formularios */
 .form-group {
   margin-bottom: 20px;
 }
@@ -128,7 +123,6 @@ body {
   border-color: var(--primary-color);
 }
 
-/* Estilos para tablas */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -151,7 +145,6 @@ body {
   vertical-align: middle;
 }
 
-/* Estilos para badges */
 .badge {
   padding: 6px 12px;
   border-radius: 20px;
@@ -180,13 +173,11 @@ body {
   color: #0c5460;
 }
 
-/* Estilos para iconos */
 .icon {
   font-size: 18px;
   margin-right: 8px;
 }
 
-/* Utilidades */
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .text-right { text-align: right; }
@@ -209,7 +200,6 @@ body {
 .p-3 { padding: 24px; }
 .p-4 { padding: 32px; }
 
-/* Responsive */
 @media (max-width: 768px) {
   .main-content {
     padding: 15px;
@@ -234,7 +224,6 @@ body {
   }
 }
 
-/* Animaciones */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -244,7 +233,6 @@ body {
   animation: fadeIn 0.5s ease-out;
 }
 
-/* Estilos para el router outlet */
 router-outlet {
   display: block;
 }

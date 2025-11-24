@@ -52,6 +52,24 @@ public class PedidoListaResponse {
     @JsonProperty("fechaProblema")
     private String fechaProblema;
     
+    @JsonProperty("pagoEfectivoConfirmadoPorCliente")
+    private Boolean pagoEfectivoConfirmadoPorCliente;
+    
+    @JsonProperty("pagoEfectivoConfirmadoPorRepartidor")
+    private Boolean pagoEfectivoConfirmadoPorRepartidor;
+    
+    @JsonProperty("fechaConfirmacionPagoCliente")
+    private String fechaConfirmacionPagoCliente;
+    
+    @JsonProperty("fechaConfirmacionPagoRepartidor")
+    private String fechaConfirmacionPagoRepartidor;
+    
+    @JsonProperty("montoPagadoCliente")
+    private BigDecimal montoPagadoCliente;
+    
+    @JsonProperty("codigoCupon")
+    private String codigoCupon;
+    
     public PedidoListaResponse() {
     }
     
@@ -196,5 +214,53 @@ public class PedidoListaResponse {
 
     public void setFechaProblema(String fechaProblema) {
         this.fechaProblema = fechaProblema;
+    }
+
+    public Boolean getPagoEfectivoConfirmadoPorCliente() {
+        return pagoEfectivoConfirmadoPorCliente;
+    }
+
+    public void setPagoEfectivoConfirmadoPorCliente(Boolean pagoEfectivoConfirmadoPorCliente) {
+        this.pagoEfectivoConfirmadoPorCliente = pagoEfectivoConfirmadoPorCliente;
+    }
+
+    public Boolean getPagoEfectivoConfirmadoPorRepartidor() {
+        return pagoEfectivoConfirmadoPorRepartidor;
+    }
+
+    public void setPagoEfectivoConfirmadoPorRepartidor(Boolean pagoEfectivoConfirmadoPorRepartidor) {
+        this.pagoEfectivoConfirmadoPorRepartidor = pagoEfectivoConfirmadoPorRepartidor;
+    }
+
+    public String getFechaConfirmacionPagoCliente() {
+        return fechaConfirmacionPagoCliente;
+    }
+
+    public void setFechaConfirmacionPagoCliente(String fechaConfirmacionPagoCliente) {
+        this.fechaConfirmacionPagoCliente = fechaConfirmacionPagoCliente;
+    }
+
+    public String getFechaConfirmacionPagoRepartidor() {
+        return fechaConfirmacionPagoRepartidor;
+    }
+
+    public void setFechaConfirmacionPagoRepartidor(String fechaConfirmacionPagoRepartidor) {
+        this.fechaConfirmacionPagoRepartidor = fechaConfirmacionPagoRepartidor;
+    }
+
+    public BigDecimal getMontoPagadoCliente() {
+        return montoPagadoCliente;
+    }
+
+    public void setMontoPagadoCliente(BigDecimal montoPagadoCliente) {
+        this.montoPagadoCliente = montoPagadoCliente;
+    }
+
+    public String getCodigoCupon() {
+        return codigoCupon;
+    }
+
+    public void setCodigoCupon(String codigoCupon) {
+        this.codigoCupon = codigoCupon;
     }
 }

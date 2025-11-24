@@ -25,21 +25,18 @@ public class RepartidorController {
     @Autowired
     private PedidoService pedidoService;
 
-    // Obtiene pedidos disponibles para aceptar (GET /api/repartidor/pedidos/disponibles)
     @GetMapping("/pedidos/disponibles")
     public ResponseEntity<List<PedidoListaResponse>> obtenerPedidosDisponibles() {
         List<PedidoListaResponse> pedidos = pedidoService.obtenerPedidosDisponibles();
         return ResponseEntity.ok(pedidos);
     }
 
-    // Obtiene pedidos asignados a un repartidor (GET /api/repartidor/pedidos/mios/{idRepartidor})
     @GetMapping("/pedidos/mios/{idRepartidor}")
     public ResponseEntity<List<PedidoListaResponse>> obtenerMisPedidos(@PathVariable Integer idRepartidor) {
         List<PedidoListaResponse> pedidos = pedidoService.obtenerPedidosDelRepartidor(idRepartidor);
         return ResponseEntity.ok(pedidos);
     }
 
-    // Acepta un pedido (POST /api/repartidor/pedidos/{id}/aceptar)
     @PostMapping("/pedidos/{id}/aceptar")
     public ResponseEntity<Map<String, Object>> aceptarPedido(
             @PathVariable Integer id,
@@ -59,13 +56,11 @@ public class RepartidorController {
         ));
     }
 
-    // Actualiza el estado de un pedido (PUT /api/repartidor/pedidos/{id}/estado)
     @PutMapping("/pedidos/{id}/estado")
     public ResponseEntity<Map<String, Object>> actualizarEstadoPedido(
             @PathVariable Integer id,
             @RequestBody ActualizarEstadoPedidoRequest request) {
         
-        // El servicio ya valida que el pedido exista y lanza RecursoNoEncontradoExcepcion si no existe
         pedidoService.obtenerPedidoPorId(id);
         
         String nuevoEstado = request.getNuevoEstado();
@@ -79,7 +74,6 @@ public class RepartidorController {
         ));
     }
 
-    // Marca un pedido como entregado (PUT /api/repartidor/pedidos/{id}/entregado)
     @PutMapping("/pedidos/{id}/entregado")
     public ResponseEntity<Map<String, Object>> marcarPedidoComoEntregado(@PathVariable Integer id) {
         pedidoService.marcarPedidoComoEntregado(id);
@@ -90,21 +84,18 @@ public class RepartidorController {
         ));
     }
 
-    // Obtiene historial de entregas completadas de un repartidor (GET /api/repartidor/historial/{idRepartidor})
     @GetMapping("/historial/{idRepartidor}")
     public ResponseEntity<List<PedidoListaResponse>> obtenerHistorialEntregas(@PathVariable Integer idRepartidor) {
         List<PedidoListaResponse> historial = pedidoService.obtenerHistorialEntregas(idRepartidor);
         return ResponseEntity.ok(historial);
     }
 
-    // Obtiene estadísticas del repartidor (GET /api/repartidor/estadisticas/{idRepartidor})
     @GetMapping("/estadisticas/{idRepartidor}")
     public ResponseEntity<Map<String, Object>> obtenerEstadisticas(@PathVariable Integer idRepartidor) {
         Map<String, Object> estadisticas = pedidoService.obtenerEstadisticasRepartidor(idRepartidor);
         return ResponseEntity.ok(estadisticas);
     }
 
-    // Obtiene historial reciente de pedidos de un cliente
     @GetMapping("/pedidos/cliente/{idCliente}/historial")
     public ResponseEntity<List<PedidoListaResponse>> obtenerHistorialCliente(
             @PathVariable Integer idCliente,
@@ -113,7 +104,6 @@ public class RepartidorController {
         return ResponseEntity.ok(historial);
     }
 
-    // Cancela un pedido en curso para liberarlo
     @PutMapping("/pedidos/{id}/cancelar")
     public ResponseEntity<Map<String, Object>> cancelarPedido(
             @PathVariable Integer id,
@@ -130,7 +120,6 @@ public class RepartidorController {
         ));
     }
 
-    // Reporta un problema con el pedido
     @PostMapping("/pedidos/{id}/reportar-problema")
     public ResponseEntity<Map<String, Object>> reportarProblema(
             @PathVariable Integer id,
@@ -155,5 +144,21 @@ public class RepartidorController {
     public ResponseEntity<List<com.web.capas.domain.dto.ReporteProblemaResponse>> obtenerReportesProblemas() {
         List<com.web.capas.domain.dto.ReporteProblemaResponse> reportes = pedidoService.obtenerReportesProblemas();
         return ResponseEntity.ok(reportes);
+    }
+
+    @PutMapping("/pedidos/{id}/confirmar-pago")
+    public ResponseEntity<Map<String, Object>> confirmarPagoRepartidor(
+            @PathVariable Integer id,
+            @RequestBody Map<String, Integer> request) {
+        Integer idRepartidor = request.get("idRepartidor");
+        if (idRepartidor == null) {
+            throw new ServiceException("idRepartidor es requerido");
+        }
+        PedidoResponse pedido = pedidoService.confirmarPagoEfectivoRepartidor(id, idRepartidor);
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "mensaje", "Pago confirmado correctamente",
+            "pedido", pedido
+        ));
     }
 }

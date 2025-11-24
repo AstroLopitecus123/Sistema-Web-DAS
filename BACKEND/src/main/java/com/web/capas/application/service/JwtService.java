@@ -17,7 +17,7 @@ import java.util.function.Function;
 public class JwtService {
     
     private static final String SECRET_KEY = "mi-clave-secreta-super-segura-para-jwt-tokens-de-autenticacion-2024";
-    private static final int JWT_EXPIRATION = 86400000; // 24 horas en milisegundos
+    private static final int JWT_EXPIRATION = 86400000; 
     
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());

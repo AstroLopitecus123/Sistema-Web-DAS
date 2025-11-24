@@ -47,12 +47,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional
     public Usuario registrarUsuario(Usuario usuario) {
-        // Verificar correo duplicado
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new ServiceException("El email ya está registrado");
         }
         
-        // Validar campos requeridos
         if (usuario.getNombre() == null || usuario.getNombre().trim().isEmpty()) {
             throw new ServiceException("El nombre es obligatorio");
         }
@@ -69,16 +67,13 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new ServiceException("El username es obligatorio");
         }
         
-        // Verificar username duplicado
         if (usuarioRepository.existsByUsername(usuario.getUsername())) {
             throw new ServiceException("El username ya está registrado");
         }
         
-        // Encriptar contraseña
         String contrasenaEncriptada = passwordEncoder.encode(usuario.getContrasenaEncriptada());
         usuario.setContrasenaEncriptada(contrasenaEncriptada);
         
-        // Asignar valores por defecto
         if (usuario.getRol() == null) {
             usuario.setRol(Usuario.Rol.cliente);
         }
@@ -87,7 +82,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setActivo(true);
         }
         
-        // Normalizar teléfono: asegurar que tenga +51
         if (usuario.getTelefono() != null && !usuario.getTelefono().trim().isEmpty()) {
             usuario.setTelefono(normalizarTelefono(usuario.getTelefono()));
         } else {
@@ -107,12 +101,10 @@ public class UsuarioServiceImpl implements UsuarioService {
             return null;
         }
         
-        // Verificar contraseña
         if (!passwordEncoder.matches(contrasena, usuario.getContrasenaEncriptada())) {
             return null;
         }
         
-        // Si la cuenta está desactivada
         Boolean activo = usuario.getActivo();
         if (activo != null && !activo) {
             throw new CredencialesInvalidasException("CUENTA_DESACTIVADA");
@@ -141,8 +133,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioRepository.existsByUsername(username);
     }
     
-    // Funciones para el admin
-    
     @Override
     public List<Usuario> obtenerTodosLosUsuarios() {
         return usuarioRepository.findAll();
@@ -157,11 +147,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional
     public boolean eliminarUsuario(Integer id) {
         try {
-            // Verificar que el usuario existe
             Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Usuario no encontrado para eliminar"));
             
-            // Verificar si es un administrador - no permitir eliminar administradores
             if (usuario.getRol() == Usuario.Rol.administrador) {
                 long totalAdministradores = usuarioRepository.countByRol(Usuario.Rol.administrador);
                 if (totalAdministradores <= 1) {
@@ -169,8 +157,6 @@ public class UsuarioServiceImpl implements UsuarioService {
                 }
             }
             
-            // Intentar eliminar el usuario
-            // Si hay restricciones de clave foránea, se lanzará una excepción
             usuarioRepository.deleteById(id);
             return true;
             
@@ -214,7 +200,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional
     public boolean eliminarUsuarioSeguro(Integer id) {
         try {
-            // Verificar que el usuario existe y no es administrador
             Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Usuario no encontrado"));
             
@@ -238,7 +223,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
     
-    // Elimina todos los datos relacionados a un usuario en el orden correcto
     private void eliminarDatosRelacionados(Integer idUsuario) {
         eliminarCarritoUsuario(idUsuario);
         
@@ -247,7 +231,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         eliminarPedidosUsuario(idUsuario);
     }
     
-    // Elimina el carrito del usuario
     private void eliminarCarritoUsuario(Integer idUsuario) {
         try {
             carritoRepository.deleteByCliente_IdUsuario(idUsuario);
@@ -255,7 +238,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
     
-    // Elimina los tokens de recuperación del usuario
     private void eliminarTokensRecuperacion(Integer idUsuario) {
         try {
             passwordResetTokenRepository.deleteByUsuario_IdUsuario(idUsuario);
@@ -263,7 +245,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
     
-    // Elimina los pedidos del usuario y sus pagos asociados
     private void eliminarPedidosUsuario(Integer idUsuario) {
         List<Pedido> pedidos = pedidoRepository.findByCliente_IdUsuario(idUsuario);
         
@@ -274,7 +255,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
     
-    // Elimina los pagos de un pedido específico
     private void eliminarPagosPedido(Integer idPedido) {
         try {
             pagoRepository.findByPedido_IdPedido(idPedido).ifPresent(pago -> {
@@ -284,7 +264,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
     
-    // Elimina un pedido específico
     private void eliminarPedido(Integer idPedido) {
         try {
             pedidoRepository.deleteById(idPedido);
@@ -314,7 +293,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Usuario no encontrado"));
             
-            // Convertir texto a enum
             Usuario.Rol rolEnum;
             switch (nuevoRol.toLowerCase()) {
                 case "cliente":
@@ -346,7 +324,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Usuario no encontrado"));
             
-            // Validar campos requeridos
             if (nombre == null || nombre.trim().isEmpty()) {
                 throw new ServiceException("El nombre es obligatorio");
             }
@@ -355,10 +332,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 throw new ServiceException("El apellido es obligatorio");
             }
             
-            // Guardar cambios 
             usuario.setNombre(nombre.trim());
             usuario.setApellido(apellido.trim());
-            // Normalizar teléfono: asegurar que tenga +51
             if (telefono != null && !telefono.trim().isEmpty()) {
                 usuario.setTelefono(normalizarTelefono(telefono.trim()));
             } else {
@@ -378,7 +353,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional
     public boolean cambiarContrasena(Integer idUsuario, String contrasenaActual, String nuevaContrasena) {
         try {
-            // Validaciones
             if (nuevaContrasena == null || nuevaContrasena.trim().isEmpty()) {
                 throw new ServiceException("La nueva contraseña no puede estar vacía");
             }
@@ -395,17 +369,14 @@ public class UsuarioServiceImpl implements UsuarioService {
             
             Usuario usuario = usuarioOpt.get();
             
-            // Verificar contraseña actual
             if (!passwordEncoder.matches(contrasenaActual, usuario.getContrasenaEncriptada())) {
                 return false;
             }
             
-            // La nueva debe ser diferente
             if (passwordEncoder.matches(nuevaContrasena, usuario.getContrasenaEncriptada())) {
                 throw new ServiceException("La nueva contraseña debe ser diferente a la actual");
             }
             
-            // Encriptar nueva contraseña
             String nuevaContrasenaEncriptada = passwordEncoder.encode(nuevaContrasena);
             usuario.setContrasenaEncriptada(nuevaContrasenaEncriptada);
             usuarioRepository.save(usuario);
@@ -425,7 +396,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         try {
             Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
             
-            // Solo enviar correo si existe y está activo
             if (usuarioOpt.isPresent()) {
                 Usuario usuario = usuarioOpt.get();
                 
@@ -454,7 +424,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional
     public boolean restablecerContrasena(String token, String nuevaContrasena) {
         try {
-            // Validaciones
             if (nuevaContrasena == null || nuevaContrasena.trim().isEmpty()) {
                 throw new ServiceException("La nueva contraseña no puede estar vacía");
             }
@@ -463,7 +432,6 @@ public class UsuarioServiceImpl implements UsuarioService {
                 throw new ServiceException("La nueva contraseña debe tener al menos 6 caracteres");
             }
             
-            // Buscar y validar token
             PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token)
                     .orElseThrow(() -> new ServiceException("Token inválido"));
             
@@ -475,13 +443,11 @@ public class UsuarioServiceImpl implements UsuarioService {
                 throw new ServiceException("Este token ha expirado");
             }
             
-            // Cambiar contraseña
             Usuario usuario = passwordResetToken.getUsuario();
             String nuevaContrasenaEncriptada = passwordEncoder.encode(nuevaContrasena);
             usuario.setContrasenaEncriptada(nuevaContrasenaEncriptada);
             usuarioRepository.save(usuario);
             
-            // Marcar token como usado
             passwordResetToken.setUsado(true);
             passwordResetTokenRepository.save(passwordResetToken);
             
@@ -494,13 +460,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
 
-        // Normaliza el teléfono
     private String normalizarTelefono(String telefono) {
         if (telefono == null || telefono.trim().isEmpty()) {
             return null;
         }
 
-        // Remover espacios
         String telefonoLimpio = telefono.replaceAll("\\s+", "");
 
         // Si empieza con +51, dejarlo tal cual
@@ -508,16 +472,14 @@ public class UsuarioServiceImpl implements UsuarioService {
             return telefonoLimpio;
         }
 
-        // Si empieza con otro código (ej: +52, +1), extraer solo los números y agregar +51
+        // Si empieza con otro código
         if (telefonoLimpio.startsWith("+")) {
-            // Extraer solo los números después del +
             String soloNumeros = telefonoLimpio.substring(1).replaceAll("\\D", "");
             if (soloNumeros.length() > 0) {
                 return "+51" + soloNumeros;
             }
         }
 
-        // Si son solo números (sin +), agregar +51
         String soloNumeros = telefonoLimpio.replaceAll("\\D", "");
         if (soloNumeros.length() > 0) {
             return "+51" + soloNumeros;
@@ -562,5 +524,15 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new RecursoNoEncontradoExcepcion("Usuario no encontrado");
         }
         return mapearAUsuarioResponse(usuario);
+    }
+    
+    @Override
+    @Transactional
+    public Usuario actualizarPlayerId(Integer idUsuario, String playerId) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+            .orElseThrow(() -> new RecursoNoEncontradoExcepcion("Usuario no encontrado"));
+        
+        usuario.setPlayerId(playerId);
+        return usuarioRepository.save(usuario);
     }
 }

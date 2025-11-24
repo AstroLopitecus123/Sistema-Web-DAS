@@ -4,7 +4,11 @@ import com.web.capas.application.service.UsuarioService;
 import com.web.capas.domain.ServiceException;
 import com.web.capas.domain.dto.CambioRolRequest;
 import com.web.capas.domain.dto.UsuarioResponse;
+import com.web.capas.domain.repository.PedidoRepository;
+import com.web.capas.infrastructure.persistence.entities.Pedido;
 import com.web.capas.infrastructure.persistence.entities.Usuario;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,22 +28,22 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private PedidoRepository pedidoRepository;
 
-    // Obtiene todos los usuarios - solo administradores (GET /api/admin/usuarios)
     @GetMapping
     public ResponseEntity<List<UsuarioResponse>> obtenerTodosLosUsuarios() {
         List<UsuarioResponse> usuarios = usuarioService.obtenerTodosLosUsuariosComoDTO();
         return ResponseEntity.ok(usuarios);
     }
 
-    // Obtiene un usuario por ID - solo administradores (GET /api/admin/usuarios/{id})
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponse> obtenerUsuarioPorId(@PathVariable Integer id) {
         UsuarioResponse usuario = usuarioService.obtenerUsuarioPorIdComoDTO(id);
         return ResponseEntity.ok(usuario);
     }
 
-    // Elimina un usuario por ID - solo administradores (DELETE /api/admin/usuarios/{id})
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> eliminarUsuario(@PathVariable Integer id) {
         boolean resultado = usuarioService.eliminarUsuario(id);
@@ -53,7 +57,6 @@ public class UsuarioController {
         }
     }
 
-    // Elimina un usuario de forma segura - solo administradores (DELETE /api/admin/usuarios/{id}/seguro)
     @DeleteMapping("/{id}/seguro")
     public ResponseEntity<Map<String, Object>> eliminarUsuarioSeguro(@PathVariable Integer id) {
         boolean eliminado = usuarioService.eliminarUsuarioSeguro(id);
@@ -73,7 +76,6 @@ public class UsuarioController {
         }
     }
 
-    // Activa/Desactiva un usuario - solo administradores (PUT /api/admin/usuarios/{id}/estado)
     @PutMapping("/{id}/estado")
     public ResponseEntity<Map<String, Object>> cambiarEstadoUsuario(@PathVariable Integer id, @RequestParam boolean activo) {
         boolean resultado = usuarioService.cambiarEstadoUsuario(id, activo);
@@ -89,7 +91,6 @@ public class UsuarioController {
         ));
     }
 
-    // Obtiene estadísticas de usuarios - solo administradores (GET /api/admin/usuarios/estadisticas)
     @GetMapping("/estadisticas")
     public ResponseEntity<Object> obtenerEstadisticasUsuarios() {
         long totalUsuarios = usuarioService.contarUsuarios();
@@ -99,7 +100,6 @@ public class UsuarioController {
         long repartidores = usuarioService.contarUsuariosPorRol(Usuario.Rol.repartidor);
         long vendedores = usuarioService.contarUsuariosPorRol(Usuario.Rol.vendedor);
 
-        // Map de estadísticas
         java.util.Map<String, Object> estadisticas = new java.util.HashMap<>();
         estadisticas.put("totalUsuarios", totalUsuarios);
         estadisticas.put("usuariosActivos", usuariosActivos);
@@ -112,6 +112,38 @@ public class UsuarioController {
         return ResponseEntity.ok(estadisticas);
     }
 
+    @GetMapping("/dashboard/estadisticas")
+    public ResponseEntity<Map<String, Object>> obtenerEstadisticasDashboard() {
+        try {
+            LocalDateTime ahora = LocalDateTime.now();
+            LocalDateTime inicioHoy = ahora.toLocalDate().atStartOfDay();
+            LocalDateTime finHoy = ahora.toLocalDate().atTime(23, 59, 59);
+            
+            List<Pedido> pedidosHoy = pedidoRepository.findByFechaPedidoBetween(inicioHoy, finHoy);
+            
+            List<Pedido> pedidosHoyNoCancelados = pedidosHoy.stream()
+                .filter(p -> p.getEstadoPedido() != Pedido.EstadoPedido.cancelado)
+                .collect(java.util.stream.Collectors.toList());
+            
+            long pedidosHoyCount = pedidosHoyNoCancelados.size();
+            
+            BigDecimal ventasHoy = pedidosHoyNoCancelados.stream()
+                .map(Pedido::getTotalPedido)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            long clientesActivos = usuarioService.contarUsuariosPorRol(Usuario.Rol.cliente);
+            
+            Map<String, Object> estadisticas = new java.util.HashMap<>();
+            estadisticas.put("pedidosHoy", pedidosHoyCount);
+            estadisticas.put("ventasHoy", ventasHoy.doubleValue());
+            estadisticas.put("clientesActivos", clientesActivos);
+            
+            return ResponseEntity.ok(estadisticas);
+        } catch (Exception e) {
+            throw new ServiceException("Error al obtener estadísticas del dashboard: " + e.getMessage());
+        }
+    }
+
     @PutMapping("/cambiar-rol/{id}")
     public ResponseEntity<Map<String, Object>> cambiarRolUsuario(@PathVariable Integer id, @RequestBody CambioRolRequest request) {
         String nuevoRol = request.getRol();
@@ -120,7 +152,6 @@ public class UsuarioController {
             throw new ServiceException("El rol no puede estar vacío");
         }
 
-        // Validar que el rol sea válido
         if (!nuevoRol.equals("cliente") && !nuevoRol.equals("administrador") && 
             !nuevoRol.equals("repartidor")) {
             throw new ServiceException("Rol no válido");

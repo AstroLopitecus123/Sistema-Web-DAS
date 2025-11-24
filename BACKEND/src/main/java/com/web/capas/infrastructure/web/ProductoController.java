@@ -31,16 +31,12 @@ public class ProductoController {
     @Autowired
     private OpcionPersonalizacionRepository opcionPersonalizacionRepository;
 
-    // CU (CLIENTE): VER MENÚ
-    // GET /api/v1/menu/productos
     @GetMapping("/productos")
     public ResponseEntity<List<ProductoResponse>> obtenerMenu() {
         List<ProductoResponse> productos = productoService.obtenerMenuDisponible();
         return ResponseEntity.ok(productos);
     }
 
-    // CU (CLIENTE): BUSCAR PRODUCTOS (Búsqueda por letras)
-    // GET /api/v1/menu/productos/buscar?keyword=hamburg
     @GetMapping("/productos/buscar")
     public ResponseEntity<List<ProductoResponse>> buscarProductosPorNombre(@RequestParam String keyword) {
         List<ProductoResponse> productosEncontrados = productoService.buscarProductos(keyword);
@@ -53,8 +49,6 @@ public class ProductoController {
         return ResponseEntity.ok(producto);
     }
 
-    // CU (CLIENTE): OBTENER OPCIONES DE PERSONALIZACIÓN
-    // GET /api/v1/menu/productos/{id}/opciones
     @GetMapping("/productos/{id}/opciones")
     @Transactional(readOnly = true)
     public ResponseEntity<List<OpcionPersonalizacion>> obtenerOpcionesPersonalizacion(@PathVariable Integer id) {
@@ -72,8 +66,6 @@ public class ProductoController {
         return ResponseEntity.ok(productos);
     }
 
-    // CU (ADMINISTRADOR): GESTIONAR EL MENÚ (Crear/Actualizar)
-    // POST /api/v1/menu/productos
     @PostMapping("/productos")
     public ResponseEntity<ProductoResponse> crearOActualizarProducto(@RequestBody ProductoRequest request) {
         ProductoResponse productoGuardado = productoService.guardarProducto(request);
